@@ -1,0 +1,31 @@
+version: "3.8"
+
+networks:
+  mediaproxy:
+    external: true
+
+services:
+  sonarr:
+    container_name: sonarr
+    image: ghcr.io/linuxserver/sonarr:latest
+    environment:
+      - PUID=568
+      - PGID=568
+      - TZ=America/Chicago
+      - DOCKER_MODS=ghcr.io/gilbn/theme.park:sonarr
+      - TP_THEME=organizr
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.sonarr.entrypoints=websecure
+      - traefik.http.routers.sonarr.rule=Host(`sonarr.u-acres.com`)
+      - traefik.http.routers.sonarr.service=sonarr
+      - traefik.http.services.sonarr.loadbalancer.server.port=8989
+      - traefik.http.routers.sonarr.tls.certresolver=${CERTRESOLVER:-cloudflare}
+      - traefik.http.routers.sonarr.tls.domains[0].main=sonarr.u-acres.com
+      - com.centurylinklabs.watchtower.enable=true
+    networks:
+      - mediaproxy
+    restart: unless-stopped
+    volumes:
+      - /mnt/Apps/Sonarr:/config
+      - /mnt/Pool01/data/:/data

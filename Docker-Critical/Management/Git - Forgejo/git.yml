@@ -1,0 +1,62 @@
+networks:
+  gitproxy:
+    name: gitproxy
+    external: true
+
+services:
+  forgejo:
+    image: codeberg.org/forgejo/forgejo:13
+    container_name: forgejo
+    environment:
+      - USER_UID=568
+      - USER_GID=568
+      - FORGEJO__database__DB_TYPE=postgres
+      - FORGEJO__database__HOST=git-db:5432
+      - FORGEJO__database__NAME=git
+      - FORGEJO__database__USER=git
+      - FORGEJO__database__PASSWD=${GIT_DB_PASSWORD}
+      - FORGEJO__actions__DEFAULT_ACTIONS_URL=https://data.forgejo.org
+      - FORGEJO__actions__ENABLED=true
+      - FORGEJO__actions__DISABLE_API=false
+      - FORGEJO__actions__DISABLE_WEBHOOKS=false
+      - FORGEJO__actions__DISABLE_GITHUB_WEBHOOKS=false
+      - FORGEJO__repository__ENABLE_LOCAL_PATH_MIGRATION=true
+      - SSH_LISTEN_PORT=2222
+      - FORGEJO__ui__THEMES=forgejo-light,forgejo-dark,sage-modern
+      - FORGEJO__ui__DEFAULT_THEME=sage-modern
+    restart: always
+    networks:
+      - gitproxy
+    volumes:
+      - /opt/Docker-Critical/git/data:/data
+      - ./sage-modern.css:/data/gitea/public/assets/css/theme-sage-modern.css
+    ports:
+      - 192.168.19.11:3000:3000
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.git.rule=Host(`git.${DOMAIN_NAME}`)
+      - traefik.http.routers.git.entrypoints=websecure
+      - traefik.http.routers.git.service=git
+      - traefik.docker.network=gitproxy
+      - traefik.http.services.git.loadbalancer.server.port=3000
+      - traefik.http.routers.git.tls.certresolver=${CERTRESOLVER:-cloudflare}
+      - traefik.http.routers.git.tls.domains[0].main=git.${DOMAIN_NAME}
+      - com.centurylinklabs.watchtower.enable=true
+      - traefik.http.routers.git-ssh.rule="HostSNI(`*`)"
+      - traefik.http.routers.git-ssh.entrypoints=ssh
+      - traefik.http.routers.git-ssh.service=git-ssh
+      - traefik.http.services.git-ssh.loadbalancer.server.port=2222
+  git-db:
+    image: postgres:14
+    container_name: git-db
+    restart: always
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${GIT_DB_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    networks:
+      - gitproxy
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+    volumes:
+      - /opt/Docker-Critical/git/postgres:/var/lib/postgresql/data

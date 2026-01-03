@@ -1,0 +1,14 @@
+name: forgejo-mcp-server
+version: 0.0.1
+schema: v1
+mcpServers:
+  - name: forgejo
+    command: "c:/Users/Nicho/OneDrive/Home-Lab/Tools/AI/MCP/forgejo-mcp/forgejo-mcp.exe"
+    args:
+      - "--transport"
+      - "stdio"
+      - "--url"
+      - "https://git.u-acres.com"
+    env:
+      FORGEJO_ACCESS_TOKEN: "59a5d24b9fd0f825d9a27d4d00e6fd3fd467cd2d"
+    disabled: false

@@ -1,0 +1,68 @@
+name: Deploy Norish
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "Docker-Critical/Home/Cooking/**"
+      - ".forgejo/workflows/deploy-norish.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: docker-critical-linux-x64
+
+    defaults:
+      run:
+        shell: sh
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify Norish compose file exists
+        shell: sh
+        run: |
+          ls -l "./Docker-Critical/Home/Cooking/norish.yml"
+
+      - name: Compare image and config
+        shell: sh
+        working-directory: "./Docker-Critical/Home/Cooking"
+        env:
+          CERTRESOLVER: ${{ vars.CERTRESOLVER }}
+        run: |
+          # Extract defined image
+          defined_image=$(grep -m1 'image:' norish.yml | awk '{print $2}')
+
+          # Extract running image from remote host
+          running_image=$(docker inspect -f '{{.Config.Image}}' norish-app 2>/dev/null || echo "none")
+
+          # Compute checksum of compose file
+          checksum=$(sha256sum norish.yml | awk '{print $1}')
+          old=$(cat .norish_checksum 2>/dev/null || echo "")
+
+          echo "Defined: $defined_image"
+          echo "Running: $running_image"
+          echo "Checksum: $checksum vs $old"
+
+          if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
+            echo "Redeploying Norish on remote host (truenas01)"
+
+            # Copy compose file to remote host
+            scp norish.yml runner@truenas01:/tmp/norish.yml
+
+            # Stop old containers (any project)
+            ssh runner@truenas01 "docker rm -f norish-app norish-db norish-redis chrome-headless || true"
+
+            # Bring down the old project (if it exists)
+            ssh runner@truenas01 "docker compose -p norish -f /tmp/norish.yml down --remove-orphans || true"
+
+            # Deploy the entire stack under project 'norish'
+            ssh runner@truenas01 "CERTRESOLVER=$CERTRESOLVER docker compose -p norish -f /tmp/norish.yml up -d --force-recreate"
+
+            # Save checksum
+            echo "$checksum" > .norish_checksum
+          else
+            echo "No redeploy needed"
+          fi

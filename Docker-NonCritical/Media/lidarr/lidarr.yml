@@ -1,0 +1,29 @@
+version: "3.8"
+
+networks:
+  mediaproxy:
+    external: true
+
+services:
+  lidarr:
+    container_name: lidarr
+    image: linuxserver/lidarr
+    environment:
+      - PUID=568
+      - PGID=568
+      - TZ=America/Chicago
+    labels:
+      - traefik.http.routers.lidarr.entrypoints=websecure
+      - traefik.http.routers.lidarr.rule=Host(`lidarr.u-acres.com`)
+      - traefik.http.routers.lidarr.service=lidarr
+      - traefik.http.services.lidarr.loadbalancer.server.port=8686
+      - traefik.http.routers.lidarr.tls.certresolver=${CERTRESOLVER:-cloudflare}
+      - traefik.http.routers.lidarr.tls.domains[0].main=lidarr.u-acres.com
+      - com.centurylinklabs.watchtower.enable=true
+      - traefik.enable=true
+    networks:
+      - mediaproxy
+    restart: unless-stopped
+    volumes:
+      - /mnt/Apps/Lidarr:/config
+      - /mnt/Pool01/data:/data

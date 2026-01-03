@@ -1,0 +1,61 @@
+services:
+  authelia:
+    image: authelia/authelia:latest
+    container_name: authelia
+    restart: unless-stopped
+    networks:
+      - authnet
+    volumes:
+      - /opt/Docker-Critical/Authelia/config:/config
+    environment:
+      - TZ=America/Chicago
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.authelia.rule=Host(`authelia.${DOMAIN_NAME}`)"
+      - "traefik.http.services.authelia.loadbalancer.server.port=9091"
+      - "traefik.http.routers.authelia.entrypoints=websecure"
+      - "traefik.http.routers.authelia.tls=true"
+      - "traefik.http.routers.authelia.tls.certresolver=${CERTRESOLVER:-cloudflare}"
+      - "traefik.http.routers.authelia.tls.domains[0].main=authelia.${DOMAIN_NAME}"
+      - "com.centurylinklabs.watchtower.enable=true"
+    depends_on:
+      - authelia-db
+  authelia-db:
+    image: postgres:13
+    container_name: authelia-db
+    restart: unless-stopped
+    networks:
+      - authnet
+    volumes:
+      - /opt/Docker-Critical/Authelia/authelia-db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=authelia
+      - POSTGRES_USER=authelia
+      - POSTGRES_PASSWORD=${AUTHELIA_DB_PASSWORD}
+  lldap:
+    image: lldap/lldap:stable
+    container_name: lldap
+    hostname: lldap
+    restart: unless-stopped
+    networks:
+      - authnet
+    expose:
+      - "3890"
+    env_file:
+      - /opt/Docker-Critical/Authelia/lldap/container-vars.env
+    volumes:
+      - /opt/Docker-Critical/Authelia/lldap/data:/data
+      - /opt/Docker-Critical/Authelia/lldap/secrets:/secrets
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.lldap.rule=Host(`ldapadmin.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.lldap.entrypoints=websecure"
+      - "traefik.http.routers.lldap.tls.certresolver=${CERTRESOLVER:-cloudflare}"
+      - "traefik.http.routers.lldap.tls.domains[0].main=ldapadmin.${DOMAIN_NAME}"
+      - "traefik.http.routers.lldap.tls=true"
+      - "traefik.http.services.lldap.loadbalancer.server.port=17170"
+      - "traefik.http.routers.lldap.middlewares=authelia@docker"
+
+networks:
+  authnet:
+    external: true

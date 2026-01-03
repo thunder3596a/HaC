@@ -1,0 +1,45 @@
+networks:
+  mediaproxy:
+    external: true
+    name: mediaproxy
+
+services:
+  audiobookshelf:
+    image: ghcr.io/advplyr/audiobookshelf:latest
+    volumes:
+      - /mnt/Pool01/data/media/audiobooks:/audiobooks
+      - /mnt/Pool01/data/media/podcasts:/podcasts
+      - /mnt/Pool01/Apps/audiobookshelf/data:/config
+      - /mnt/Pool01/data/metadata:/metadata
+    networks:
+      - mediaproxy
+    environment:
+      - TZ=America/Chicago
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+      - traefik.enable=true
+      - traefik.http.routers.audiobookshelf.entrypoints=websecure
+      - traefik.http.routers.audiobookshelf.rule=Host(`audiobooks.u-acres.com`)
+      - traefik.http.routers.audiobookshelf.service=audiobookshelf
+      - traefik.http.services.audiobookshelf.loadbalancer.server.port=13378
+    restart: unless-stopped
+  kavita:
+    image: lscr.io/linuxserver/kavita:latest
+    container_name: kavita
+    environment:
+      - PUID=568
+      - PGID=568
+      - TZ=America/Chicago
+    volumes:
+      - /mnt/Pool01/Apps/kavita/data:/config
+      - /mnt/Pool01/data:/data
+    restart: unless-stopped
+    networks:
+      - mediaproxy
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+      - traefik.enable=true
+      - traefik.http.routers.kavita.entrypoints=websecure
+      - traefik.http.routers.kavita.rule=Host(`kavita.u-acres.com`)
+      - traefik.http.routers.kavita.service=kavita
+      - traefik.http.services.kavita.loadbalancer.server.port=5000

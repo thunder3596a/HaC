@@ -1,0 +1,29 @@
+version: "3.8"
+
+networks:
+  mediaproxy:
+    external: true
+
+services:
+  readarr:
+    container_name: readarr
+    image: linuxserver/readarr:0.4.19-nightly
+    environment:
+      - PUID=568
+      - PGID=568
+      - TZ=America/Chicago
+    labels:
+      - traefik.http.routers.readarr.entrypoints=websecure
+      - traefik.http.routers.readarr.rule=Host(`readarr.u-acres.com`)
+      - traefik.http.routers.readarr.service=readarr
+      - traefik.http.services.readarr.loadbalancer.server.port=8787
+      - traefik.http.routers.readarr.tls.certresolver=${CERTRESOLVER:-cloudflare}
+      - traefik.http.routers.readarr.tls.domains[0].main=readarr.u-acres.com
+      - com.centurylinklabs.watchtower.enable=true
+      - traefik.enable=true
+    networks:
+      - mediaproxy
+    restart: unless-stopped
+    volumes:
+      - /mnt/Apps/Readarr:/config
+      - /mnt/Pool01/data:/data

@@ -1,0 +1,87 @@
+name: Deploy Postfix SMTP Relay
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "Docker-Critical/Networking/Mail/Postfix.yml"
+      - ".forgejo/workflows/deploy-smtprelay.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: docker-critical-linux-x64
+
+    defaults:
+      run:
+        shell: sh
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify Postfix compose file exists
+        run: |
+          ls -l "./Docker-Critical/Networking/Mail/Postfix.yml"
+
+      - name: Compare image and config
+        working-directory: "./Docker-Critical/Networking/Mail"
+        env:
+          DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
+          CERTRESOLVER: ${{ vars.CERTRESOLVER }}
+          SMTP_RELAYHOST: ${{ vars.SMTP_RELAYHOST }}
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          ALLOWED_SENDER_DOMAINS: ${{ vars.ALLOWED_SENDER_DOMAINS }}
+          SMTP_HOSTNAME_POSTFIX: ${{ vars.SMTP_HOSTNAME_POSTFIX }}
+          SENDER_DOMAIN: ${{ vars.SENDER_DOMAIN }}
+        run: |
+          # Fail fast if required variables are missing
+          missing=""
+          [ -z "$SMTP_RELAYHOST" ] && missing="$missing SMTP_RELAYHOST"
+          [ -z "$SMTP_USERNAME" ] && missing="$missing SMTP_USERNAME"
+          [ -z "$SMTP_PASSWORD" ] && missing="$missing SMTP_PASSWORD"
+          [ -z "$SMTP_HOSTNAME_POSTFIX" ] && missing="$missing SMTP_HOSTNAME_POSTFIX"
+          [ -z "$DOMAIN_NAME" ] && missing="$missing DOMAIN_NAME"
+          [ -z "$SENDER_DOMAIN" ] && missing="$missing SENDER_DOMAIN"
+          [ -z "$ALLOWED_SENDER_DOMAINS" ] && missing="$missing ALLOWED_SENDER_DOMAINS"
+
+          if [ -n "$missing" ]; then
+            echo "Missing required variables:$missing"
+            exit 1
+          fi
+
+          # Extract defined image
+          defined_image=$(grep -m1 'image:' Postfix.yml | awk '{print $2}')
+
+          # Extract running image from remote host
+          running_image=$(docker inspect -f '{{.Config.Image}}' smtp-relay 2>/dev/null || echo "none")
+
+          # Compute checksum of compose file
+          checksum=$(sha256sum Postfix.yml | awk '{print $1}')
+          old=$(cat .postfix_checksum 2>/dev/null || echo "")
+
+          echo "Defined: $defined_image"
+          echo "Running: $running_image"
+          echo "Checksum: $checksum vs $old"
+
+          if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
+            echo "Redeploying Postfix SMTP Relay on remote host (truenas01)"
+
+            # Copy compose file to remote host
+            scp Postfix.yml runner@truenas01:/tmp/Postfix.yml
+
+            # Stop old containers if they exist (service name and legacy name)
+            ssh runner@truenas01 "docker rm -f postfix smtp-relay || true"
+
+            # Bring stack down cleanly (scoped to project 'postfix' so other stacks are untouched)
+            ssh runner@truenas01 "docker compose -p postfix -f /tmp/Postfix.yml down --remove-orphans || true"
+
+            # Deploy stack (scoped to project 'postfix') with environment vars passed through
+            ssh runner@truenas01 "SMTP_RELAYHOST=$SMTP_RELAYHOST SMTP_USERNAME=$SMTP_USERNAME SMTP_PASSWORD=$SMTP_PASSWORD ALLOWED_SENDER_DOMAINS=$ALLOWED_SENDER_DOMAINS SMTP_HOSTNAME_POSTFIX=$SMTP_HOSTNAME_POSTFIX DOMAIN_NAME=$DOMAIN_NAME SENDER_DOMAIN=$SENDER_DOMAIN docker compose -p postfix -f /tmp/Postfix.yml up -d --force-recreate"
+
+            # Save checksum locally for next comparison
+            echo "$checksum" > .postfix_checksum
+          else
+            echo "No redeploy needed"
+          fi

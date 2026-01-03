@@ -1,0 +1,73 @@
+services:
+  avahi:
+    image: ghcr.io/linuxserver/avahi:latest
+    container_name: avahi
+    restart: unless-stopped
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    environment:
+      - TZ=${TZ:-America/Chicago}
+    volumes:
+      - /opt/Docker-Critical/avahi:/config
+      - /var/run/dbus:/var/run/dbus:ro
+
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:latest
+    container_name: homeassistant
+    restart: unless-stopped
+    privileged: true
+    networks:
+      - homeproxy
+    environment:
+      - TZ=${TZ:-America/Chicago}
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.homeassistant.entrypoints=websecure
+      - traefik.http.routers.homeassistant.rule=Host(`ha.${DOMAIN_NAME}`)
+      - traefik.http.routers.homeassistant.service=homeassistant
+      - traefik.http.routers.homeassistant.tls=true
+      - traefik.http.routers.homeassistant.tls.certresolver=${CERTRESOLVER:-cloudflare}
+      - traefik.http.routers.homeassistant.tls.domains[0].main=ha.${DOMAIN_NAME}
+      - traefik.http.services.homeassistant.loadbalancer.server.port=8123
+      - com.centurylinklabs.watchtower.enable=true
+    volumes:
+      - /opt/Docker-Critical/homeassistant:/config
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8123/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  esphome:
+    image: ghcr.io/esphome/esphome:latest
+    container_name: esphome
+    restart: unless-stopped
+    networks:
+      - homeproxy
+    environment:
+      - TZ=${TZ:-America/Chicago}
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.esphome.entrypoints=websecure
+      - traefik.http.routers.esphome.rule=Host(`esphome.${DOMAIN_NAME}`)
+      - traefik.http.routers.esphome.service=esphome
+      - traefik.http.routers.esphome.tls=true
+      - traefik.http.routers.esphome.tls.certresolver=${CERTRESOLVER:-cloudflare}
+      - traefik.http.routers.esphome.tls.domains[0].main=esphome.${DOMAIN_NAME}
+      - traefik.http.services.esphome.loadbalancer.server.port=6052
+      - com.centurylinklabs.watchtower.enable=true
+    volumes:
+      - /opt/Docker-Critical/esphome:/config
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6052/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+networks:
+  homeproxy:
+    external: true

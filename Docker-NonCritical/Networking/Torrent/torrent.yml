@@ -1,0 +1,111 @@
+services:
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    container_name: gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - 8888:8888/tcp # HTTP proxy
+      - 8388:8388/tcp # Shadowsocks
+      - 8388:8388/udp # Shadowsocks
+      - 8090:8090/tcp # port for qbittorrent
+    volumes:
+      - /mnt/apps/gluetun:/gluetun
+    environment:
+      - PUID=568
+      - PGID=568
+      - TZ=America/Chicago
+      - VPN_SERVICE_PROVIDER=private internet access
+      - VPN_TYPE=openvpn
+      - OPENVPN_USER=${OPENVPN_USER}
+      - OPENVPN_PASSWORD=${OPENVPN_PASSWORD}
+      - SERVER_REGIONS=US Minnesota #US Chicago
+      - HTTPPROXY=off
+      - SHADOWSOCKS=off
+      - FIREWALL_OUTBOUND_SUBNETS=172.20.0.0/16,192.168.19.0/24
+      #      - FIREWALL_VPN_INPUT_PORTS=12345 #uncomment or remove this line based on the notes below
+      - UPDATER_PERIOD=24h
+      - HEALTH_VPN_DURATION_ADDITION=20s
+      - BLOCK_ADS=on
+      - BLOCK_MALICIOUS=on
+      - BLOCK_SURVEILLANCE=on
+      - DNS_UPDATE_PERIOD=24h
+      - DOT_PROVIDERS=cloudflare
+      - DOT=on
+      - FREE_ONLY=off
+    networks:
+      - torrentproxy
+    labels:
+      # Watchtower
+      - com.centurylinklabs.watchtower.enable=true
+      # Traefik
+      - traefik.enable=true
+      - traefik.docker.network=torrentproxy
+      # Gluetun Built-in HTTP control server (API Endpoint)
+      - traefik.http.routers.gluetun.entrypoints=websecure
+      - traefik.http.routers.gluetun.rule=Host(`gluetun.u-acres.com`)
+      - traefik.http.routers.gluetun.service=gluetun
+      - traefik.http.services.gluetun.loadbalancer.server.port=8000
+      - traefik.http.routers.gluetun.tls.certresolver=${CERTRESOLVER:-cloudflare}
+      - traefik.http.routers.gluetun.tls.domains[0].main=gluetun.u-acres.com 
+    security_opt:
+      - no-new-privileges:true
+  qbittorrent:
+    image: linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    environment:
+      - PUID=568
+      - PGID=568
+      - TZ=America/Chicago
+      - WEBUI_PORT=8081
+      - UMASK=022
+    volumes:
+      - /mnt/Apps/qbittorrent:/config
+      - /mnt/Pool01/data:/data
+    network_mode: service:gluetun
+    depends_on:  
+      gluetun:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.qbit.entrypoints=websecure
+      - traefik.http.routers.qbit.rule=Host(`qbit.u-acres.com`)
+      - traefik.http.routers.qbit.service=qbit
+      - traefik.http.services.qbit.loadbalancer.server.port=8081      - traefik.http.routers.qbit.tls.certresolver=${CERTRESOLVER:-cloudflare}
+      - traefik.http.routers.qbit.tls.domains[0].main=qbit.u-acres.com      - com.centurylinklabs.watchtower.enable=true
+
+  nzbget:
+    image: linuxserver/nzbget:latest
+    container_name: nzbget
+    environment:
+      - PUID=568
+      - PGID=568
+      - TZ=America/Chicago
+    volumes:
+      - /mnt/Apps/nzbget/config:/config
+      - /mnt/Pool01/data/usenet:/data/usenet
+    network_mode: service:gluetun
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.nzbget.entrypoints=websecure
+      - traefik.http.routers.nzbget.rule=Host(`nzbget.u-acres.com`)
+      - traefik.http.routers.nzbget.service=nzbget
+      - traefik.http.services.nzbget.loadbalancer.server.port=6789
+      - traefik.http.routers.nzbget.tls.certresolver=${CERTRESOLVER:-cloudflare}
+      - traefik.http.routers.nzbget.tls.domains[0].main=nzbget.u-acres.com
+      - com.centurylinklabs.watchtower.enable=true
+networks:
+  torrentproxy:
+    external: True
+    name: torrentproxy

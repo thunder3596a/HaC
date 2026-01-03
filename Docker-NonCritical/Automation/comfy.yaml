@@ -1,0 +1,20 @@
+version: "3.8"
+services:
+  comfyui:
+    image: ghcr.io/lecode-official/comfyui-docker:latest
+    container_name: comfyui
+    restart: unless-stopped
+    environment:
+      - USER_ID=568
+      - GROUP_ID=568
+    volumes:
+      - C:\Users\Nicho\Documents\ComfyUI\models:/opt/comfyui/models:rw
+      - C:\Users\Nicho\Documents\ComfyUI\custom_nodes:/opt/comfyui/custom_nodes:rw
+    ports:
+      - "8188:8188"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+    runtime: nvidia

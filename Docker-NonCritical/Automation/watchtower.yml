@@ -1,0 +1,13 @@
+version: '3.8'
+services:
+  watchtower:
+    container_name: watchtower
+    image: containrrr/watchtower:latest
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - TZ=America/Chicago
+      - WATCHTOWER_CLEANUP=true           # Remove old images after update
+      - WATCHTOWER_POLL_INTERVAL=300      # Check every 5 minutes
+      - WATCHTOWER_LABEL_ENABLE=true 

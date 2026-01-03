@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  pricetracker:
+    image: cybrarist/discount-bandit:v4
+    ports:
+      - "8080:80"
+    volumes:
+      - ./database/database.sqlite:/app/database/sqlite
+      - ./logs:/logs
+    environment:
+      - DB_CONNECTION=sqlite
+      - APP_TIMEZONE=UTC
+      - THEME_COLOR=Red
+      - APP_URL=https://pricetracker.u-acres.com
+      - ASSET_URL=https://pricetracker.u-acres.com
+      - EXCHANGE_RATE_API_KEY=""
+    restart: unless-stopped
+    networks:
+      - toolsproxy
+  db:
+    image: sqlite:latest
+    volumes:
+      - ./database:/var/lib/sqlite
+networks:
+  toolsproxy:
+    external: true

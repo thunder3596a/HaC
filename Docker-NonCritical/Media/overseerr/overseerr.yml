@@ -1,0 +1,29 @@
+version: "3.8"
+
+networks:
+  mediaproxy:
+    external: true
+
+services:
+  overseerr:
+    container_name: overseerr
+    image: linuxserver/overseerr:latest
+    environment:
+      - LOG_LEVEL=info
+      - PUID=568
+      - PGID=568
+      - TZ=America/Chicago
+    labels:
+      - traefik.http.routers.overseerr.entrypoints=websecure
+      - traefik.http.routers.overseerr.rule=Host(`request.u-acres.com`)
+      - traefik.http.routers.overseerr.service=overseerr
+      - traefik.http.services.overseerr.loadbalancer.server.port=5055
+      - traefik.http.routers.overseerr.tls.certresolver=${CERTRESOLVER:-cloudflare}
+      - traefik.http.routers.overseerr.tls.domains[0].main=request.u-acres.com
+      - com.centurylinklabs.watchtower.enable=true
+      - traefik.enable=true
+    networks:
+      - mediaproxy
+    restart: unless-stopped
+    volumes:
+      - /mnt/Apps/overseerr:/app/config

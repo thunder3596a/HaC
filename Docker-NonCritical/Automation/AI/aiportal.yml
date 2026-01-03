@@ -1,0 +1,24 @@
+services:
+  openWebUI:
+    image: ghcr.io/open-webui/open-webui:main
+    restart: always
+    volumes:
+      - /mnt/Apps/open-webui-local/data:/app/backend/data
+    networks:
+      - aiproxy
+    environment:
+      - TZ=America/Chicago
+      - OLLAMA_BASE_URL=https://ollama.u-acres.com
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+      - traefik.enable=true
+      - traefik.http.routers.openwebui.entrypoints=websecure
+      - traefik.http.routers.openwebui.rule=Host(`ai.u-acres.com`)
+      - traefik.http.routers.openwebui.service=openwebui
+      - traefik.http.services.openwebui.loadbalancer.server.port=8080
+      - traefik.http.routers.openwebui.tls.certresolver=${CERTRESOLVER:-cloudflare}
+      - traefik.http.routers.openwebui.tls.domains[0].main=ai.u-acres.com
+
+networks:
+  aiproxy:
+    external: true

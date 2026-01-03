@@ -1,0 +1,27 @@
+networks:
+  mediaproxy:
+    external: true
+
+services:
+  profilarr:
+    image: santiagosayshey/profilarr:latest
+    container_name: profilarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - PROFILARR_PAT=${PROFILARR_PAT}
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.profilarr.entrypoints=websecure
+      - traefik.http.routers.profilarr.rule=Host(`profilarr.${DOMAIN_NAME}`)
+      - traefik.http.routers.profilarr.service=profilarr
+      - traefik.http.services.profilarr.loadbalancer.server.port=6868
+      - traefik.http.routers.profilarr.tls.certresolver=${CERTRESOLVER:-cloudflare}
+      - traefik.http.routers.profilarr.tls.domains[0].main=profilarr.${DOMAIN_NAME}
+      - com.centurylinklabs.watchtower.enable=true
+    networks:
+      - mediaproxy
+    restart: unless-stopped
+    volumes:
+      - ${PROFILARR_CONFIG:-/mnt/Apps/profilarr/data/config}:/config

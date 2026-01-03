@@ -1,0 +1,74 @@
+name: Deploy Forgejo
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "Docker-Critical/Management/Git - Forgejo/git.yml"
+      - ".forgejo/workflows/deploy-forgejo.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: docker-critical-linux-x64
+    defaults:
+      run:
+        shell: sh
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify compose file exists
+        run: ls -l "./Docker-Critical/Management/Git - Forgejo/git.yml"
+
+      - name: Deploy Forgejo
+        working-directory: "./Docker-Critical/Management/Git - Forgejo"
+        env:
+          DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
+          CERTRESOLVER: ${{ vars.CERTRESOLVER }}
+          GIT_DB_PASSWORD: ${{ secrets.GIT_DB_PASSWORD }}
+          POSTGRES_USER: ${{ vars.POSTGRES_USER }}
+          POSTGRES_DB: ${{ vars.POSTGRES_DB }}
+        run: |
+          # Validate required vars
+          for var in GIT_DB_PASSWORD POSTGRES_USER POSTGRES_DB; do
+            eval val=\$$var
+            if [ -z "$val" ]; then
+              echo "Missing required variable: $var" >&2
+              exit 1
+            fi
+          done
+
+          # Extract defined image from compose file
+          defined_image=$(grep -m1 'image:' git.yml | awk '{print $2}')
+
+          # Get currently running image on remote host
+          running_image=$(docker --context truenas01 inspect -f '{{.Config.Image}}' forgejo 2>/dev/null || echo "none")
+
+          # Compute checksum of compose file
+          checksum=$(sha256sum git.yml | awk '{print $1}')
+          old=$(cat .git_checksum 2>/dev/null || echo "")
+
+          # Decide whether to redeploy
+          if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
+            echo "Redeploying Forgejo on remote host (truenas01)"
+
+            # Copy compose file to remote host
+            scp git.yml runner@truenas01:/tmp/git.yml
+
+            # Stop old container if exists
+            ssh runner@truenas01 "docker rm -f forgejo postgres-git || true"
+
+            # Bring stack down cleanly
+            ssh runner@truenas01 "docker compose -p git -f /tmp/git.yml down --remove-orphans || true"
+
+            # Deploy stack
+            ssh runner@truenas01 "POSTGRES_USER=${POSTGRES_USER} POSTGRES_DB=${POSTGRES_DB} GIT_DB_PASSWORD=${GIT_DB_PASSWORD} docker compose -p git -f /tmp/git.yml up -d --force-recreate"
+
+            # Save checksum locally for next comparison
+            echo "$checksum" > .git_checksum
+          else
+            echo "No changes detected; skipping redeploy"
+          fi
