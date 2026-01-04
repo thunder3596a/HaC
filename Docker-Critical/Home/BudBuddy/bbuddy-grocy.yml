@@ -1,0 +1,27 @@
+services:
+  bbuddy-grocy:
+    image: ghcr.io/justmeyer/budbuddy:latest
+    container_name: bbuddy-grocy
+    restart: unless-stopped
+    networks:
+      - homeproxy
+    environment:
+      - PUID=568
+      - PGID=568
+      - TZ=${TZ:-America/Chicago}
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.bbuddy.entrypoints=websecure
+      - traefik.http.routers.bbuddy.rule=Host(`bbuddy.${DOMAIN_NAME}`)
+      - traefik.http.routers.bbuddy.service=bbuddy
+      - traefik.http.routers.bbuddy.tls=true
+      - traefik.http.routers.bbuddy.tls.certresolver=${CERTRESOLVER:-cloudflare}
+      - traefik.http.routers.bbuddy.tls.domains[0].main=bbuddy.${DOMAIN_NAME}
+      - traefik.http.services.bbuddy.loadbalancer.server.port=8000
+      - com.centurylinklabs.watchtower.enable=true
+    volumes:
+      - /srv/bbuddy-grocy:/config
+
+networks:
+  homeproxy:
+    external: true

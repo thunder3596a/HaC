@@ -1,0 +1,28 @@
+services:
+  vscode:
+    image: codercom/code-server:latest
+    container_name: vscode
+    restart: unless-stopped
+    networks:
+      - homeproxy
+    environment:
+      - PUID=568
+      - PGID=568
+      - TZ=${TZ:-America/Chicago}
+      - PASSWORD=${VSCODE_PASSWORD}
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.vscode.entrypoints=websecure
+      - traefik.http.routers.vscode.rule=Host(`vscode.${DOMAIN_NAME}`)
+      - traefik.http.routers.vscode.service=vscode
+      - traefik.http.routers.vscode.tls=true
+      - traefik.http.routers.vscode.tls.certresolver=${CERTRESOLVER:-cloudflare}
+      - traefik.http.routers.vscode.tls.domains[0].main=vscode.${DOMAIN_NAME}
+      - traefik.http.services.vscode.loadbalancer.server.port=8080
+      - com.centurylinklabs.watchtower.enable=true
+    volumes:
+      - /srv/vscode:/home/coder/.local/share/code-server
+
+networks:
+  homeproxy:
+    external: true

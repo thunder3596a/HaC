@@ -2,37 +2,37 @@
 
 This guide covers migrating Docker-Critical services from TrueNAS (`/mnt/Apps/`) to the Debian 12 critical host using the new storage layout:
 
-- NVMe #1 (`/srv`) for critical configs, high-IO databases, MQTT, Zigbee/Z-Wave, Traefik, Node-RED, n8n
-- NVMe #2 (`/mnt/nvme-appdata`) for appdata/search/AI tiers (NetBox, HomeBox, KaraKeep Meili data, OpenWebUI, etc.)
-- HDD (`/mnt/hdd`) for backups/logs/archives (e.g., service logs, large ZIM archives)
+- SSD (`/srv`) for all critical services: Home Assistant, databases, MQTT, Zigbee/Z-Wave, Traefik, Authelia, Forgejo, NetBox, HomeBox, KaraKeep
+- HDD (`/mnt/hdd`) for backups, logs, and large archives (Kiwix ZIM files)
 
-## Pre-Migration Checklist
+## Storage Layout
 
-- [ ] Ensure Home Assistant has sufficient disk space
-- [ ] SSH access configured between hosts
-- [ ] Stop all running services on TrueNAS (optional, for data consistency)
-- [ ] Backup critical data before migration
+Your hardware consists of:
+- **512GB SSD** mounted at `/srv` — All critical services, databases, and persistent data
+- **1TB HDD** mounted at `/mnt/hdd` — Logs, backups, and large archives (e.g., Kiwix ZIM files)
+
+All Docker-Critical services are consolidated on the SSD for performance.
 
 ## Service Mapping
 
-| Service | Old Path (TrueNAS) | New Path (Critical Host) |
-|---------|-------------------|---------------------------|
-| Home Assistant | `/mnt/Apps/homeassistant` | `/srv/homeassistant/config` |
-| Avahi | `/mnt/Apps/avahi` | `/srv/avahi` |
-| ESPHome | `/mnt/Apps/esphome` | `/srv/esphome` |
-| RTL-SDR | `/mnt/Apps/rtl-sdr` | `/srv/rtl-sdr` |
-| Music Assistant | `/mnt/Apps/music-assistant` | `/srv/music-assistant` |
-| InfluxDB | `/mnt/Apps/influxdb` | `/srv/influxdb` |
-| Authelia | `/mnt/Apps/Authelia` | `/srv/authelia` |
-| Traefik | `/mnt/Apps/traefik` | `/srv/traefik` |
-| SMTP Relay | `/mnt/Apps/SMTPRelay` | `/srv/smtp-relay` (spool) + `/mnt/hdd/logs/smtp-relay` (logs) |
-| Omada | `/mnt/Apps/Omada` | `/srv/omada` (data) + `/mnt/hdd/logs/omada` (logs) |
-| Norish | `/mnt/Apps/norish` + `/mnt/Apps/Norish` | `/srv/norish` |
-| Forgejo | `/mnt/Apps/git` | `/srv/git` |
-| NetBox | `/mnt/Apps/NetBox` | `/mnt/nvme-appdata/netbox` |
-| HomeBox | `/mnt/Apps/homebox` | `/mnt/nvme-appdata/homebox` |
-| KaraKeep | `/mnt/Apps/KaraKeep` | `/mnt/nvme-appdata/karakeep` |
-| Kiwix | `/mnt/Apps/kiwix` | `/mnt/hdd/kiwix/zim` |
+| Service | Old Path (TrueNAS) | New Path (Critical Host) | Storage Tier |
+|---------|-------------------|---------------------------|--------------|
+| Home Assistant | `/mnt/Apps/homeassistant` | `/srv/homeassistant/config` | SSD |
+| Avahi | `/mnt/Apps/avahi` | `/srv/avahi` | SSD |
+| ESPHome | `/mnt/Apps/esphome` | `/srv/esphome` | SSD |
+| RTL-SDR | `/mnt/Apps/rtl-sdr` | `/srv/rtl-sdr` | SSD |
+| Music Assistant | `/mnt/Apps/music-assistant` | `/srv/music-assistant` | SSD |
+| InfluxDB | `/mnt/Apps/influxdb` | `/srv/influxdb` | SSD |
+| Authelia | `/mnt/Apps/Authelia` | `/srv/authelia` | SSD |
+| Traefik | `/mnt/Apps/traefik` | `/srv/traefik` | SSD |
+| SMTP Relay | `/mnt/Apps/SMTPRelay` | `/srv/smtp-relay` (spool) + `/mnt/hdd/logs/smtp-relay` (logs) | SSD/HDD |
+| Omada | `/mnt/Apps/Omada` | `/srv/omada` (data) + `/mnt/hdd/logs/omada` (logs) | SSD/HDD |
+| Norish | `/mnt/Apps/norish` + `/mnt/Apps/Norish` | `/srv/norish` | SSD |
+| Forgejo | `/mnt/Apps/git` | `/srv/git` | SSD |
+| NetBox | `/mnt/Apps/NetBox` | `/srv/netbox` | SSD |
+| HomeBox | `/mnt/Apps/homebox` | `/srv/homebox` | SSD |
+| KaraKeep | `/mnt/Apps/KaraKeep` | `/srv/karakeep` | SSD |
+| Kiwix | `/mnt/Apps/kiwix` | `/mnt/hdd/kiwix` | HDD |
 
 ## Migration Methods
 
@@ -101,17 +101,17 @@ done
 On the Debian host:
 ```bash
 # Check all directories exist and have content
-ls -lah /srv /mnt/nvme-appdata /mnt/hdd
+ls -lah /srv /mnt/hdd
 
 # Verify specific services
-du -sh /srv/* /mnt/nvme-appdata/* /mnt/hdd/*
+du -sh /srv/* /mnt/hdd/*
 ```
 
 ### 2. Fix Ownership/Permissions
 
 ```bash
 # Set ownership to user 568:568 (standard for linuxserver images)
-sudo chown -R 568:568 /srv/* /mnt/nvme-appdata/*
+sudo chown -R 568:568 /srv/*
 
 # Specific permission fixes
 sudo chmod 600 /srv/traefik/acme.json

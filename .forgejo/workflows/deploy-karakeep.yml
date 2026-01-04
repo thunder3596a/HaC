@@ -46,17 +46,17 @@ jobs:
           defined_image=$(grep -m1 'image:' Home/KaraKeep/karakeep.yml | awk '{print $2}')
           running_image=$(docker inspect -f '{{.Config.Image}}' karakeep 2>/dev/null || echo "none")
           checksum=$(sha256sum Home/KaraKeep/karakeep.yml | awk '{print $1}')
-          old=$(sudo cat /mnt/Apps/KaraKeep/.karakeep_checksum 2>/dev/null || echo "")
+          old=$(sudo cat /srv/karakeep/.karakeep_checksum 2>/dev/null || echo "")
 
           if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
             echo "Redeploying KaraKeep..."
-            sudo mkdir -p /mnt/Apps/KaraKeep
-            sudo cp Home/KaraKeep/karakeep.yml /mnt/Apps/KaraKeep/
-            sudo chmod 644 /mnt/Apps/KaraKeep/karakeep.yml
+            sudo mkdir -p /srv/karakeep
+            sudo cp Home/KaraKeep/karakeep.yml /srv/karakeep/
+            sudo chmod 644 /srv/karakeep/karakeep.yml
 
-            cd /mnt/Apps/KaraKeep
+            cd /srv/karakeep
             env DOMAIN_NAME=$DOMAIN_NAME \
-              KARAKEEP_DATA=${KARAKEEP_DATA:-/mnt/Apps/KaraKeep/data} \
+              KARAKEEP_DATA=${KARAKEEP_DATA:-/srv/karakeep/data} \
               MEILI_MASTER_KEY=$MEILI_MASTER_KEY \
               NEXTAUTH_SECRET=$NEXTAUTH_SECRET \
               OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-https://ollama.$DOMAIN_NAME} \
@@ -68,7 +68,7 @@ jobs:
               BROWSER_WEB_URL=${BROWSER_WEB_URL:-http://localhost:9222} \
               docker compose -p karakeep -f karakeep.yml up -d --force-recreate
 
-            sudo sh -c "echo '$checksum' > /mnt/Apps/KaraKeep/.karakeep_checksum"
+            sudo sh -c "echo '$checksum' > /srv/karakeep/.karakeep_checksum"
           else
             echo "No changes detected; skipping redeploy"
           fi

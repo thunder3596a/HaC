@@ -1,0 +1,22 @@
+services:
+  rtl433:
+    image: hertzg/rtl_433:latest
+    container_name: rtl433
+    restart: unless-stopped
+    networks:
+      - homeproxy
+    environment:
+      - PUID=568
+      - PGID=568
+      - TZ=${TZ:-America/Chicago}
+      - RTL_433_OPTS=${RTL_433_OPTS}
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+    volumes:
+      - /srv/rtl433:/config
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+
+networks:
+  homeproxy:
+    external: true

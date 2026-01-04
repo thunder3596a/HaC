@@ -1,0 +1,31 @@
+services:
+  nut:
+    image: ghcr.io/upsnap/nut:latest
+    container_name: nut
+    restart: unless-stopped
+    networks:
+      - homeproxy
+    environment:
+      - PUID=568
+      - PGID=568
+      - TZ=${TZ:-America/Chicago}
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.nut.entrypoints=websecure
+      - traefik.http.routers.nut.rule=Host(`nut.${DOMAIN_NAME}`)
+      - traefik.http.routers.nut.service=nut
+      - traefik.http.routers.nut.tls=true
+      - traefik.http.routers.nut.tls.certresolver=${CERTRESOLVER:-cloudflare}
+      - traefik.http.routers.nut.tls.domains[0].main=nut.${DOMAIN_NAME}
+      - traefik.http.services.nut.loadbalancer.server.port=3493
+      - com.centurylinklabs.watchtower.enable=true
+    volumes:
+      - /srv/nut:/config
+    devices:
+      - /dev/usb:/dev/usb
+    cap_add:
+      - SYS_RAWIO
+
+networks:
+  homeproxy:
+    external: true

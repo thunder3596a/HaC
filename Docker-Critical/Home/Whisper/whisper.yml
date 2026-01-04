@@ -1,0 +1,29 @@
+services:
+  whisper:
+    image: openai/whisper:latest
+    container_name: whisper
+    restart: unless-stopped
+    networks:
+      - homeproxy
+    environment:
+      - TZ=${TZ:-America/Chicago}
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.whisper.entrypoints=websecure
+      - traefik.http.routers.whisper.rule=Host(`whisper.${DOMAIN_NAME}`)
+      - traefik.http.routers.whisper.service=whisper
+      - traefik.http.routers.whisper.tls=true
+      - traefik.http.routers.whisper.tls.certresolver=${CERTRESOLVER:-cloudflare}
+      - traefik.http.routers.whisper.tls.domains[0].main=whisper.${DOMAIN_NAME}
+      - traefik.http.services.whisper.loadbalancer.server.port=7860
+      - com.centurylinklabs.watchtower.enable=true
+    volumes:
+      - /srv/whisper:/root/.cache/whisper
+    devices:
+      - /dev/null:/dev/null
+    cap_add:
+      - SYS_NICE
+
+networks:
+  homeproxy:
+    external: true

@@ -1,0 +1,20 @@
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    restart: unless-stopped
+    networks:
+      - homeproxy
+    environment:
+      - TZ=${TZ:-America/Chicago}
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+    volumes:
+      - /srv/cloudflared:/config
+    command: tunnel --config /config/config.yml run
+    cap_add:
+      - NET_ADMIN
+
+networks:
+  homeproxy:
+    external: true

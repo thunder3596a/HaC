@@ -25,15 +25,15 @@ jobs:
 
       - name: Copy theme files to host
         run: |
-          sudo mkdir -p /mnt/Apps/NetBox/theme
-          sudo cp "./Docker-Critical/Home/NetBox/netbox.yml" /mnt/Apps/NetBox/
-          sudo cp "./Docker-Critical/Home/NetBox/docker-compose.override.yml" /mnt/Apps/NetBox/
-          sudo cp "./Docker-Critical/Home/NetBox/Dockerfile-Plugins" /mnt/Apps/NetBox/
-          sudo cp "./Docker-Critical/Home/NetBox/theme"/*.py /mnt/Apps/NetBox/theme/ || true
-          sudo cp "./Docker-Critical/Home/NetBox/theme"/*.txt /mnt/Apps/NetBox/theme/ || true
-          sudo cp "./Docker-Critical/Home/NetBox/theme"/*.sh /mnt/Apps/NetBox/theme/ || true
-          sudo cp "./Docker-Critical/Home/NetBox/theme"/*.css /mnt/Apps/NetBox/theme/ || true
-          echo "All files copied to /mnt/Apps/NetBox/"
+          sudo mkdir -p /srv/netbox/theme
+          sudo cp "./Docker-Critical/Home/NetBox/netbox.yml" /srv/netbox/
+          sudo cp "./Docker-Critical/Home/NetBox/docker-compose.override.yml" /srv/netbox/
+          sudo cp "./Docker-Critical/Home/NetBox/Dockerfile-Plugins" /srv/netbox/
+          sudo cp "./Docker-Critical/Home/NetBox/theme"/*.py /srv/netbox/theme/ || true
+          sudo cp "./Docker-Critical/Home/NetBox/theme"/*.txt /srv/netbox/theme/ || true
+          sudo cp "./Docker-Critical/Home/NetBox/theme"/*.sh /srv/netbox/theme/ || true
+          sudo cp "./Docker-Critical/Home/NetBox/theme"/*.css /srv/netbox/theme/ || true
+          echo "All files copied to /srv/netbox/"
 
       - name: Deploy NetBox
         working-directory: "./Docker-Critical/Home/NetBox"
@@ -79,13 +79,13 @@ jobs:
           defined_image=$(grep -m1 'image:' netbox.yml | awk '{print $2}')
           running_image=$(docker inspect -f '{{.Config.Image}}' netbox 2>/dev/null || echo "none")
           checksum=$(sha256sum netbox.yml | awk '{print $1}')
-          old=$(sudo cat /mnt/Apps/NetBox/.netbox_checksum 2>/dev/null || echo "")
+          old=$(sudo cat /srv/netbox/.netbox_checksum 2>/dev/null || echo "")
 
           if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
             echo "Redeploying NetBox..."
-            cd /mnt/Apps/NetBox
+            cd /srv/netbox
             docker compose -p netbox down --remove-orphans || true
             docker compose -p netbox build --no-cache || true
             docker compose -p netbox -f netbox.yml up -d --force-recreate
-            sudo sh -c "echo '$checksum' > /mnt/Apps/NetBox/.netbox_checksum"
+            sudo sh -c "echo '$checksum' > /srv/netbox/.netbox_checksum"
           fi

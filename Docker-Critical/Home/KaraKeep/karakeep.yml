@@ -3,7 +3,7 @@ services:
     image: ghcr.io/karakeep-app/karakeep:release
     restart: unless-stopped
     volumes:
-      - ${KARAKEEP_DATA:-/mnt/nvme-appdata/karakeep/data}:/data
+      - ${KARAKEEP_DATA:-/srv/karakeep/data}:/data
     networks:
       - toolsproxy
     labels:
@@ -47,7 +47,7 @@ services:
       MEILI_ENV: production
     network_mode: service:web
     volumes:
-      - /mnt/nvme-appdata/karakeep/meili_data:/meili_data
+      - /srv/karakeep/meili_data:/meili_data
 networks:
   toolsproxy:
     external: true
