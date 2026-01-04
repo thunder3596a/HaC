@@ -44,6 +44,7 @@ services:
       - "8123:8123"
     depends_on:
       - mariadb
+      - mosquitto
 
   mariadb:
     image: mariadb:latest
@@ -65,6 +66,29 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
+
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    container_name: homeassistant-mqtt
+    restart: unless-stopped
+    networks:
+      - homeproxy
+    ports:
+      - "1883:1883"
+      - "8883:8883"
+    environment:
+      - TZ=${TZ:-America/Chicago}
+    volumes:
+      - /srv/homeassistant/mosquitto/config:/mosquitto/config
+      - /srv/homeassistant/mosquitto/data:/mosquitto/data
+      - /srv/homeassistant/mosquitto/log:/mosquitto/log
+    healthcheck:
+      test:
+        ["CMD", "mosquitto_sub", "-h", "127.0.0.1", "-t", "$$SYS/#", "-C", "1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
   esphome:
     image: ghcr.io/esphome/esphome:latest
     container_name: esphome

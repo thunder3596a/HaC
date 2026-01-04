@@ -1,22 +1,25 @@
 services:
   govee2mqtt:
-    image: wernerhp/govee2mqtt:latest
+    image: ghcr.io/wez/govee2mqtt:latest
     container_name: govee2mqtt
     restart: unless-stopped
-    networks:
-      - homeproxy
+    network_mode: host
     environment:
-      - PUID=568
-      - PGID=568
-      - TZ=${TZ:-America/Chicago}
-      - GOVEE_DEVICES=${GOVEE_DEVICES}
-      - MQTT_HOST=${MQTT_HOST:-mosquitto}
-      - MQTT_PORT=1883
+      - GOVEE_EMAIL=${GOVEE_EMAIL}
+      - GOVEE_PASSWORD=${GOVEE_PASSWORD}
       - GOVEE_API_KEY=${GOVEE_API_KEY}
+      - GOVEE_MQTT_HOST=localhost
+      - GOVEE_MQTT_PORT=1883
+      - GOVEE_MQTT_USER=${GOVEE_MQTT_USER:-}
+      - GOVEE_MQTT_PASSWORD=${GOVEE_MQTT_PASSWORD:-}
+      - GOVEE_TEMPERATURE_SCALE=${GOVEE_TEMPERATURE_SCALE:-C}
+      - RUST_LOG_STYLE=always
+      - RUST_LOG=${RUST_LOG:-govee=info}
+      - TZ=${TZ:-America/Chicago}
     labels:
       - com.centurylinklabs.watchtower.enable=true
     volumes:
-      - /srv/govee2mqtt:/config
+      - /srv/govee2mqtt/data:/data
     depends_on:
       - mosquitto
 
