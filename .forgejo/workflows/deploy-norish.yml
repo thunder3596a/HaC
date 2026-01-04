@@ -11,7 +11,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: docker-critical-linux-x64
+    runs-on: docker-critical:host
 
     defaults:
       run:
