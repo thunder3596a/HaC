@@ -1,6 +1,6 @@
 services:
   avahi:
-    image: ghcr.io/linuxserver/avahi:latest
+    image: lscr.io/linuxserver/avahi:latest
     container_name: avahi
     restart: unless-stopped
     network_mode: host
