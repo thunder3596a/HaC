@@ -75,7 +75,7 @@ services:
       - proxy
       - homeproxy
       - gitproxy
-      - authnet
+      - authnet #
 
     ports:
       - 80:80
