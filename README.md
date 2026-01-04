@@ -44,7 +44,10 @@ docker/
 
 ## 🟢 Docker-Critical Services
 
-Services running on the primary home automation host (`docker-critical-linux-x64`). All use `/opt/Docker-Critical/` for persistent data.
+Services running on the primary home automation host (`docker-critical-linux-x64`). Storage layout:
+- `/srv` (NVMe #1) for critical configs and high-IO databases
+- `/mnt/nvme-appdata` (NVMe #2) for appdata/search/AI tiers (NetBox, HomeBox, KaraKeep Meili, etc.)
+- `/mnt/hdd` for backups/logs/archives (e.g., ZIM files, service logs)
 
 ### Authentication & Access Control
 - **Authelia** (`authelia.yml`) - SSO and authentication
@@ -80,7 +83,7 @@ Services running on the primary home automation host (`docker-critical-linux-x64
   - 433 MHz and 915 MHz frequency monitoring
   - MQTT integration with Home Assistant
   - Weather station and sensor data decoding
-  - Config: `/opt/Docker-Critical/rtl-sdr/`
+  - Config: `/srv/rtl-sdr/`
 
 ### Infrastructure Services
 - **Forgejo** (`Management/Git - Forgejo/git.yml`) - Self-hosted Git server
@@ -95,6 +98,13 @@ Services running on the primary home automation host (`docker-critical-linux-x64
   - Custom theming via sage-green theme
   - PostgreSQL + Redis backends
   - Dashboard at `netbox.${DOMAIN_NAME}`
+
+### Data & Monitoring
+- **InfluxDB** (`Tools/InfluxDB/influxdb.yml`) - Time-series database
+  - Stores metrics and sensor data from Home Assistant
+  - Historical data archival and analysis
+  - Flux query language for complex aggregations
+  - Dashboard at `influx.${DOMAIN_NAME}`
 
 ### Home Services
 - **Norish** (`Home/Cooking/norish.yml`) - Recipe management
@@ -115,6 +125,13 @@ Services running on the primary home automation host (`docker-critical-linux-x64
   - Video collection organization
   - Meilisearch integration for full-text search
   - Dashboard at `kara.${DOMAIN_NAME}`
+
+- **Music Assistant** (`Home/MusicAssistant/musicassistant.yml`) - Music server and player management
+  - Unified music library from multiple providers (Spotify, Plex, Jellyfin, local files)
+  - Multi-player support (Sonos, AirPlay, Google Cast, DLNA, etc.)
+  - Local audio file streaming with quality selection
+  - Host network mode for mDNS/player discovery
+  - Dashboard at `music.${DOMAIN_NAME}`
 
 ---
 
@@ -222,6 +239,8 @@ All services deploy via Forgejo CI/CD workflows in `.forgejo/workflows/`:
 | Home Assistant | `deploy-homeassistant.yml` | Push to `Docker-Critical/Home/HomeAssistant/**` |
 | ESPHome | (included in HA) | Push to `Docker-Critical/Home/HomeAssistant/**` |
 | RTL-SDR | `deploy-rtl-sdr.yml` | Push to `Docker-Critical/Home/RTL-SDR/**` |
+| Music Assistant | `deploy-musicassistant.yml` | Push to `Docker-Critical/Home/MusicAssistant/**` |
+| InfluxDB | `deploy-influxdb.yml` | Push to `Docker-Critical/Tools/InfluxDB/**` |
 | NetBox | `deploy-netbox.yml` | Push to `Docker-Critical/Home/NetBox/**` |
 | Norish | `deploy-norish.yml` | Push to `Docker-Critical/Home/Cooking/**` |
 | Forgejo | `deploy-forgejo.yml` | Push to `Docker-Critical/Management/Git*/**` |
@@ -241,6 +260,7 @@ Global variables (set in repository settings):
 - `POSTGRES_USER`, `POSTGRES_DB` - PostgreSQL defaults
 - `OLLAMA_BASE_URL` - Ollama LLM server URL
 - `INFERENCE_*` - Model selection for KaraKeep AI features
+- `INFLUXDB_ADMIN_USER` - InfluxDB admin username (default: `admin`)
 
 ### Required Forgejo Secrets
 Encrypted secrets (set in repository settings):
@@ -255,31 +275,40 @@ Encrypted secrets (set in repository settings):
 - `MQTT_PASSWORD` - MQTT broker password
 - `PROFILARR_PAT` - Profilarr API token
 - `SMTP_*` - SMTP relay credentials
+- `INFLUXDB_ADMIN_PASSWORD` - InfluxDB admin password
 
 ---
 
 ## 📦 Data Locations
 
 ### Critical Services
-Persistent data on primary host:
+Persistent data on primary host (tiered):
 ```
-/opt/Docker-Critical/
-├── Authelia/              # SSO database and config
+/srv/                      # NVMe #1 (critical + high IO)
+├── authelia/              # SSO database and config
 ├── traefik/               # Reverse proxy config and ACME certs
 ├── git/                   # Forgejo repositories and config
-├── NetBox/                # IPAM database
-├── netbox/                # IP docs
-├── norish/                # Recipe database
-├── homebox/               # Household inventory
-├── kiwix/                 # Wikipedia mirrors
-├── KaraKeep/              # Media library
-├── avahi/                 # mDNS reflection config
 ├── homeassistant/         # HA config and automations
+├── avahi/                 # mDNS reflection config
 ├── esphome/               # ESPHome device configs
 ├── rtl-sdr/               # RTL-SDR config and decoded data
-├── Omada/                 # Network controller data
-├── SMTPRelay/             # SMTP spool and logs
-└── [other services]
+├── music-assistant/       # Music Assistant data
+├── influxdb/              # Time-series database and config
+├── norish/                # Recipe database (app + DB + redis)
+├── smtp-relay/            # Postfix spool
+├── omada/                 # Controller data
+└── git/                   # Forgejo data + Postgres
+
+/mnt/nvme-appdata/         # NVMe #2 (appdata/search/AI)
+├── netbox/                # IPAM app, Postgres, Redis, theme
+├── homebox/               # HomeBox data/config
+└── karakeep/              # KaraKeep data + Meilisearch
+
+/mnt/hdd/                  # HDD (bulk/logs/archives)
+├── logs/omada             # Omada logs
+├── logs/smtp-relay        # Postfix logs
+├── kiwix/zim              # Kiwix ZIM archives
+└── backups/               # Cold backups/archives
 ```
 
 ### Non-Critical Services
@@ -379,6 +408,8 @@ Traefik (Critical)
 ├── Home Assistant (home automation hub)
 │   ├── ESPHome (device management)
 │   └── RTL-SDR (wireless sensors)
+├── InfluxDB (metrics and historical data)
+├── Music Assistant (music server and players)
 ├── NetBox (infrastructure docs)
 ├── Norish (recipes)
 ├── KaraKeep (media library)
@@ -430,10 +461,10 @@ docker inspect <service> | grep traefik
 ### Permissions errors
 ```bash
 # Verify ownership
-ls -la /opt/Docker-Critical/<service>/
+ls -la /srv/<service>/
 
 # Fix permissions
-sudo chown -R 568:568 /opt/Docker-Critical/<service>/
+sudo chown -R 568:568 /srv/<service>/
 ```
 
 ---

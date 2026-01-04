@@ -37,8 +37,8 @@ services:
       POSTFIX_smtp_sasl_security_options: "noanonymous"
 
     volumes:
-      - /opt/Docker-Critical/SMTPRelay/spool:/var/spool/postfix
-      - /opt/Docker-Critical/SMTPRelay/log:/var/log/postfix
+      - /srv/smtp-relay/spool:/var/spool/postfix
+      - /mnt/hdd/logs/smtp-relay:/var/log/postfix
 
 networks:
   toolsproxy:

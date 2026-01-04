@@ -31,6 +31,10 @@ jobs:
         working-directory: "./Docker-Critical/Home/Cooking"
         env:
           CERTRESOLVER: ${{ vars.CERTRESOLVER }}
+          DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
+          NORISH_MASTER_KEY: ${{ secrets.NORISH_MASTER_KEY }}
+          NORISH_OIDC_CLIENT_SECRET: ${{ secrets.NORISH_OIDC_CLIENT_SECRET }}
+          NORISH_DB_PASSWORD: ${{ secrets.NORISH_DB_PASSWORD }}
         run: |
           # Extract defined image
           defined_image=$(grep -m1 'image:' norish.yml | awk '{print $2}')
@@ -59,7 +63,7 @@ jobs:
             ssh runner@truenas01 "docker compose -p norish -f /tmp/norish.yml down --remove-orphans || true"
 
             # Deploy the entire stack under project 'norish'
-            ssh runner@truenas01 "CERTRESOLVER=$CERTRESOLVER docker compose -p norish -f /tmp/norish.yml up -d --force-recreate"
+            ssh runner@truenas01 "CERTRESOLVER=$CERTRESOLVER DOMAIN_NAME=$DOMAIN_NAME NORISH_MASTER_KEY=$NORISH_MASTER_KEY NORISH_OIDC_CLIENT_SECRET=$NORISH_OIDC_CLIENT_SECRET NORISH_DB_PASSWORD=$NORISH_DB_PASSWORD docker compose -p norish -f /tmp/norish.yml up -d --force-recreate"
 
             # Save checksum
             echo "$checksum" > .norish_checksum

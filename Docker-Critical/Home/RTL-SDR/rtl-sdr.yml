@@ -10,8 +10,8 @@ services:
     devices:
       - /dev/bus/usb:/dev/bus/usb
     volumes:
-      - /opt/Docker-Critical/rtl-sdr/config:/config
-      - /opt/Docker-Critical/rtl-sdr/data:/data
+      - /srv/rtl-sdr/config:/config
+      - /srv/rtl-sdr/data:/data
     command: >
       -F mqtt://${MQTT_HOST:-homeassistant}:${MQTT_PORT:-1883},user=${MQTT_USER},pass=${MQTT_PASSWORD},retain=1,devices=rtl_433[/model][/id]
       -M time:unix:usec:utc

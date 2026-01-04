@@ -6,7 +6,7 @@ services:
     networks:
       - authnet
     volumes:
-      - /opt/Docker-Critical/Authelia/config:/config
+      - /srv/authelia/config:/config
     environment:
       - TZ=America/Chicago
     labels:
@@ -27,7 +27,7 @@ services:
     networks:
       - authnet
     volumes:
-      - /opt/Docker-Critical/Authelia/authelia-db:/var/lib/postgresql/data
+      - /srv/authelia/postgres:/var/lib/postgresql/data
     environment:
       - POSTGRES_DB=authelia
       - POSTGRES_USER=authelia
@@ -42,10 +42,10 @@ services:
     expose:
       - "3890"
     env_file:
-      - /opt/Docker-Critical/Authelia/lldap/container-vars.env
+      - /srv/authelia/lldap/container-vars.env
     volumes:
-      - /opt/Docker-Critical/Authelia/lldap/data:/data
-      - /opt/Docker-Critical/Authelia/lldap/secrets:/secrets
+      - /srv/authelia/lldap/data:/data
+      - /srv/authelia/lldap/secrets:/secrets
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.lldap.rule=Host(`ldapadmin.${DOMAIN_NAME}`)"

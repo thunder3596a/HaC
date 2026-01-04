@@ -8,7 +8,26 @@ set -e  # Exit on error
 SOURCE_HOST="truenas01"
 SOURCE_USER="runner"
 SOURCE_BASE="/mnt/Apps"
-TARGET_BASE="/opt/Docker-Critical"
+
+declare -A TARGET_PATHS=(
+    [Authelia]="/srv/authelia"
+    [traefik]="/srv/traefik"
+    [SMTPRelay]="/srv/smtp-relay"
+    [Omada]="/srv/omada"
+    [KaraKeep]="/mnt/nvme-appdata/karakeep"
+    [homebox]="/mnt/nvme-appdata/homebox"
+    [kiwix]="/mnt/hdd/kiwix/zim"
+    [NetBox]="/mnt/nvme-appdata/netbox"
+    [norish]="/srv/norish"
+    [Norish]="/srv/norish"
+    [git]="/srv/git"
+    [homeassistant]="/srv/homeassistant/config"
+    [avahi]="/srv/avahi"
+    [esphome]="/srv/esphome"
+    [rtl-sdr]="/srv/rtl-sdr"
+    [music-assistant]="/srv/music-assistant"
+    [influxdb]="/srv/influxdb"
+)
 
 # Color output
 RED='\033[0;31m'
@@ -18,59 +37,31 @@ NC='\033[0m' # No Color
 
 echo -e "${GREEN}=== Docker-Critical Data Migration ===${NC}"
 echo "Source: ${SOURCE_USER}@${SOURCE_HOST}:${SOURCE_BASE}"
-echo "Target: ${TARGET_BASE}"
+echo "Targets: /srv (critical), /mnt/nvme-appdata (appdata), /mnt/hdd (logs/archives)"
 echo ""
 
-# Create base directory
-echo -e "${YELLOW}Creating base directory...${NC}"
-sudo mkdir -p "${TARGET_BASE}"
-
 # Function to migrate a service
-migrate_service() {
-    local service_name=$1
-    local source_path="${SOURCE_USER}@${SOURCE_HOST}:${SOURCE_BASE}/${service_name}"
-    local target_path="${TARGET_BASE}/${service_name}"
-    
-    echo -e "${YELLOW}Migrating ${service_name}...${NC}"
-    
-    # Create target directory
+echo -e "${GREEN}Starting service migrations...${NC}\n"
+
+for service_name in "${!TARGET_PATHS[@]}"; do
+    source_path="${SOURCE_USER}@${SOURCE_HOST}:${SOURCE_BASE}/${service_name}"
+    target_path="${TARGET_PATHS[$service_name]}"
+
+    echo -e "${YELLOW}Migrating ${service_name} -> ${target_path}...${NC}"
     sudo mkdir -p "${target_path}"
-    
-    # Rsync data from source to target
+
     sudo rsync -avz --progress \
         -e "ssh -o StrictHostKeyChecking=no" \
         "${source_path}/" \
         "${target_path}/"
-    
+
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}✓ ${service_name} migrated successfully${NC}"
     else
         echo -e "${RED}✗ ${service_name} migration failed${NC}"
-        return 1
+        exit 1
     fi
-}
-
-# Migrate all services
-echo -e "${GREEN}Starting service migrations...${NC}\n"
-
-# Auth services
-migrate_service "Authelia"
-
-# Networking services
-migrate_service "traefik"
-migrate_service "SMTPRelay"
-migrate_service "Omada"
-
-# Home services
-migrate_service "KaraKeep"
-migrate_service "homebox"
-migrate_service "kiwix"
-migrate_service "NetBox"
-migrate_service "norish"
-migrate_service "Norish"  # Case difference
-
-# Management services
-migrate_service "git"
+done
 
 echo ""
 echo -e "${GREEN}=== Migration Summary ===${NC}"

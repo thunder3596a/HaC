@@ -9,12 +9,12 @@ services:
       - homeproxy
     user: "568:568"
     volumes:
-      - /opt/Docker-Critical/norish/app/uploads:/app/uploads
+      - /srv/norish/app/uploads:/app/uploads
     environment:
       # Core settings (required)
-      AUTH_URL: https://norish.u-acres.com
-      DATABASE_URL: postgres://postgres:norish@norish-db:5432/norish
-      MASTER_KEY: JJexQrxL1C4lXM5nm6xYmdB0T3vDyqXT317EUNWislQ= # Generate with: openssl rand -base64 32
+      AUTH_URL: https://norish.${DOMAIN_NAME}
+      DATABASE_URL: postgres://postgres:${NORISH_DB_PASSWORD}@norish-db:5432/norish
+      MASTER_KEY: ${NORISH_MASTER_KEY} # Secret
       CHROME_WS_ENDPOINT: ws://chrome-headless:3000
       REDIS_URL: redis://redis:6379
 
@@ -22,7 +22,7 @@ services:
       # NEXT_PUBLIC_LOG_LEVEL: info       # trace, debug, info, warn, error, fatal (default: info in prod, debug in dev)
       # TRUSTED_ORIGINS:http://192.168.1.100:3000,https://norish.example.com  # Additional trusted origins, comma separated. Useful when behind a proxy or using multiple domains.
       # YT_DLP_BIN_DIR: # Custom folder path for `yt-dlp` (default: /app/bin)
-      TRUSTED_ORIGINS: https://norish.u-acres.com
+      TRUSTED_ORIGINS: https://norish.${DOMAIN_NAME}
       # ─────────────────────────────────────────────────────────────────────────
       # FIRST USER SETUP
       # ─────────────────────────────────────────────────────────────────────────
@@ -37,10 +37,10 @@ services:
 
       # Option 2: OIDC (Authentik, Keycloak, PocketID, etc.)
       OIDC_NAME: Authelia
-      OIDC_ISSUER: https://authelia.u-acres.com
+      OIDC_ISSUER: https://authelia.${DOMAIN_NAME}
       OIDC_CLIENT_ID: norish
-      OIDC_CLIENT_SECRET: JJexQrxL1C4lXM5nm6xYmdB0T3vDyqXT317EUNWislQ=
-      OIDC_WELLKNOWN: https://authelia.u-acres.com/.well-known/openid-configuration
+      OIDC_CLIENT_SECRET: ${NORISH_OIDC_CLIENT_SECRET} #secret
+      OIDC_WELLKNOWN: https://authelia.${DOMAIN_NAME}/.well-known/openid-configuration
       # Wellknown is optional: By default the wellknown URL is derived from the issuer by appending /.well-known/openid-configuration
 
       # Option 3: GitHub OAuth (uncomment and remove OIDC above)
@@ -55,11 +55,11 @@ services:
       - redis
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.norish.rule=Host(`norish.u-acres.com`)"
+      - "traefik.http.routers.norish.rule=Host(`norish.${DOMAIN_NAME}`)"
       - "traefik.http.routers.norish.entrypoints=websecure"
       - "traefik.http.routers.norish.tls=true"
       - "traefik.http.routers.norish.tls.certresolver=${CERTRESOLVER:-cloudflare}"
-      - "traefik.http.routers.norish.tls.domains[0].main=norish.u-acres.com"
+      - "traefik.http.routers.norish.tls.domains[0].main=norish.${DOMAIN_NAME}"
       - "traefik.http.services.norish.loadbalancer.server.port=3000"
       - "traefik.http.routers.norish.middlewares=authelia@docker"
 
@@ -69,12 +69,12 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: norish
+      POSTGRES_PASSWORD: ${NORISH_DB_PASSWORD}
       POSTGRES_DB: norish
     networks:
       - homeproxy
     volumes:
-      - /opt/Docker-Critical/Norish/norish-db/data:/var/lib/postgresql/data
+      - /srv/norish/postgres:/var/lib/postgresql/data
 
   # Chrome headless
   chrome-headless:
@@ -99,7 +99,7 @@ services:
     networks:
       - homeproxy
     volumes:
-      - /opt/Docker-Critical/norish/redis_data:/data
+      - /srv/norish/redis_data:/data
 networks:
   homeproxy:
     external: true

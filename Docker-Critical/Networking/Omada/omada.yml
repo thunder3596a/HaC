@@ -39,8 +39,8 @@ services:
       - traefik.http.routers.omada.tls.domains[0].main=omada.${DOMAIN_NAME}
       - com.centurylinklabs.watchtower.enable=true
     volumes:
-      - /opt/Docker-Critical/Omada/data:/opt/tplink/EAPController/data
-      - /opt/Docker-Critical/Omada/logs:/opt/tplink/EAPController/logs
+      - /srv/omada/data:/opt/tplink/EAPController/data
+      - /mnt/hdd/logs/omada:/opt/tplink/EAPController/logs
     healthcheck:
       test: ["CMD", "curl", "-f", "-k", "https://localhost:8043"]
       interval: 30s

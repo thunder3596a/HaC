@@ -20,8 +20,8 @@ services:
       - com.centurylinklabs.watchtower.enable=true
       - traefik.enable=true
     volumes:
-      - /opt/Docker-Critical/homebox/data:/app/data
-      - /opt/Docker-Critical/homebox/config:/app/config
+      - /srv/homebox/data:/app/data
+      - /srv/homebox/config:/app/config
 networks:
   homeproxy:
     external: True

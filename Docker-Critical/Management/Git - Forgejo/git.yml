@@ -28,7 +28,7 @@ services:
     networks:
       - gitproxy
     volumes:
-      - /opt/Docker-Critical/git/data:/data
+      - /srv/git/data:/data
       - ./sage-modern.css:/data/gitea/public/assets/css/theme-sage-modern.css
     ports:
       - 192.168.19.11:3000:3000
@@ -59,4 +59,4 @@ services:
     labels:
       - com.centurylinklabs.watchtower.enable=true
     volumes:
-      - /opt/Docker-Critical/git/postgres:/var/lib/postgresql/data
+      - /srv/git/postgres:/var/lib/postgresql/data

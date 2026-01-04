@@ -8,7 +8,7 @@ services:
     networks:
       - homeproxy
     volumes:
-      - /opt/Docker-Critical/kiwix/zim:/data:ro
+      - /mnt/hdd/kiwix/zim:/data:ro
     command:
       [
         "kiwix-serve",

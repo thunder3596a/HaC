@@ -1,0 +1,33 @@
+services:
+  music-assistant:
+    image: ghcr.io/music-assistant/server:latest
+    container_name: music-assistant
+    restart: unless-stopped
+    # Music Assistant requires host network mode for mDNS and player discovery
+    network_mode: host
+    environment:
+      - TZ=${TZ:-America/Chicago}
+      - LOG_LEVEL=info
+    # Required privileges for mounting SMB/NFS shares and device discovery
+    cap_add:
+      - SYS_ADMIN
+      - DAC_READ_SEARCH
+    security_opt:
+      - apparmor:unconfined
+    volumes:
+      - /srv/music-assistant/data:/data
+      # Mount media library for local file access (optional, adjust path as needed)
+      - /mnt/Pool01/data/media/music:/media/music:ro
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.musicassistant.entrypoints=websecure
+      - traefik.http.routers.musicassistant.rule=Host(`music.${DOMAIN_NAME}`)
+      - traefik.http.routers.musicassistant.service=musicassistant
+      - traefik.http.services.musicassistant.loadbalancer.server.port=8095
+      - com.centurylinklabs.watchtower.enable=true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8095/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s

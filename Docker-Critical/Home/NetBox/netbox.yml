@@ -53,11 +53,11 @@ services:
       VERIFY_SSL: ${VERIFY_SSL}
 
     volumes:
-      - /opt/Docker-Critical/NetBox/media:/opt/netbox/netbox/media
-      - /opt/Docker-Critical/NetBox/reports:/opt/netbox/netbox/reports
-      - /opt/Docker-Critical/NetBox/scripts:/opt/netbox/netbox/scripts
-      - /opt/Docker-Critical/NetBox/theme/extra.py:/etc/netbox/config/extra.py:ro
-      - /opt/Docker-Critical/NetBox/theme/sage.css:/opt/netbox/netbox/static/netbox/css/sage.css:ro
+      - /mnt/nvme-appdata/netbox/media:/opt/netbox/netbox/media
+      - /mnt/nvme-appdata/netbox/reports:/opt/netbox/netbox/reports
+      - /mnt/nvme-appdata/netbox/scripts:/opt/netbox/netbox/scripts
+      - /mnt/nvme-appdata/netbox/theme/extra.py:/etc/netbox/config/extra.py:ro
+      - /mnt/nvme-appdata/netbox/theme/sage.css:/opt/netbox/netbox/static/netbox/css/sage.css:ro
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/"]
       interval: 30s
@@ -123,7 +123,7 @@ services:
       POSTGRES_USER: ${NETBOX_DB_USER}
       POSTGRES_PASSWORD: ${NETBOX_DB_PASSWORD}
     volumes:
-      - /opt/Docker-Critical/NetBox/postgres:/var/lib/postgresql/data
+      - /mnt/nvme-appdata/netbox/postgres:/var/lib/postgresql/data
 
   netbox-redis:
     image: redis:7-alpine
@@ -133,7 +133,7 @@ services:
       - toolsproxy
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
-      - /opt/Docker-Critical/NetBox/redis:/data
+      - /mnt/nvme-appdata/netbox/redis:/data
 
 networks:
   toolsproxy:

@@ -10,7 +10,7 @@ services:
     environment:
       - TZ=${TZ:-America/Chicago}
     volumes:
-      - /opt/Docker-Critical/avahi:/config
+      - /srv/avahi:/config
       - /var/run/dbus:/var/run/dbus:ro
 
   homeassistant:
@@ -33,7 +33,7 @@ services:
       - traefik.http.services.homeassistant.loadbalancer.server.port=8123
       - com.centurylinklabs.watchtower.enable=true
     volumes:
-      - /opt/Docker-Critical/homeassistant:/config
+      - /srv/homeassistant/config:/config
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8123/"]
       interval: 30s
@@ -60,7 +60,7 @@ services:
       - traefik.http.services.esphome.loadbalancer.server.port=6052
       - com.centurylinklabs.watchtower.enable=true
     volumes:
-      - /opt/Docker-Critical/esphome:/config
+      - /srv/esphome:/config
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:6052/"]
       interval: 30s

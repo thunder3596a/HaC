@@ -11,7 +11,7 @@ lsusb | grep RTL
 ```
 
 ### 2. Configuration
-Edit `/opt/Docker-Critical/rtl-sdr/config/rtl_433.conf` to customize:
+Edit `/srv/rtl-sdr/config/rtl_433.conf` to customize:
 - Frequency (default: 433.92 MHz)
 - Protocols to decode
 - Output format
