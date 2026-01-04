@@ -40,7 +40,8 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
-
+    ports:
+      - "8123:8123"
   esphome:
     image: ghcr.io/esphome/esphome:latest
     container_name: esphome
