@@ -104,7 +104,6 @@ services:
       - /run/dbus:/run/dbus:ro
     ports:
       - "5580:5580"
-      - "5353:5353/udp"
     cap_add:
       - NET_ADMIN
     healthcheck:
