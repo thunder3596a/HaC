@@ -37,8 +37,6 @@ services:
       - traefik.http.routers.homeassistant.tls.domains[0].main=ha.${DOMAIN_NAME}
       - traefik.http.services.homeassistant.loadbalancer.server.port=8123
       - com.centurylinklabs.watchtower.enable=true
-    volumes:
-      - /srv/homeassistant/config:/config
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8123/"]
       interval: 30s
