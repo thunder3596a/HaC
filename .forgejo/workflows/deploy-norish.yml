@@ -51,22 +51,24 @@ jobs:
           echo "Checksum: $checksum vs $old"
 
           if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
-            echo "Redeploying Norish on remote host (truenas01)"
+            echo "Redeploying Norish..."
 
-            # Copy compose file to remote host
-            scp norish.yml runner@truenas01:/tmp/norish.yml
+            # Copy compose file to local /srv
+            mkdir -p /srv/norish
+            cp norish.yml /srv/norish/
+            chmod 644 /srv/norish/norish.yml
 
-            # Stop old containers (any project)
-            ssh runner@truenas01 "docker rm -f norish-app norish-db norish-redis chrome-headless || true"
-
-            # Bring down the old project (if it exists)
-            ssh runner@truenas01 "docker compose -p norish -f /tmp/norish.yml down --remove-orphans || true"
-
-            # Deploy the entire stack under project 'norish'
-            ssh runner@truenas01 "CERTRESOLVER=$CERTRESOLVER DOMAIN_NAME=$DOMAIN_NAME NORISH_MASTER_KEY=$NORISH_MASTER_KEY NORISH_OIDC_CLIENT_SECRET=$NORISH_OIDC_CLIENT_SECRET NORISH_DB_PASSWORD=$NORISH_DB_PASSWORD docker compose -p norish -f /tmp/norish.yml up -d --force-recreate"
+            # Deploy locally
+            cd /srv/norish
+            CERTRESOLVER=${CERTRESOLVER:-cloudflare} \
+            DOMAIN_NAME=$DOMAIN_NAME \
+            NORISH_MASTER_KEY=$NORISH_MASTER_KEY \
+            NORISH_OIDC_CLIENT_SECRET=$NORISH_OIDC_CLIENT_SECRET \
+            NORISH_DB_PASSWORD=$NORISH_DB_PASSWORD \
+            docker compose -p norish -f norish.yml up -d --force-recreate
 
             # Save checksum
-            echo "$checksum" > .norish_checksum
+            echo "$checksum" > /srv/norish/.norish_checksum
           else
-            echo "No redeploy needed"
+            echo "No changes detected; skipping redeploy"
           fi

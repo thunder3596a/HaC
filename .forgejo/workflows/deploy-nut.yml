@@ -22,6 +22,8 @@ jobs:
 
       - name: Deploy NUT
         env:
+          PUID: ${{ vars.PUID }}
+          PGID: ${{ vars.PGID }}
           DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
           CERTRESOLVER: ${{ vars.CERTRESOLVER }}
           TZ: ${{ vars.TZ }}
@@ -29,21 +31,23 @@ jobs:
           defined_image=$(grep -m1 'image:' Docker-Critical/Home/NUT/nut.yml | awk '{print $2}')
           running_image=$(docker inspect -f '{{.Config.Image}}' nut 2>/dev/null || echo "none")
           checksum=$(sha256sum Docker-Critical/Home/NUT/nut.yml | awk '{print $1}')
-          old=$(sudo cat /srv/nut/.nut_checksum 2>/dev/null || echo "")
+          old=$(cat /srv/nut/.nut_checksum 2>/dev/null || echo "")
 
           if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
             echo "Redeploying NUT..."
-            sudo mkdir -p /srv/nut
-            sudo cp Docker-Critical/Home/NUT/nut.yml /srv/nut/
-            sudo chmod 644 /srv/nut/nut.yml
+            mkdir -p /srv/nut
+            cp Docker-Critical/Home/NUT/nut.yml /srv/nut/
+            chmod 644 /srv/nut/nut.yml
 
             cd /srv/nut
-            env DOMAIN_NAME=$DOMAIN_NAME \
-              CERTRESOLVER=${CERTRESOLVER:-cloudflare} \
-              TZ=${TZ:-America/Chicago} \
-              docker compose -p nut -f nut.yml up -d --force-recreate
+            PUID=${PUID:-568} \
+            PGID=${PGID:-568} \
+            DOMAIN_NAME=$DOMAIN_NAME \
+            CERTRESOLVER=${CERTRESOLVER:-cloudflare} \
+            TZ=${TZ:-America/Chicago} \
+            docker compose -p nut -f nut.yml up -d --force-recreate
 
-            sudo sh -c "echo '$checksum' > /srv/nut/.nut_checksum"
+            echo '$checksum' > /srv/nut/.nut_checksum
           else
             echo "No changes detected; skipping redeploy"
           fi
