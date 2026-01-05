@@ -45,6 +45,7 @@ services:
     depends_on:
       - mariadb
       - mosquitto
+      - matter-server
 
   mariadb:
     image: mariadb:latest
@@ -89,6 +90,33 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
+
+  matter-server:
+    image: ghcr.io/home-assistant-libs/python-matter-server:stable
+    container_name: matter-server
+    restart: unless-stopped
+    networks:
+      - homeproxy
+    environment:
+      - TZ=${TZ:-America/Chicago}
+    volumes:
+      - /srv/homeassistant/matter:/data
+      - /run/dbus:/run/dbus:ro
+    ports:
+      - "5580:5580"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import socket; s=socket.socket(); s.connect(('127.0.0.1', 5580)); s.close()",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
   esphome:
     image: ghcr.io/esphome/esphome:latest
     container_name: esphome
