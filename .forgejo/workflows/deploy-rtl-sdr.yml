@@ -33,8 +33,8 @@ jobs:
           PGID: ${{ vars.PGID }}
           MQTT_HOST: ${{ vars.MQTT_HOST || 'homeassistant-mqtt' }}
           MQTT_PORT: ${{ vars.MQTT_PORT || '1883' }}
-          MQTT_USER: ${{ vars.MQTT_USER || 'mqtt' }}
-          MQTT_PASSWORD: ${{ secrets.MQTT_PASSWORD || 'mqtt' }}
+          MQTT_USER: ${{ vars.MQTT_USER }}
+          MQTT_PASSWORD: ${{ secrets.MQTT_PASSWORD }}
         run: |
           # Extract defined image
           defined_image=$(grep -m1 'image:' rtl-sdr.yml | awk '{print $2}')
