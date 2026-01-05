@@ -95,15 +95,12 @@ services:
     image: ghcr.io/home-assistant-libs/python-matter-server:stable
     container_name: matter-server
     restart: unless-stopped
-    networks:
-      - homeproxy
+    network_mode: host
     environment:
       - TZ=${TZ:-America/Chicago}
     volumes:
       - /srv/homeassistant/matter:/data
       - /run/dbus:/run/dbus:ro
-    ports:
-      - "5580:5580"
     healthcheck:
       test:
         [
