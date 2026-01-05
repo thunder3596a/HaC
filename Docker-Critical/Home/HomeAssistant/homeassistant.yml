@@ -22,6 +22,11 @@ services:
       - homeproxy
     environment:
       - TZ=${TZ:-America/Chicago}
+    devices:
+      - /dev/bus/usb/001/003:/dev/bus/usb/001/003
+    volumes:
+      - /srv/homeassistant/config:/config
+      - /run/dbus:/run/dbus:ro
     labels:
       - traefik.enable=true
       - traefik.http.routers.homeassistant.entrypoints=websecure
