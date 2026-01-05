@@ -98,7 +98,7 @@ services:
     network_mode: host
     environment:
       - TZ=${TZ:-America/Chicago}
-    command: --storage /data --log-level DEBUG
+    command: --storage /data --log-level DEBUG --primary-interface eno1
     volumes:
       - /srv/homeassistant/matter:/data
       - /run/dbus:/run/dbus:ro
