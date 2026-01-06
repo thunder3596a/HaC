@@ -18,6 +18,9 @@ services:
     container_name: homeassistant
     restart: unless-stopped
     privileged: true
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
     networks:
       - homeproxy
     environment:
