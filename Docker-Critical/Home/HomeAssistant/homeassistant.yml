@@ -23,10 +23,12 @@ services:
     environment:
       - TZ=${TZ:-America/Chicago}
     devices:
-      - /dev/bus/usb/001/003:/dev/bus/usb/001/003
+      - /dev/bus/usb:/dev/bus/usb
+      - /dev/rfkill:/dev/rfkill
     volumes:
       - /srv/homeassistant/config:/config
       - /run/dbus:/run/dbus:ro
+      - /var/run/dbus:/var/run/dbus:ro
     labels:
       - traefik.enable=true
       - traefik.http.routers.homeassistant.entrypoints=websecure
