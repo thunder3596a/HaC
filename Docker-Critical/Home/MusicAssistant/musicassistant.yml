@@ -17,7 +17,7 @@ services:
     volumes:
       - /srv/music-assistant/data:/data
       # Mount media library for local file access (optional, adjust path as needed)
-      - /mnt/Pool01/data/media/music:/media/music:ro
+      - /mnt/data/media/music:/media/music:ro
     labels:
       - traefik.enable=true
       - traefik.http.routers.musicassistant.entrypoints=websecure
@@ -26,7 +26,8 @@ services:
       - traefik.http.services.musicassistant.loadbalancer.server.port=8095
       - com.centurylinklabs.watchtower.enable=true
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8095/"]
+      # Change from curl to wget (wget is available in the image):
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8095/ || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3

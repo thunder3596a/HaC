@@ -44,7 +44,9 @@ docker/
 
 ## 🟢 Docker-Critical Services
 
-Services running on the primary home automation host (`docker-critical-linux-x64`). Storage layout:
+Services running on **docker-critical** (critical host).
+
+**Storage layout on docker-critical:**
 - `/srv` (NVMe #1) for critical configs and high-IO databases
 - `/mnt/nvme-appdata` (NVMe #2) for appdata/search/AI tiers (NetBox, HomeBox, KaraKeep Meili, etc.)
 - `/mnt/hdd` for backups/logs/archives (e.g., ZIM files, service logs)
@@ -110,7 +112,7 @@ Services running on the primary home automation host (`docker-critical-linux-x64
 - **Norish** (`Home/Cooking/norish.yml`) - Recipe management
   - Recipe storage and organization
   - PostgreSQL + Redis backends
-  - Dashboard at `norish.u-acres.com`
+  - Dashboard via Traefik route (`norish.${DOMAIN_NAME}`)
   
 - **HomeBox** (`Management/HomeBox/homebox.yml`) - Household management
   - Inventory and asset tracking
@@ -137,7 +139,10 @@ Services running on the primary home automation host (`docker-critical-linux-x64
 
 ## 🔴 Docker-NonCritical Services
 
-Services on secondary host(s) (`docker-noncritical-linux-x64`). Can restart without affecting home automation.
+Services running on **docker-noncritical** (non-critical host). Can restart without affecting home automation.
+
+**Storage layout on docker-noncritical:**
+- Per-service persistent data directories (local to host)
 
 ### Networking & Proxy
 - **Traefik** (`Networking/Proxy/proxy.yml`) - Non-critical reverse proxy
@@ -228,31 +233,36 @@ Services on secondary host(s) (`docker-noncritical-linux-x64`). Can restart with
 
 ## 🚀 Deployment
 
-### Workflows
-All services deploy via Forgejo CI/CD workflows in `.forgejo/workflows/`:
+### Deployment Hosts
 
-| Service | Workflow | Trigger |
-|---------|----------|---------|
-| Authelia | `deploy-authelia.yml` | Push to `Docker-Critical/Auth/**` |
-| Traefik (Critical) | `deploy-traefik-critical.yml` | Push to `Docker-Critical/Networking/Proxy/**` |
-| Traefik (NonCritical) | `deploy-traefik-noncritical.yml` | Push to `Docker-NonCritical/Networking/Proxy/**` |
-| Home Assistant | `deploy-homeassistant.yml` | Push to `Docker-Critical/Home/HomeAssistant/**` |
-| ESPHome | (included in HA) | Push to `Docker-Critical/Home/HomeAssistant/**` |
-| RTL-SDR | `deploy-rtl-sdr.yml` | Push to `Docker-Critical/Home/RTL-SDR/**` |
-| Music Assistant | `deploy-musicassistant.yml` | Push to `Docker-Critical/Home/MusicAssistant/**` |
-| InfluxDB | `deploy-influxdb.yml` | Push to `Docker-Critical/Tools/InfluxDB/**` |
-| NetBox | `deploy-netbox.yml` | Push to `Docker-Critical/Home/NetBox/**` |
-| Norish | `deploy-norish.yml` | Push to `Docker-Critical/Home/Cooking/**` |
-| Forgejo | `deploy-forgejo.yml` | Push to `Docker-Critical/Management/Git*/**` |
-| Omada | `deploy-omada.yml` | Push to `Docker-Critical/Networking/Omada/**` |
-| SMTP Relay | `deploy-smtprelay.yml` | Push to `Docker-Critical/Networking/Mail/**` |
-| Plex | `deploy-plex.yml` | Push to `Docker-NonCritical/Media/Plex/**` |
-| Profilarr | `deploy-profilarr.yml` | Push to `Docker-NonCritical/Media/profilarr/**` |
+All services deploy via Forgejo CI/CD workflows in `.forgejo/workflows/`. Workflows select the appropriate runner based on service location:
+
+**Critical services** → `runs-on: docker-critical`
+**Non-critical services** → `runs-on: docker-noncritical`
+
+| Service | Workflow | Host | Trigger |
+|---------|----------|------|---------|
+| Authelia | `deploy-authelia.yml` | docker-critical | Push to `Docker-Critical/Auth/**` |
+| Traefik (Critical) | `deploy-traefik-critical.yml` | docker-critical | Push to `Docker-Critical/Networking/Proxy/**` |
+| Traefik (NonCritical) | `deploy-traefik-noncritical.yml` | docker-noncritical | Push to `Docker-NonCritical/Networking/Proxy/**` |
+| Home Assistant | `deploy-homeassistant.yml` | docker-critical | Push to `Docker-Critical/Home/HomeAssistant/**` |
+| ESPHome | (included in HA) | docker-critical | Push to `Docker-Critical/Home/HomeAssistant/**` |
+| RTL-SDR | `deploy-rtl-sdr.yml` | docker-critical | Push to `Docker-Critical/Home/RTL-SDR/**` |
+| Music Assistant | `deploy-musicassistant.yml` | docker-critical | Push to `Docker-Critical/Home/MusicAssistant/**` |
+| InfluxDB | `deploy-influxdb.yml` | docker-critical | Push to `Docker-Critical/Tools/InfluxDB/**` |
+| NetBox | `deploy-netbox.yml` | docker-critical | Push to `Docker-Critical/Home/NetBox/**` |
+| Norish | `deploy-norish.yml` | docker-critical | Push to `Docker-Critical/Home/Cooking/**` |
+| Forgejo | `deploy-forgejo.yml` | docker-critical | Push to `Docker-Critical/Management/Git*/**` |
+| Omada | `deploy-omada.yml` | docker-critical | Push to `Docker-Critical/Networking/Omada/**` |
+| SMTP Relay | `deploy-smtprelay.yml` | docker-critical | Push to `Docker-Critical/Networking/Mail/**` |
+| Plex | `deploy-plex.yml` | docker-noncritical | Push to `Docker-NonCritical/Media/Plex/**` |
+| Radarr/Sonarr/etc | `deploy-*.yml` | docker-noncritical | Push to `Docker-NonCritical/Media/**` |
+| Profilarr | `deploy-profilarr.yml` | docker-noncritical | Push to `Docker-NonCritical/Media/profilarr/**` |
 
 ### Required Forgejo Variables
 Global variables (set in repository settings):
 
-- `DOMAIN_NAME` - Primary domain (e.g., `u-acres.com`)
+- `DOMAIN_NAME` - Primary domain (e.g., `example.com`)
 - `CERTRESOLVER` - Certificate resolver (default: `cloudflare`)
 - `PUID` / `PGID` - User/group IDs for linuxserver images (default: `568`)
 - `TZ` - Timezone (default: `America/Chicago`)
@@ -312,15 +322,11 @@ Persistent data on primary host (tiered):
 ```
 
 ### Non-Critical Services
-Persistent data on secondary host:
+Persistent data on docker-noncritical:
 ```
-/mnt/Apps/                # (Legacy, during transition)
-
-[New location on host]:
-├── Plex/                 # Plex library config
-├── radarr/               # Movie management
-├── sonarr/               # TV management
-└── [other services]
+/var/lib/docker/volumes/   # Docker-managed volumes
+/srv/ (optional)           # For higher IO services if available
+[per-service mounts]       # Absolute paths per compose file
 ```
 
 ### Media (Shared Storage)
@@ -469,11 +475,6 @@ sudo chown -R 568:568 /srv/<service>/
 
 ---
 
-## 📚 Additional Resources
-
-- [MIGRATION.md](Docker-Critical/MIGRATION.md) - TrueNAS to Home Assistant migration
-- Individual service READMEs in each folder
-- Forgejo repository for issue tracking and CI/CD status
 
 ---
 
