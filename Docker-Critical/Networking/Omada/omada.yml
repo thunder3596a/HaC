@@ -31,6 +31,7 @@ services:
       - traefik.http.routers.omada.entrypoints=websecure
       - traefik.http.routers.omada.rule=Host(`omada.${DOMAIN_NAME}`)
       - traefik.http.routers.omada.service=omada
+      - traefik.http.routers.omada.tls=true
       - traefik.http.services.omada.loadbalancer.server.port=8043
       - traefik.http.services.omada.loadbalancer.server.scheme=https
       - traefik.http.services.omada.loadbalancer.serversTransport=omada-transport
