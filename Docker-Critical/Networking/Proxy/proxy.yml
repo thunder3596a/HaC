@@ -41,7 +41,7 @@ services:
       # Docker provider
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
-      - "--providers.docker.network=toolsproxy"
+      - "--providers.docker.network=toolsproxy,homeproxy,gitproxy,authnet"
 
     environment:
       - CLOUDFLARE_EMAIL=${CLOUDFLARE_EMAIL}
@@ -75,7 +75,7 @@ services:
       - proxy
       - homeproxy
       - gitproxy
-      - authnet #
+      - authnet
 
     ports:
       - 80:80
