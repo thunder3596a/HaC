@@ -7,18 +7,18 @@ networks:
 services:
   lidarr:
     container_name: lidarr
-    image: linuxserver/lidarr
+    image: linuxserver/lidarr:latest
     environment:
       - PUID=568
       - PGID=568
-      - TZ=America/Chicago
+      - TZ=${TZ}
     labels:
       - traefik.http.routers.lidarr.entrypoints=websecure
-      - traefik.http.routers.lidarr.rule=Host(`lidarr.u-acres.com`)
+      - traefik.http.routers.lidarr.rule=Host(`lidarr.${DOMAIN_NAME}`)
       - traefik.http.routers.lidarr.service=lidarr
       - traefik.http.services.lidarr.loadbalancer.server.port=8686
       - traefik.http.routers.lidarr.tls.certresolver=${CERTRESOLVER:-cloudflare}
-      - traefik.http.routers.lidarr.tls.domains[0].main=lidarr.u-acres.com
+      - traefik.http.routers.lidarr.tls.domains[0].main=lidarr.${DOMAIN_NAME}
       - com.centurylinklabs.watchtower.enable=true
       - traefik.enable=true
     networks:

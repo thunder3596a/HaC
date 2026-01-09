@@ -12,14 +12,14 @@ services:
       - LOG_LEVEL=info
       - PUID=568
       - PGID=568
-      - TZ=America/Chicago
+      - TZ=${TZ}
     labels:
       - traefik.http.routers.overseerr.entrypoints=websecure
-      - traefik.http.routers.overseerr.rule=Host(`request.u-acres.com`)
+      - traefik.http.routers.overseerr.rule=Host(`request.${DOMAIN_NAME}`)
       - traefik.http.routers.overseerr.service=overseerr
       - traefik.http.services.overseerr.loadbalancer.server.port=5055
       - traefik.http.routers.overseerr.tls.certresolver=${CERTRESOLVER:-cloudflare}
-      - traefik.http.routers.overseerr.tls.domains[0].main=request.u-acres.com
+      - traefik.http.routers.overseerr.tls.domains[0].main=request.${DOMAIN_NAME}
       - com.centurylinklabs.watchtower.enable=true
       - traefik.enable=true
     networks:
