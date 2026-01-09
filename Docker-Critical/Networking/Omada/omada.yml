@@ -32,7 +32,7 @@ services:
       - "traefik.http.routers.omada.rule=Host(`omada.${DOMAIN_NAME}`)"
       - "traefik.http.routers.omada.service=omada"
       - "traefik.http.routers.omada.tls=true"
-      - "traefik.http.services.omada.loadbalancer.server.address=8043"
+      - "traefik.http.services.omada.loadbalancer.server.port=8043"
       - "traefik.http.services.omada.loadbalancer.server.scheme=https"
       - "traefik.http.services.omada.loadbalancer.serversTransport=omada-transport"
       - "traefik.http.serversTransports.omada-transport.scheme=https"
@@ -43,6 +43,8 @@ services:
     volumes:
       - /srv/omada/data:/opt/tplink/EAPController/data
       - /mnt/hdd/logs/omada:/opt/tplink/EAPController/logs
+      - /mnt/hdd/omada/backups:/opt/tplink/EAPController/data/autobackup
+
     healthcheck:
       test: ["CMD", "curl", "-f", "-k", "https://localhost:8043"]
       interval: 30s
