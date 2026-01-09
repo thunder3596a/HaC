@@ -6,9 +6,9 @@ services:
     networks:
       - toolsproxy
     environment:
-      - PUID=568
-      - PGID=568
-      - TZ=America/Chicago
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
       - MANAGE_HTTP_PORT=8088
       - MANAGE_HTTPS_PORT=8043
       - PORTAL_HTTP_PORT=8088
@@ -27,19 +27,19 @@ services:
       - "29813:29813" # Port for adopt and upgrade
       - "29814:29814" # Port for manager/device discovery
     labels:
-      - traefik.enable=true
-      - traefik.http.routers.omada.entrypoints=websecure
-      - traefik.http.routers.omada.rule=Host(`omada.${DOMAIN_NAME}`)
-      - traefik.http.routers.omada.service=omada
-      - traefik.http.routers.omada.tls=true
-      - traefik.http.services.omada.loadbalancer.server.address=8043
-      - traefik.http.services.omada.loadbalancer.server.scheme=https
-      - traefik.http.services.omada.loadbalancer.serversTransport=omada-transport
-      - traefik.http.serversTransports.omada-transport.scheme=https
-      - traefik.http.serversTransports.omada-transport.insecureSkipVerify=true
-      - traefik.http.routers.omada.tls.certresolver=${CERTRESOLVER:-cloudflare}
-      - traefik.http.routers.omada.tls.domains[0].main=omada.${DOMAIN_NAME}
-      - com.centurylinklabs.watchtower.enable=true
+      - "traefik.enable=true"
+      - "traefik.http.routers.omada.entrypoints=websecure"
+      - "traefik.http.routers.omada.rule=Host(`omada.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.omada.service=omada"
+      - "traefik.http.routers.omada.tls=true"
+      - "traefik.http.services.omada.loadbalancer.server.address=8043"
+      - "traefik.http.services.omada.loadbalancer.server.scheme=https"
+      - "traefik.http.services.omada.loadbalancer.serversTransport=omada-transport"
+      - "traefik.http.serversTransports.omada-transport.scheme=https"
+      - "traefik.http.serversTransports.omada-transport.insecureSkipVerify=true"
+      - "traefik.http.routers.omada.tls.certresolver=${CERTRESOLVER:-cloudflare}"
+      - "traefik.http.routers.omada.tls.domains[0].main=omada.${DOMAIN_NAME}"
+      - "com.centurylinklabs.watchtower.enable=true"
     volumes:
       - /srv/omada/data:/opt/tplink/EAPController/data
       - /mnt/hdd/logs/omada:/opt/tplink/EAPController/logs
