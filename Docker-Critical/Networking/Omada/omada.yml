@@ -19,7 +19,7 @@ services:
       - SSL_KEY_NAME=tls.key
     ports:
       - "8088:8088" # HTTP portal
-      - "8043:8043" # HTTPS portal (also via Traefik)
+      #- "8043:8043" # HTTPS portal (also via Traefik)
       - "8843:8843" # HTTPS guest portal
       - "29810:29810/udp" # EAP discovery
       - "29811:29811" # Manager v1 port
@@ -32,7 +32,7 @@ services:
       - traefik.http.routers.omada.rule=Host(`omada.${DOMAIN_NAME}`)
       - traefik.http.routers.omada.service=omada
       - traefik.http.routers.omada.tls=true
-      - traefik.http.services.omada.loadbalancer.server.address=omada-controller:8043
+      - traefik.http.services.omada.loadbalancer.server.address=8043
       - traefik.http.services.omada.loadbalancer.server.scheme=https
       - traefik.http.services.omada.loadbalancer.serversTransport=omada-transport
       - traefik.http.serversTransports.omada-transport.scheme=https

@@ -41,7 +41,6 @@ services:
       # Docker provider
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
-      - "--providers.docker.network=toolsproxy"
 
     environment:
       - CLOUDFLARE_EMAIL=${CLOUDFLARE_EMAIL}
