@@ -40,7 +40,7 @@ services:
       - "traefik.http.services.omada-svc.loadbalancer.server.scheme=https"
       - "traefik.http.services.omada-svc.loadbalancer.server.port=8043"
       - "traefik.http.services.omada-svc.loadbalancer.passhostheader=true"
-      - "traefik.http.services.omada-svc.loadbalancer.serverstransport=omada-transport"
+      - "traefik.http.services.omada-svc.loadbalancer.serverstransport=omada-transport@docker"
       # Middleware chain: redirect THEN headers (order matters!)
       - "traefik.http.middlewares.omada-middlewares.chain.middlewares=omada-redirect,omada-headers"
       - "traefik.http.middlewares.omada-redirect.redirectregex.regex=^https:\\/\\/([^\\/]+)\\/?$$"
