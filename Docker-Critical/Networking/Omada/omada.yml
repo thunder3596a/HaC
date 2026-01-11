@@ -36,11 +36,12 @@ services:
       - "traefik.http.routers.omada.tls.certresolver=${CERTRESOLVER:-cloudflare}"
       - "traefik.http.routers.omada.tls.domains[0].main=omada.${DOMAIN_NAME}"
       - "traefik.http.routers.omada.middlewares=omada-headers"
-      # Service: HTTP 8088 (no TLS verification needed)
-      - "traefik.http.services.omada-svc.loadbalancer.server.port=8088"
+      # Service: HTTPS 8043 backend (insecureSkipVerify enabled globally in Traefik)
+      - "traefik.http.services.omada-svc.loadbalancer.server.scheme=https"
+      - "traefik.http.services.omada-svc.loadbalancer.server.port=8043"
       - "traefik.http.services.omada-svc.loadbalancer.passhostheader=true"
-      # Middleware: Host header rewrite
-      - "traefik.http.middlewares.omada-headers.headers.customrequestheaders.Host=omada.${DOMAIN_NAME}:8088"
+      # Middleware: Host header rewrite to prevent Omada port redirect
+      - "traefik.http.middlewares.omada-headers.headers.customrequestheaders.Host=omada.${DOMAIN_NAME}:8043"
       - "traefik.http.middlewares.omada-headers.headers.customresponseheaders.Host=omada.${DOMAIN_NAME}"
       - "com.centurylinklabs.watchtower.enable=true"
     volumes:
