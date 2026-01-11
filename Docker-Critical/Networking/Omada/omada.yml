@@ -35,7 +35,6 @@ services:
       - "traefik.http.services.omada.loadbalancer.server.port=8043"
       - "traefik.http.services.omada.loadbalancer.server.scheme=https"
       - "traefik.http.services.omada.loadbalancer.serversTransport=omada-transport"
-      - "traefik.http.serversTransports.omada-transport.scheme=https"
       - "traefik.http.serversTransports.omada-transport.insecureSkipVerify=true"
       - "traefik.http.routers.omada.tls.certresolver=${CERTRESOLVER:-cloudflare}"
       - "traefik.http.routers.omada.tls.domains[0].main=omada.${DOMAIN_NAME}"
