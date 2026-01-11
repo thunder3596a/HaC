@@ -23,6 +23,8 @@ services:
       - NET_RAW
     networks:
       - homeproxy
+    dns:
+      - 192.168.19.2
     environment:
       - TZ=${TZ:-America/Chicago}
     devices:
