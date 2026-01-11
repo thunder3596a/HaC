@@ -67,6 +67,10 @@ services:
       - "traefik.http.middlewares.authelia.forwardauth.address=http://authelia:9091/api/verify?rd=https://authelia.${DOMAIN_NAME}"
       - "traefik.http.middlewares.authelia.forwardauth.trustForwardHeader=true"
       - "traefik.http.middlewares.authelia.forwardauth.authResponseHeaders=Remote-User,Remote-Groups,Remote-Name,Remote-Email"
+      
+      # ServersTransport for Omada (skip TLS verification for self-signed cert)
+      - "traefik.http.serversTransports.omada-transport.insecureSkipVerify=true"
+      
       # Watchtower
       - "com.centurylinklabs.watchtower.enable=true"
 
