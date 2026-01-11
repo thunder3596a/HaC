@@ -50,14 +50,14 @@ services:
     networks:
       - toolsproxy
     environment:
-      - PUID=568
-      - PGID=568
-      - TZ=America/Chicago
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
       - VAR_NAME=${VAR_NAME}
     labels:
       - traefik.enable=true
       - traefik.http.routers.myservice.entrypoints=websecure
-      - traefik.http.routers.myservice.rule=Host(`myservice.u-acres.com`)
+      - traefik.http.routers.myservice.rule=Host(`myservice.${DOMAIN_NAME}`)
       - traefik.http.routers.myservice.service=myservice
       - traefik.http.services.myservice.loadbalancer.server.port=8080
       - com.centurylinklabs.watchtower.enable=true
