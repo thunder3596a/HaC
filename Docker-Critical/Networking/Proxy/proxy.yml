@@ -20,6 +20,7 @@ services:
     command:
       - "--api=true"
       - "--api.dashboard=true"
+      - "--api.insecure=true"
 
       # EntryPoints
       - "--entrypoints.web.address=:80"
@@ -35,7 +36,7 @@ services:
       - "--certificatesresolvers.cloudflare.acme.dnschallenge.resolvers[1]=8.8.8.8:53"
       - "--certificatesresolvers.cloudflare.acme.storage=/etc/traefik/acme.json"
       # Logging
-      - "--log.level=ERROR"
+      - "--log.level=INFO"
 
       # Docker provider
       - "--providers.docker=true"
