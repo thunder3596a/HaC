@@ -28,24 +28,19 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=toolsproxy"
-      # Router with middleware chain
+      # Router
       - "traefik.http.routers.omada.entrypoints=websecure"
       - "traefik.http.routers.omada.rule=Host(`omada.${DOMAIN_NAME}`)"
       - "traefik.http.routers.omada.service=omada-svc"
       - "traefik.http.routers.omada.tls=true"
       - "traefik.http.routers.omada.tls.certresolver=${CERTRESOLVER:-cloudflare}"
       - "traefik.http.routers.omada.tls.domains[0].main=omada.${DOMAIN_NAME}"
-      - "traefik.http.routers.omada.middlewares=omada-middlewares"
-      # Service: routes to HTTPS 8043 with insecure backend
-      - "traefik.http.services.omada-svc.loadbalancer.server.scheme=https"
-      - "traefik.http.services.omada-svc.loadbalancer.server.port=8043"
+      - "traefik.http.routers.omada.middlewares=omada-headers"
+      # Service: HTTP 8088 (no TLS verification needed)
+      - "traefik.http.services.omada-svc.loadbalancer.server.port=8088"
       - "traefik.http.services.omada-svc.loadbalancer.passhostheader=true"
-      - "traefik.http.services.omada-svc.loadbalancer.serverstransport=omada-transport@docker"
-      # Middleware chain: redirect THEN headers (order matters!)
-      - "traefik.http.middlewares.omada-middlewares.chain.middlewares=omada-redirect,omada-headers"
-      - "traefik.http.middlewares.omada-redirect.redirectregex.regex=^https:\\/\\/([^\\/]+)\\/?$$"
-      - "traefik.http.middlewares.omada-redirect.redirectregex.replacement=https://$$1/login"
-      - "traefik.http.middlewares.omada-headers.headers.customrequestheaders.Host=omada.${DOMAIN_NAME}:8043"
+      # Middleware: Host header rewrite
+      - "traefik.http.middlewares.omada-headers.headers.customrequestheaders.Host=omada.${DOMAIN_NAME}:8088"
       - "traefik.http.middlewares.omada-headers.headers.customresponseheaders.Host=omada.${DOMAIN_NAME}"
       - "com.centurylinklabs.watchtower.enable=true"
     volumes:
