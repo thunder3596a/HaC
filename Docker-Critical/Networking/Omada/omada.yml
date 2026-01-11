@@ -28,28 +28,24 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=toolsproxy"
-      # Router for login/root paths (no header rewrite)
-      - "traefik.http.routers.omada-login.entrypoints=websecure"
-      - "traefik.http.routers.omada-login.rule=Host(`omada.${DOMAIN_NAME}`) && Path(`/`, `/login`)"
-      - "traefik.http.routers.omada-login.service=omada"
-      - "traefik.http.routers.omada-login.tls=true"
-      - "traefik.http.routers.omada-login.tls.certresolver=${CERTRESOLVER:-cloudflare}"
-      - "traefik.http.routers.omada-login.tls.domains[0].main=omada.${DOMAIN_NAME}"
-      # Router for all other paths (with Omada port header rewrite)
+      # Router with middleware chain
       - "traefik.http.routers.omada.entrypoints=websecure"
       - "traefik.http.routers.omada.rule=Host(`omada.${DOMAIN_NAME}`)"
-      - "traefik.http.routers.omada.service=omada"
+      - "traefik.http.routers.omada.service=omada-svc"
       - "traefik.http.routers.omada.tls=true"
       - "traefik.http.routers.omada.tls.certresolver=${CERTRESOLVER:-cloudflare}"
       - "traefik.http.routers.omada.tls.domains[0].main=omada.${DOMAIN_NAME}"
-      - "traefik.http.routers.omada.middlewares=omada-headers@docker"
+      - "traefik.http.routers.omada.middlewares=omada-middlewares"
       # Service: routes to HTTPS 8043
-      - "traefik.http.services.omada.loadbalancer.server.port=8043"
-      - "traefik.http.services.omada.loadbalancer.server.scheme=https"
-      - "traefik.http.services.omada.loadbalancer.passHostHeader=true"
-      # Middleware: Host header rewrite for Omada's internal redirect logic
+      - "traefik.http.services.omada-svc.loadbalancer.server.scheme=https"
+      - "traefik.http.services.omada-svc.loadbalancer.server.port=8043"
+      - "traefik.http.services.omada-svc.loadbalancer.passhostheader=true"
+      # Middleware chain: redirect THEN headers (order matters!)
+      - "traefik.http.middlewares.omada-middlewares.chain.middlewares=omada-redirect,omada-headers"
+      - "traefik.http.middlewares.omada-redirect.redirectregex.regex=^https:\\/\\/([^\\/]+)\\/?$$"
+      - "traefik.http.middlewares.omada-redirect.redirectregex.replacement=https://$$1/login"
       - "traefik.http.middlewares.omada-headers.headers.customrequestheaders.Host=omada.${DOMAIN_NAME}:8043"
-      - "traefik.http.middlewares.omada-headers.headers.customresponseheaders.Host=omada.${DOMAIN_NAME}:443"
+      - "traefik.http.middlewares.omada-headers.headers.customresponseheaders.Host=omada.${DOMAIN_NAME}"
       - "com.centurylinklabs.watchtower.enable=true"
     volumes:
       - /srv/omada/data:/opt/tplink/EAPController/data
