@@ -36,10 +36,13 @@ services:
       - "traefik.http.routers.omada.tls.certresolver=${CERTRESOLVER:-cloudflare}"
       - "traefik.http.routers.omada.tls.domains[0].main=omada.${DOMAIN_NAME}"
       - "traefik.http.routers.omada.middlewares=omada-middlewares"
-      # Service: routes to HTTPS 8043
+      # Service: routes to HTTPS 8043 with insecure backend
       - "traefik.http.services.omada-svc.loadbalancer.server.scheme=https"
       - "traefik.http.services.omada-svc.loadbalancer.server.port=8043"
       - "traefik.http.services.omada-svc.loadbalancer.passhostheader=true"
+      - "traefik.http.services.omada-svc.loadbalancer.serverstransport=omada-transport@docker"
+      # Transport: skip TLS verification for Omada's self-signed cert
+      - "traefik.http.serversTransports.omada-transport.insecureSkipVerify=true"
       # Middleware chain: redirect THEN headers (order matters!)
       - "traefik.http.middlewares.omada-middlewares.chain.middlewares=omada-redirect,omada-headers"
       - "traefik.http.middlewares.omada-redirect.redirectregex.regex=^https:\\/\\/([^\\/]+)\\/?$$"
