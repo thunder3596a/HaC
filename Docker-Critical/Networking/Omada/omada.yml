@@ -32,12 +32,9 @@ services:
       - "traefik.http.routers.omada.rule=Host(`omada.${DOMAIN_NAME}`)"
       - "traefik.http.routers.omada.service=omada"
       - "traefik.http.routers.omada.tls=true"
-      - "traefik.http.services.omada.loadbalancer.server.port=8043"
-      - "traefik.http.services.omada.loadbalancer.server.scheme=https"
-      - "traefik.http.services.omada.loadbalancer.serversTransport=omada-transport"
-      - "traefik.http.serversTransports.omada-transport.insecureSkipVerify=true"
       - "traefik.http.routers.omada.tls.certresolver=${CERTRESOLVER:-cloudflare}"
       - "traefik.http.routers.omada.tls.domains[0].main=omada.${DOMAIN_NAME}"
+      - "traefik.http.services.omada.loadbalancer.server.port=8088"
       - "com.centurylinklabs.watchtower.enable=true"
     volumes:
       - /srv/omada/data:/opt/tplink/EAPController/data
@@ -45,7 +42,7 @@ services:
       - /mnt/hdd/omada/backups:/opt/tplink/EAPController/data/autobackup
 
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "--no-check-certificate", "https://localhost:8043"]
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8088"]
       interval: 30s
       timeout: 10s
       retries: 3
