@@ -131,6 +131,13 @@ services:
     restart: unless-stopped
     networks:
       - homeproxy
+    dns:
+      - 192.168.19.2
+    extra_hosts:
+      - "slzb-06-zigbeebluetooth-e42018.local:192.168.101.1"
+      - "slzb-06.local:192.168.101.1"
+      # Add more ESPHome devices as needed:
+      # - "device-name.local:192.168.x.x"
     environment:
       - TZ=${TZ:-America/Chicago}
     labels:
