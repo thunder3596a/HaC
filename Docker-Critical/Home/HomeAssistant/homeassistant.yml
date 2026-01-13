@@ -33,8 +33,8 @@ services:
       - /dev/hci0:/dev/hci0
     volumes:
       - /srv/homeassistant/config:/config
-      - /run/dbus:/run/dbus:ro
-      - /var/run/dbus:/var/run/dbus:ro
+      - /run/dbus:/run/dbus
+      - /var/run/dbus:/var/run/dbus
     labels:
       - traefik.enable=true
       - traefik.http.routers.homeassistant.entrypoints=websecure
