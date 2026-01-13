@@ -30,6 +30,7 @@ services:
     devices:
       - /dev/bus/usb:/dev/bus/usb
       - /dev/rfkill:/dev/rfkill
+      - /dev/hci0:/dev/hci0
     volumes:
       - /srv/homeassistant/config:/config
       - /run/dbus:/run/dbus:ro
