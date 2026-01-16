@@ -4,7 +4,7 @@ services:
     container_name: plex
     restart: unless-stopped
     networks:
-      - homeproxy
+      - mediaproxy
     environment:
       - PUID=${PUID:-568}
       - PGID=${PGID:-568}
@@ -44,5 +44,5 @@ services:
       start_period: 60s
 
 networks:
-  homeproxy:
+  mediaproxy:
     external: true
