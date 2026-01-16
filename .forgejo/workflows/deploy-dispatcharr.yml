@@ -1,0 +1,48 @@
+name: Deploy Dispatcharr
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "Docker-NonCritical/Media/Dispatcharr/dispatcharr.yml"
+      - ".forgejo/workflows/deploy-dispatcharr.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: docker-noncritical
+    defaults:
+      run:
+        shell: sh
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify compose file exists
+        run: ls -l "./Docker-NonCritical/Media/Dispatcharr/dispatcharr.yml"
+
+      - name: Deploy Dispatcharr
+        working-directory: "./Docker-NonCritical/Media/Dispatcharr"
+        env:
+          DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
+          TZ: ${{ vars.TZ }}
+          PUID: ${{ vars.PUID }}
+          PGID: ${{ vars.PGID }}
+        run: |
+          defined_image=$(grep -m1 'image:' dispatcharr.yml | awk '{print $2}')
+          running_image=$(docker inspect -f '{{.Config.Image}}' dispatcharr 2>/dev/null || echo "none")
+          checksum=$(sha256sum dispatcharr.yml | awk '{print $1}')
+          old=$(cat .dispatcharr_checksum 2>/dev/null || echo "")
+
+          if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
+            echo "Redeploying Dispatcharr..."
+            scp dispatcharr.yml runner@truenas01:/tmp/dispatcharr.yml
+            ssh runner@truenas01 "docker rm -f dispatcharr || true"
+            ssh runner@truenas01 "docker compose -p dispatcharr -f /tmp/dispatcharr.yml down --remove-orphans || true"
+            ssh runner@truenas01 "DOMAIN_NAME=$DOMAIN_NAME TZ=$TZ PUID=$PUID PGID=$PGID docker compose -p dispatcharr -f /tmp/dispatcharr.yml up -d --force-recreate"
+            echo "$checksum" > .dispatcharr_checksum
+          else
+            echo "No changes detected; skipping redeploy"
+          fi
