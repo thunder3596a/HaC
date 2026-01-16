@@ -17,11 +17,11 @@ services:
       - PUID=568
       - PGID=568
       - TZ=America/Chicago
-      - VPN_SERVICE_PROVIDER=private internet access
+      - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER}
       - VPN_TYPE=openvpn
       - OPENVPN_USER=${OPENVPN_USER}
       - OPENVPN_PASSWORD=${OPENVPN_PASSWORD}
-      - SERVER_REGIONS=US Minnesota #US Chicago
+      - SERVER_COUNTRIES=${VPN_SERVER_COUNTRIES}
       - HTTPPROXY=off
       - SHADOWSOCKS=off
       - FIREWALL_OUTBOUND_SUBNETS=172.20.0.0/16,192.168.19.0/24

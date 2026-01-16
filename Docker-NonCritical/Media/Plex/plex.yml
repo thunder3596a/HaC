@@ -22,10 +22,10 @@ services:
       - traefik.http.services.plex.loadbalancer.server.port=32400
       - com.centurylinklabs.watchtower.enable=true
     volumes:
-      - /opt/Docker-Critical/plex/config:/config
-      - /mnt/Pool01/data/media/movies:/movies
-      - /mnt/Pool01/data/media/tv:/tv
-      - /mnt/Pool01/data/media/music:/music
+      - /srv/plex/config:/config
+      - /mnt/data/media/movies:/movies
+      - /mnt/data/media/tv:/tv
+      - /mnt/data/media/music:/music
     ports:
       - "32400:32400/tcp"
       - "3005:3005/tcp"
