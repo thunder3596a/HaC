@@ -1,29 +1,27 @@
-version: "3.8"
+services:
+  radarr:
+    image: ghcr.io/linuxserver/radarr:latest
+    container_name: radarr
+    restart: unless-stopped
+    networks:
+      - mediaproxy
+    environment:
+      - PUID=${PUID:-568}
+      - PGID=${PGID:-568}
+      - TZ=${TZ:-America/Chicago}
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.radarr.entrypoints=websecure
+      - traefik.http.routers.radarr.rule=Host(`radarr.${DOMAIN_NAME}`)
+      - traefik.http.routers.radarr.service=radarr
+      - traefik.http.services.radarr.loadbalancer.server.port=7878
+      - traefik.http.routers.radarr.tls.certresolver=${CERTRESOLVER:-cloudflare}
+      - traefik.http.routers.radarr.tls.domains[0].main=radarr.${DOMAIN_NAME}
+      - com.centurylinklabs.watchtower.enable=true
+    volumes:
+      - /srv/radarr/config:/config
+      - /mnt/data:/data
 
 networks:
   mediaproxy:
     external: true
-
-services:
-  radarr:
-    container_name: radarr
-    image: ghcr.io/linuxserver/radarr:latest
-    environment:
-      - PUID=568
-      - PGID=568
-      - TZ=America/Chicago
-    labels:
-      - traefik.http.routers.radarr.entrypoints=websecure
-      - traefik.http.routers.radarr.rule=Host(`radarr.u-acres.com`)
-      - traefik.http.routers.radarr.service=radarr
-      - traefik.http.services.radarr.loadbalancer.server.port=7878
-      - traefik.http.routers.radarr.tls.certresolver=${CERTRESOLVER:-cloudflare}
-      - traefik.http.routers.radarr.tls.domains[0].main=radarr.u-acres.com
-      - com.centurylinklabs.watchtower.enable=true
-      - traefik.enable=true
-    networks:
-      - mediaproxy
-    restart: unless-stopped
-    volumes:
-      - /mnt/Apps/Radarr:/config
-      - /mnt/Pool01/data:/data

@@ -5,23 +5,25 @@ services:
     #   dockerfile: Dockerfile
     image: ghcr.io/dispatcharr/dispatcharr:latest
     container_name: dispatcharr
+    restart: unless-stopped
     networks:
       - mediaproxy
-    volumes:
-      - /mnt/Apps/dispatcharr/data:/data
     environment:
       - DISPATCHARR_ENV=aio
       - REDIS_HOST=localhost
       - CELERY_BROKER_URL=redis://localhost:6379/0
       - DISPATCHARR_LOG_LEVEL=info
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.dispatcharr.rule=Host(`dispatcharr.u-acres.com`)"
-      - "traefik.http.routers.dispatcharr.entrypoints=websecure"
-      - "traefik.http.routers.dispatcharr.service=dispatcharr"
-      - "traefik.http.services.dispatcharr.loadbalancer.server.port=9191"
-      - "traefik.http.routers.dispatcharr.tls.certresolver=${CERTRESOLVER:-cloudflare}"
-      - "traefik.http.routers.dispatcharr.tls.domains[0].main=dispatcharr.u-acres.com"
+      - traefik.enable=true
+      - traefik.http.routers.dispatcharr.entrypoints=websecure
+      - traefik.http.routers.dispatcharr.rule=Host(`dispatcharr.${DOMAIN_NAME}`)
+      - traefik.http.routers.dispatcharr.service=dispatcharr
+      - traefik.http.services.dispatcharr.loadbalancer.server.port=9191
+      - traefik.http.routers.dispatcharr.tls.certresolver=${CERTRESOLVER:-cloudflare}
+      - traefik.http.routers.dispatcharr.tls.domains[0].main=dispatcharr.${DOMAIN_NAME}
+      - com.centurylinklabs.watchtower.enable=true
+    volumes:
+      - /srv/dispatcharr/data:/data
       # Process Priority Configuration (Optional)
       # Lower values = higher priority. Range: -20 (highest) to 19 (lowest)
       # Negative values require cap_add: SYS_NICE (uncomment below)

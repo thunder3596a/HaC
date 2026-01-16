@@ -1,28 +1,26 @@
-version: "3.8"
+services:
+  prowlarr:
+    image: ghcr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    restart: unless-stopped
+    networks:
+      - mediaproxy
+    environment:
+      - PUID=${PUID:-568}
+      - PGID=${PGID:-568}
+      - TZ=${TZ:-America/Chicago}
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.prowlarr.entrypoints=websecure
+      - traefik.http.routers.prowlarr.rule=Host(`prowlarr.${DOMAIN_NAME}`)
+      - traefik.http.routers.prowlarr.service=prowlarr
+      - traefik.http.services.prowlarr.loadbalancer.server.port=9696
+      - traefik.http.routers.prowlarr.tls.certresolver=${CERTRESOLVER:-cloudflare}
+      - traefik.http.routers.prowlarr.tls.domains[0].main=prowlarr.${DOMAIN_NAME}
+      - com.centurylinklabs.watchtower.enable=true
+    volumes:
+      - /srv/prowlarr/config:/config
 
 networks:
   mediaproxy:
     external: true
-
-services:
-  prowlarr:
-    container_name: prowlarr
-    image: ghcr.io/linuxserver/prowlarr:latest
-    environment:
-      - PUID=568
-      - PGID=568
-      - TZ=America/Chicago
-    labels:
-      - traefik.http.routers.prowlarr.entrypoints=websecure
-      - traefik.http.routers.prowlarr.rule=Host(`prowlarr.u-acres.com`)
-      - traefik.http.routers.prowlarr.service=prowlarr
-      - traefik.http.services.prowlarr.loadbalancer.server.port=9696
-      - traefik.http.routers.prowlarr.tls.certresolver=${CERTRESOLVER:-cloudflare}
-      - traefik.http.routers.prowlarr.tls.domains[0].main=prowlarr.u-acres.com
-      - com.centurylinklabs.watchtower.enable=true
-      - traefik.enable=true
-    networks:
-      - mediaproxy
-    restart: unless-stopped
-    volumes:
-      - /mnt/Apps/Prowlarr:/config

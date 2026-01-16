@@ -1,27 +1,25 @@
-version: "3.8"
+services:
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    restart: unless-stopped
+    networks:
+      - mediaproxy
+    environment:
+      - TZ=${TZ:-America/Chicago}
+      - LOG_LEVEL=info
+      - LOG_HTML=false
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=mediaproxy
+      - traefik.http.routers.flare.entrypoints=websecure
+      - traefik.http.routers.flare.rule=Host(`flare.${DOMAIN_NAME}`)
+      - traefik.http.routers.flare.service=flare
+      - traefik.http.services.flare.loadbalancer.server.port=8191
+      - traefik.http.routers.flare.tls.certresolver=${CERTRESOLVER:-cloudflare}
+      - traefik.http.routers.flare.tls.domains[0].main=flare.${DOMAIN_NAME}
+      - com.centurylinklabs.watchtower.enable=true
 
 networks:
   mediaproxy:
     external: true
-
-services:
-  flaresolverr:
-    container_name: flaresolverr
-    image: ghcr.io/flaresolverr/flaresolverr:latest
-    environment:
-      - LOG_LEVEL=info
-      - LOG_HTML=false
-      - TZ=America/Chicago
-    labels:
-      - traefik.docker.network=mediaproxy
-      - traefik.enable=true
-      - traefik.http.routers.flare.entrypoints=websecure
-      - traefik.http.routers.flare.rule=Host(`flare.u-acres.com`)
-      - traefik.http.routers.flare.service=flare
-      - traefik.http.services.flare.loadbalancer.server.port=8191
-      - traefik.http.routers.flare.tls.certresolver=${CERTRESOLVER:-cloudflare}
-      - traefik.http.routers.flare.tls.domains[0].main=flare.u-acres.com
-      - com.centurylinklabs.watchtower.enable=true
-    networks:
-      - mediaproxy
-    restart: unless-stopped

@@ -1,18 +1,16 @@
-version: "3.8"
-
-networks:
-  mediaproxy:
-    external: true
-
 services:
   lidarr:
-    container_name: lidarr
     image: linuxserver/lidarr:latest
+    container_name: lidarr
+    restart: unless-stopped
+    networks:
+      - mediaproxy
     environment:
-      - PUID=568
-      - PGID=568
-      - TZ=${TZ}
+      - PUID=${PUID:-568}
+      - PGID=${PGID:-568}
+      - TZ=${TZ:-America/Chicago}
     labels:
+      - traefik.enable=true
       - traefik.http.routers.lidarr.entrypoints=websecure
       - traefik.http.routers.lidarr.rule=Host(`lidarr.${DOMAIN_NAME}`)
       - traefik.http.routers.lidarr.service=lidarr
@@ -20,10 +18,10 @@ services:
       - traefik.http.routers.lidarr.tls.certresolver=${CERTRESOLVER:-cloudflare}
       - traefik.http.routers.lidarr.tls.domains[0].main=lidarr.${DOMAIN_NAME}
       - com.centurylinklabs.watchtower.enable=true
-      - traefik.enable=true
-    networks:
-      - mediaproxy
-    restart: unless-stopped
     volumes:
-      - /mnt/Apps/Lidarr:/config
-      - /mnt/Pool01/data:/data
+      - /srv/lidarr/config:/config
+      - /mnt/data:/data
+
+networks:
+  mediaproxy:
+    external: true

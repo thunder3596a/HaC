@@ -1,19 +1,17 @@
-version: "3.8"
-
-networks:
-  mediaproxy:
-    external: true
-
 services:
   overseerr:
-    container_name: overseerr
     image: linuxserver/overseerr:latest
+    container_name: overseerr
+    restart: unless-stopped
+    networks:
+      - mediaproxy
     environment:
+      - PUID=${PUID:-568}
+      - PGID=${PGID:-568}
+      - TZ=${TZ:-America/Chicago}
       - LOG_LEVEL=info
-      - PUID=568
-      - PGID=568
-      - TZ=${TZ}
     labels:
+      - traefik.enable=true
       - traefik.http.routers.overseerr.entrypoints=websecure
       - traefik.http.routers.overseerr.rule=Host(`request.${DOMAIN_NAME}`)
       - traefik.http.routers.overseerr.service=overseerr
@@ -21,9 +19,9 @@ services:
       - traefik.http.routers.overseerr.tls.certresolver=${CERTRESOLVER:-cloudflare}
       - traefik.http.routers.overseerr.tls.domains[0].main=request.${DOMAIN_NAME}
       - com.centurylinklabs.watchtower.enable=true
-      - traefik.enable=true
-    networks:
-      - mediaproxy
-    restart: unless-stopped
     volumes:
-      - /mnt/Apps/overseerr:/app/config
+      - /srv/overseerr/config:/app/config
+
+networks:
+  mediaproxy:
+    external: true
