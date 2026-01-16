@@ -21,10 +21,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Verify compose file exists
-        run: ls -l "./Docker-NonCritical/Media/Dispatcharr/dispatcharr.yml"
+        run: ls -l "./Docker-NonCritical/dispatcharr/dispatcharr.yml"
 
       - name: Compare image and config
-        working-directory: "./Docker-NonCritical/Media/Dispatcharr"
+        working-directory: "./Docker-NonCritical/dispatcharr"
         env:
           PUID: ${{ vars.PUID }}
           PGID: ${{ vars.PGID }}
