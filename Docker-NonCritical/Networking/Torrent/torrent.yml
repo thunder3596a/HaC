@@ -65,7 +65,7 @@ services:
       - UMASK=022
     volumes:
       - /srv/qbittorrent/config:/config
-      - /mnt/data/torrent:/data
+      - /mnt/data/torrent:/data/torrent
     network_mode: service:gluetun
     depends_on:
       gluetun:
