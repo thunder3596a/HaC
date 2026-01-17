@@ -4,24 +4,43 @@ This file guides AI coding agents through this homelab's architecture, deploymen
 
 ## Quick Context
 
-- **Host:** TrueNAS Scale (`truenas01`) running Docker
-- **Git:** Forgejo (self-hosted Git server + Actions runner)
+- **Hosts:**
+  - **docker-critical** (Debian) - Mission-critical services (Home Assistant, Authelia, Forgejo, Traefik)
+  - **docker-noncritical** (Debian) - Non-essential services (media stack, AI, automation)
+  - **truenas01** - NFS/SMB storage server only (no Docker)
+- **Git:** Forgejo (self-hosted Git server + Actions runners on each Docker host)
 - **Deployments:** GitOps via Forgejo workflows (no persistent repo clone on host)
 - **Secrets:** Forgejo repository variables/secrets only (no `.env` files)
-- **Reverse Proxy:** Traefik with Cloudflare DNS-01 ACME
-- **Storage:** `/mnt/Apps/<Service>` for persistent data; `/mnt/Pool01/data` for media
+- **Reverse Proxy:** Traefik with Cloudflare DNS-01 ACME (one instance per Docker host)
+- **Storage:**
+  - **docker-critical:** `/srv` (NVMe #1) for configs/databases, `/mnt/nvme-appdata` (NVMe #2) for appdata/search, `/mnt/hdd` for bulk/logs
+  - **docker-noncritical:** `/srv` for service configs, `/mnt/data` for media/downloads
+  - **truenas01:** NFS/SMB shares mounted on Docker hosts
 
 ## Architecture
 
 ### Service Organization
-- **`docker/Media/*/*.yml`** — Per-service media stacks (radarr, sonarr, lidarr, prowlarr, readarr, overseerr, flaresolverr, profilarr, dispatcharr)
-- **`docker/Networking/*`** — Proxy (Traefik), torrent (qbittorrent + gluetun + nzbget)
-- **`docker/Security/Auth/`** — Authelia authentication
-- **`docker/Tools/Mail/`** — SMTP relay (Postfix)
-- **`docker/Tools/Git - Forgejo/`** — Forgejo server + Postgres
-- **`docker/Tools/Git - Forgejo Runner/`** — Self-hosted Actions runner
-- **`docker/Home/*`** — Homelab services (Kiwix library, Norish recipe app, KaraKeep)
-- **`docker/Automation/*`** — AI/compute (Ollama, Open WebUI, ComfyUI)
+- **`Docker-Critical/`** — Mission-critical services on docker-critical host
+  - `Home/HomeAssistant/` — Home automation hub + ESPHome
+  - `Home/RTL-SDR/` — Software-defined radio for sensors
+  - `Home/MusicAssistant/` — Multi-room audio server
+  - `Home/NetBox/` — Network documentation
+  - `Home/Cooking/` — Norish recipe app
+  - `Home/KaraKeep/` — Media library management
+  - `Management/Git - Forgejo/` — Forgejo server + Postgres
+  - `Management/HomeBox/` — Household inventory
+  - `Networking/Proxy/` — Traefik reverse proxy
+  - `Networking/Omada/` — Network controller
+  - `Networking/Mail/` — SMTP relay (Postfix)
+  - `Auth/` — Authelia SSO
+  - `Tools/InfluxDB/` — Time-series database
+- **`Docker-NonCritical/`** — Non-essential services on docker-noncritical host
+  - `Media/*/` — Media stack (radarr, sonarr, lidarr, prowlarr, readarr, overseerr, flaresolverr, profilarr, dispatcharr, plex)
+  - `Networking/Torrent/` — qBittorrent + Gluetun VPN + NZBGet
+  - `Networking/Proxy/` — Traefik reverse proxy (non-critical instance)
+  - `Automation/AI/` — Ollama, Open WebUI
+  - `Automation/` — ComfyUI, Watchtower, Price Tracker
+  - `Security/Crowdsec/` — Threat detection
 
 ### Networks
 Services are scoped to logical networks (external, created by Traefik or defined per-stack):
@@ -35,8 +54,15 @@ Services are scoped to logical networks (external, created by Traefik or defined
 - `authnet` — Privileged auth-only network (LDAP, OAuth)
 
 ### Data Paths
-- App config: `/mnt/Apps/<ServiceName>` (e.g., `/mnt/Apps/Sonarr`, `/mnt/Apps/Forgejo`)
-- Media: `/mnt/Pool01/data` (radarr, sonarr, lidarr mounts)
+**docker-critical:**
+- App config: `/srv/<service>/` (e.g., `/srv/homeassistant`, `/srv/traefik`, `/srv/git`)
+- Appdata tier: `/mnt/nvme-appdata/<service>/` (e.g., `/mnt/nvme-appdata/netbox`, `/mnt/nvme-appdata/karakeep`)
+- Bulk storage: `/mnt/hdd/` (logs, archives, ZIM files)
+
+**docker-noncritical:**
+- App config: `/srv/<service>/config/` (e.g., `/srv/radarr/config`, `/srv/qbittorrent/config`)
+- Media/downloads: `/mnt/data/` (e.g., `/mnt/data/torrents`, `/mnt/data/usenet`)
+- Shared media: NFS mounts from truenas01 (e.g., `/mnt/Pool01/data` for Plex, *arr apps)
 
 ## Compose File Patterns
 
@@ -136,30 +162,36 @@ jobs:
 ```
 
 ### Critical Workflow Details
-- **Runner label:** `runs-on: truenas01` (must match runner's registered labels)
+- **Runner labels:**
+  - `runs-on: docker-critical` for critical services (Home Assistant, Authelia, Traefik-Critical, Forgejo, etc.)
+  - `runs-on: docker-noncritical` for non-critical services (media stack, AI, automation)
+  - Must match runner's registered labels on each host
 - **Checkout:** always v4 (`actions/checkout@v4`)
 - **Project scoping:** `-p <service-name>` prevents cross-stack impacts (e.g., `docker compose -p postfix -f /tmp/Postfix.yml`)
 - **Environment vars:** exported to remote SSH session (e.g., `VAR1=$VAR1 docker compose ...`)
 - **Checksum gate:** avoid redeploys if config unchanged (efficiency + idempotence)
 - **scp + ssh:** workflows run locally on runner; compose file copied to `/tmp/`, executed there
+- **Host-specific paths:** Ensure volume paths match the target host's storage layout
 
 ## Common Patterns
 
-### Adding a Service to Media Network
-Create `docker/Media/<ServiceName>/<service>.yml`:
+### Adding a Service to Media Network (docker-noncritical)
+Create `Docker-NonCritical/Media/<ServiceName>/<service>.yml`:
 ```yaml
 services:
   <service>:
     image: <image>
     container_name: <service>
+    restart: unless-stopped
     networks: [mediaproxy]
     environment: [PUID=568, PGID=568, TZ=America/Chicago]
-    labels: [traefik.enable=true, ...]  # as above
-    volumes: [/mnt/Apps/<Service>:/config, /mnt/Pool01/data:/data]
+    labels: [traefik.enable=true, com.centurylinklabs.watchtower.enable=true, ...]
+    volumes: [/srv/<service>/config:/config, /mnt/Pool01/data:/data]
+    security_opt: [no-new-privileges:true]
 networks:
   mediaproxy: {external: true}
 ```
-Then create `.forgejo/workflows/deploy-<service>.yml` following the template above.
+Then create `.forgejo/workflows/deploy-<service>.yml` with `runs-on: docker-noncritical`.
 
 ### Secrets in Forgejo
 Repository Settings → Variables (plaintext) or Secrets (encrypted):
@@ -188,53 +220,67 @@ healthcheck:
 ```
 
 ## Context Discovery
-Read `Context.md` in the repo root for:
-- Physical infrastructure (OpnSense router, TrueNAS interfaces)
+Read `.continue/rules/Context.md` in the workspace root for:
+- Multi-host infrastructure (docker-critical, docker-noncritical, truenas01)
 - Full list of Forgejo variables/secrets
 - Network definitions
-- Host storage layout
-- CI/CD runner details
+- Host storage layouts (per-host)
+- CI/CD runner details (one per Docker host)
 
 ## DO's and DON'Ts
 
 ✅ **DO**
-- Place each service in its own `<service>.yml` file
-- Use external networks (defined once, reused)
+- Place each service in its own `<service>.yml` file under `Docker-Critical/` or `Docker-NonCritical/`
+- Use external networks (defined once per host, reused)
 - Reference all secrets/vars via `${VAR}` placeholders
-- Create Forgejo workflows with checksum gating (idempotent)
-- Mount persistent data to `/mnt/Apps/<Service>`
+- Create Forgejo workflows with checksum gating and correct runner labels (`docker-critical` or `docker-noncritical`)
+- Mount persistent data to host-specific paths:
+  - **docker-critical:** `/srv/<service>/`, `/mnt/nvme-appdata/<service>/`, or `/mnt/hdd/`
+  - **docker-noncritical:** `/srv/<service>/config/`, `/mnt/data/`
 - Use Traefik labels for routing and ACME
 - Test compose files locally before commit
 - Document custom env vars in service READMEs
+- Include `security_opt: [no-new-privileges:true]` and `restart: unless-stopped`
 
 ❌ **DON'T**
 - Create `.env` files (breaks GitOps; use Forgejo secrets instead)
 - Hardcode domain names, passwords, or IPs (use placeholders)
 - Inline network creation (external or pre-created only)
 - Mix multiple services in one compose file (except tightly coupled stacks like Norish+DB)
-- Forget `restart: unless-stopped` or similar policy
+- Deploy critical services to docker-noncritical (will lose home automation)
+- Deploy non-critical services to docker-critical (wastes resources)
 - Use `:latest` tags without understanding update implications
-- SSH directly to `truenas01` for deployments (always use Forgejo workflows)
+- SSH directly to Docker hosts for deployments (always use Forgejo workflows)
+- Assume both hosts have identical storage paths
 
 ## File Structure Reference
 ```
 docker/
-├── .forgejo/workflows/          # CI/CD workflows
-│   ├── deploy-<service>.yml
+├── .forgejo/workflows/          # CI/CD workflows (one per service)
+│   ├── deploy-<service>.yml     # Specifies runner: docker-critical or docker-noncritical
 │   └── ...
-├── Context.md                   # Infrastructure & secrets reference
-├── Automation/                  # AI/compute services
-├── Home/                        # Home services
-├── Media/                       # Per-service media stacks
-├── Networking/                  # Proxy, torrent, VPN
-├── Security/                    # Auth, monitoring
-├── Tools/                       # Utilities, Git, Mail
+├── .github/copilot-instructions.md  # This file
+├── Docker-Critical/             # Critical services (docker-critical host)
+│   ├── Home/                    # Home services (HA, Music, NetBox, Norish, KaraKeep)
+│   ├── Management/              # Infrastructure (Forgejo, HomeBox)
+│   ├── Networking/              # Proxy, Omada, Mail
+│   ├── Auth/                    # Authelia SSO
+│   └── Tools/                   # InfluxDB
+├── Docker-NonCritical/          # Non-critical services (docker-noncritical host)
+│   ├── Media/                   # Media stack (*arr apps, Plex, Overseerr, etc.)
+│   ├── Networking/              # Torrent/VPN (qBittorrent, Gluetun, NZBGet), Proxy
+│   ├── Automation/              # AI (Ollama, WebUI, ComfyUI), Watchtower, Price Tracker
+│   └── Security/                # Crowdsec
 └── README.md
 ```
 
 ## Next Steps for Agents
-1. Read `Context.md` for full infrastructure knowledge
-2. Inspect `.forgejo/workflows/deploy-karakeep.yml` or `deploy-norish.yml` as working examples
-3. For new services: create compose file, then workflow from template above
-4. Always validate YAML syntax and network existence before committing
-5. Test locally first; use `workflow_dispatch` for manual trigger during development
+1. Read `.continue/rules/Context.md` in the workspace root for full infrastructure knowledge
+2. Determine which host the service belongs on (critical vs non-critical)
+3. Inspect existing workflows (`.forgejo/workflows/deploy-*.yml`) for runner label examples
+4. For new services:
+   - Create compose file in appropriate `Docker-Critical/` or `Docker-NonCritical/` folder
+   - Create workflow with correct `runs-on:` label
+   - Use host-appropriate storage paths
+5. Always validate YAML syntax and network existence before committing
+6. Test locally first; use `workflow_dispatch` for manual trigger during development
