@@ -22,6 +22,8 @@ services:
       - NET_ADMIN
       - NET_RAW
       - NET_BROADCAST
+      - SYS_ADMIN
+      - SYS_RESOURCE
     networks:
       - homeproxy
     dns:
