@@ -21,6 +21,7 @@ services:
     cap_add:
       - NET_ADMIN
       - NET_RAW
+      - NET_BROADCAST
     networks:
       - homeproxy
     dns:
