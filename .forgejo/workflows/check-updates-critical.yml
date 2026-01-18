@@ -1,0 +1,77 @@
+name: Check Updates - Docker Critical
+
+on:
+  schedule:
+    # Run daily at 4pm Central (22:00 UTC in winter, 21:00 UTC in summer)
+    - cron: '0 22 * * *'
+  workflow_dispatch:
+
+jobs:
+  check-updates:
+    runs-on: docker-critical
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check for container updates
+        id: check
+        env:
+          # Containers to check on docker-critical
+          CONTAINERS: "homeassistant music-assistant esphome matter-server mariadb mosquitto traefik authelia forgejo influxdb netbox"
+        run: |
+          chmod +x ./scripts/check-docker-updates.sh
+
+          updates=""
+          for container in $CONTAINERS; do
+            if docker ps --format '{{.Names}}' | grep -q "^${container}$"; then
+              result=$(./scripts/check-docker-updates.sh "$container")
+              if [ "$result" != "[]" ]; then
+                updates="${updates}${result},"
+              fi
+            fi
+          done
+
+          # Clean up JSON
+          if [ -n "$updates" ]; then
+            updates="[${updates%,}]"
+            # Flatten nested arrays
+            updates=$(echo "$updates" | sed 's/\]\[/,/g' | sed 's/\[\[/[/g' | sed 's/\]\]/]/g')
+          else
+            updates="[]"
+          fi
+
+          echo "updates=$updates" >> $GITHUB_OUTPUT
+          echo "Found updates: $updates"
+
+      - name: Send notification to Home Assistant
+        if: steps.check.outputs.updates != '[]'
+        env:
+          HA_URL: ${{ vars.HA_URL }}
+          HA_TOKEN: ${{ secrets.HA_LONG_LIVED_TOKEN }}
+          UPDATES: ${{ steps.check.outputs.updates }}
+        run: |
+          # Parse updates and create message
+          count=$(echo "$UPDATES" | grep -o '"container"' | wc -l)
+          containers=$(echo "$UPDATES" | grep -o '"container":"[^"]*"' | cut -d'"' -f4 | tr '\n' ', ' | sed 's/,$//')
+
+          # Fire an event to Home Assistant
+          curl -s -X POST \
+            -H "Authorization: Bearer ${HA_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"event_type\": \"docker_updates_available\",
+              \"event_data\": {
+                \"host\": \"docker-critical\",
+                \"count\": ${count},
+                \"containers\": \"${containers}\",
+                \"updates\": ${UPDATES}
+              }
+            }" \
+            "${HA_URL}/api/events/docker_updates_available"
+
+          echo "Notification sent to Home Assistant"

@@ -1,0 +1,106 @@
+name: Apply Updates - Docker Critical
+
+on:
+  workflow_dispatch:
+    inputs:
+      containers:
+        description: 'Containers to update (comma-separated, or "all" for all with updates)'
+        required: false
+        default: 'all'
+
+jobs:
+  apply-updates:
+    runs-on: docker-critical
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Pull and recreate containers
+        env:
+          DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
+          CERTRESOLVER: ${{ vars.CERTRESOLVER }}
+          TZ: ${{ vars.TZ }}
+          HOMEASSISTANT_MARIADB_ROOT_PASSWORD: ${{ secrets.HOMEASSISTANT_MARIADB_ROOT_PASSWORD }}
+          HOMEASSISTANT_MARIADB_PASSWORD: ${{ secrets.HOMEASSISTANT_MARIADB_PASSWORD }}
+          CONTAINERS: ${{ github.event.inputs.containers }}
+        run: |
+          # Map containers to their compose files
+          declare -A COMPOSE_MAP
+          COMPOSE_MAP["homeassistant"]="Docker-Critical/Home/HomeAssistant/homeassistant.yml"
+          COMPOSE_MAP["music-assistant"]="Docker-Critical/Home/MusicAssistant/musicassistant.yml"
+          COMPOSE_MAP["esphome"]="Docker-Critical/Home/HomeAssistant/homeassistant.yml"
+          COMPOSE_MAP["matter-server"]="Docker-Critical/Home/HomeAssistant/homeassistant.yml"
+          COMPOSE_MAP["mariadb"]="Docker-Critical/Home/HomeAssistant/homeassistant.yml"
+          COMPOSE_MAP["mosquitto"]="Docker-Critical/Home/HomeAssistant/homeassistant.yml"
+          COMPOSE_MAP["traefik"]="Docker-Critical/Networking/Traefik/traefik.yml"
+          COMPOSE_MAP["authelia"]="Docker-Critical/Networking/Authelia/authelia.yml"
+          COMPOSE_MAP["forgejo"]="Docker-Critical/Tools/Forgejo/forgejo.yml"
+          COMPOSE_MAP["influxdb"]="Docker-Critical/Tools/InfluxDB/influxdb.yml"
+          COMPOSE_MAP["netbox"]="Docker-Critical/Home/NetBox/netbox.yml"
+
+          updated=""
+
+          if [ "$CONTAINERS" = "all" ]; then
+            # Check all and update those with available updates
+            chmod +x ./scripts/check-docker-updates.sh
+            for container in "${!COMPOSE_MAP[@]}"; do
+              if docker ps --format '{{.Names}}' | grep -q "^${container}$"; then
+                result=$(./scripts/check-docker-updates.sh "$container")
+                if [ "$result" != "[]" ]; then
+                  CONTAINERS="${CONTAINERS},${container}"
+                fi
+              fi
+            done
+            CONTAINERS="${CONTAINERS#all,}"
+          fi
+
+          # Update each container
+          IFS=',' read -ra CONTAINER_LIST <<< "$CONTAINERS"
+          for container in "${CONTAINER_LIST[@]}"; do
+            container=$(echo "$container" | xargs)  # trim whitespace
+            compose_file="${COMPOSE_MAP[$container]}"
+
+            if [ -n "$compose_file" ] && [ -f "$compose_file" ]; then
+              echo "Updating $container using $compose_file"
+
+              # Pull new image
+              image=$(docker inspect --format='{{.Config.Image}}' "$container" 2>/dev/null)
+              if [ -n "$image" ]; then
+                docker pull "$image"
+              fi
+
+              # Recreate container
+              cd "$(dirname "$compose_file")"
+              docker compose -f "$(basename "$compose_file")" up -d --force-recreate "$container" || true
+              cd - > /dev/null
+
+              updated="${updated}${container}, "
+            else
+              echo "Warning: No compose file mapped for $container"
+            fi
+          done
+
+          echo "Updated containers: ${updated%, }"
+
+      - name: Notify Home Assistant of completion
+        env:
+          HA_URL: ${{ vars.HA_URL }}
+          HA_TOKEN: ${{ secrets.HA_LONG_LIVED_TOKEN }}
+          CONTAINERS: ${{ github.event.inputs.containers }}
+        run: |
+          curl -s -X POST \
+            -H "Authorization: Bearer ${HA_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"event_type\": \"docker_updates_applied\",
+              \"event_data\": {
+                \"host\": \"docker-critical\",
+                \"containers\": \"${CONTAINERS}\"
+              }
+            }" \
+            "${HA_URL}/api/events/docker_updates_applied"

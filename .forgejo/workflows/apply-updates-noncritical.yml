@@ -1,0 +1,105 @@
+name: Apply Updates - Docker NonCritical
+
+on:
+  workflow_dispatch:
+    inputs:
+      containers:
+        description: 'Containers to update (comma-separated, or "all" for all with updates)'
+        required: false
+        default: 'all'
+
+jobs:
+  apply-updates:
+    runs-on: docker-noncritical
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Pull and recreate containers
+        env:
+          DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
+          CERTRESOLVER: ${{ vars.CERTRESOLVER }}
+          TZ: ${{ vars.TZ }}
+          PLEX_CLAIM: ${{ secrets.PLEX_CLAIM }}
+          CONTAINERS: ${{ github.event.inputs.containers }}
+        run: |
+          # Map containers to their compose files
+          declare -A COMPOSE_MAP
+          COMPOSE_MAP["plex"]="Docker-NonCritical/Media/Plex/plex.yml"
+          COMPOSE_MAP["sonarr"]="Docker-NonCritical/Media/Sonarr/sonarr.yml"
+          COMPOSE_MAP["radarr"]="Docker-NonCritical/Media/Radarr/radarr.yml"
+          COMPOSE_MAP["lidarr"]="Docker-NonCritical/Media/Lidarr/lidarr.yml"
+          COMPOSE_MAP["readarr"]="Docker-NonCritical/Media/Readarr/readarr.yml"
+          COMPOSE_MAP["prowlarr"]="Docker-NonCritical/Media/Prowlarr/prowlarr.yml"
+          COMPOSE_MAP["overseerr"]="Docker-NonCritical/Media/overseerr/overseerr.yml"
+          COMPOSE_MAP["qbittorrent"]="Docker-NonCritical/Media/Torrent/torrent.yml"
+          COMPOSE_MAP["sabnzbd"]="Docker-NonCritical/Media/Torrent/torrent.yml"
+          COMPOSE_MAP["traefik"]="Docker-NonCritical/Networking/Traefik/traefik.yml"
+          COMPOSE_MAP["flaresolverr"]="Docker-NonCritical/Media/Flaresolverr/flaresolverr.yml"
+
+          updated=""
+
+          if [ "$CONTAINERS" = "all" ]; then
+            # Check all and update those with available updates
+            chmod +x ./scripts/check-docker-updates.sh
+            for container in "${!COMPOSE_MAP[@]}"; do
+              if docker ps --format '{{.Names}}' | grep -q "^${container}$"; then
+                result=$(./scripts/check-docker-updates.sh "$container")
+                if [ "$result" != "[]" ]; then
+                  CONTAINERS="${CONTAINERS},${container}"
+                fi
+              fi
+            done
+            CONTAINERS="${CONTAINERS#all,}"
+          fi
+
+          # Update each container
+          IFS=',' read -ra CONTAINER_LIST <<< "$CONTAINERS"
+          for container in "${CONTAINER_LIST[@]}"; do
+            container=$(echo "$container" | xargs)  # trim whitespace
+            compose_file="${COMPOSE_MAP[$container]}"
+
+            if [ -n "$compose_file" ] && [ -f "$compose_file" ]; then
+              echo "Updating $container using $compose_file"
+
+              # Pull new image
+              image=$(docker inspect --format='{{.Config.Image}}' "$container" 2>/dev/null)
+              if [ -n "$image" ]; then
+                docker pull "$image"
+              fi
+
+              # Recreate container
+              cd "$(dirname "$compose_file")"
+              docker compose -f "$(basename "$compose_file")" up -d --force-recreate "$container" || true
+              cd - > /dev/null
+
+              updated="${updated}${container}, "
+            else
+              echo "Warning: No compose file mapped for $container"
+            fi
+          done
+
+          echo "Updated containers: ${updated%, }"
+
+      - name: Notify Home Assistant of completion
+        env:
+          HA_URL: ${{ vars.HA_URL }}
+          HA_TOKEN: ${{ secrets.HA_LONG_LIVED_TOKEN }}
+          CONTAINERS: ${{ github.event.inputs.containers }}
+        run: |
+          curl -s -X POST \
+            -H "Authorization: Bearer ${HA_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"event_type\": \"docker_updates_applied\",
+              \"event_data\": {
+                \"host\": \"docker-noncritical\",
+                \"containers\": \"${CONTAINERS}\"
+              }
+            }" \
+            "${HA_URL}/api/events/docker_updates_applied"
