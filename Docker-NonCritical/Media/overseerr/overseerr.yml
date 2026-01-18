@@ -20,7 +20,7 @@ services:
       - traefik.http.routers.overseerr.tls.domains[0].main=request.${DOMAIN_NAME}
       - com.centurylinklabs.watchtower.enable=true
     volumes:
-      - /srv/overseerr:/app/config
+      - /srv/overseerr/config:/config
 
 networks:
   mediaproxy:
