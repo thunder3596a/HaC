@@ -7,15 +7,16 @@ services:
     networks:
       - mediaproxy
     environment:
-      # Read-only access (safe for monitoring)
+      # Read access for monitoring
       - CONTAINERS=1
       - IMAGES=1
       - INFO=1
       - NETWORKS=1
       - VOLUMES=1
       - VERSION=1
-      # Disable write operations (security)
-      - POST=0
+      # Allow POST for container restart/stop/start
+      - POST=1
+      # Disable dangerous write operations
       - BUILD=0
       - COMMIT=0
       - CONFIGS=0
