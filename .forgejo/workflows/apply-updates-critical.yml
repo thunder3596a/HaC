@@ -37,8 +37,8 @@ jobs:
           COMPOSE_MAP["matter-server"]="Docker-Critical/Home/HomeAssistant/homeassistant.yml"
           COMPOSE_MAP["mariadb"]="Docker-Critical/Home/HomeAssistant/homeassistant.yml"
           COMPOSE_MAP["mosquitto"]="Docker-Critical/Home/HomeAssistant/homeassistant.yml"
-          COMPOSE_MAP["traefik"]="Docker-Critical/Networking/Traefik/traefik.yml"
-          COMPOSE_MAP["authelia"]="Docker-Critical/Networking/Authelia/authelia.yml"
+          COMPOSE_MAP["traefik"]="Docker-Critical/Networking/Proxy/proxy.yml"
+          COMPOSE_MAP["authelia"]="Docker-Critical/Auth/Authelia.yml"
           COMPOSE_MAP["forgejo"]="Docker-Critical/Tools/Forgejo/forgejo.yml"
           COMPOSE_MAP["influxdb"]="Docker-Critical/Tools/InfluxDB/influxdb.yml"
           COMPOSE_MAP["netbox"]="Docker-Critical/Home/NetBox/netbox.yml"
@@ -48,15 +48,26 @@ jobs:
           if [ "$CONTAINERS" = "all" ]; then
             # Check all and update those with available updates
             chmod +x ./scripts/check-docker-updates.sh
+            CONTAINERS=""
             for container in "${!COMPOSE_MAP[@]}"; do
               if docker ps --format '{{.Names}}' | grep -q "^${container}$"; then
                 result=$(./scripts/check-docker-updates.sh "$container")
-                if [ "$result" != "[]" ]; then
-                  CONTAINERS="${CONTAINERS},${container}"
+                echo "Checking $container: $result"
+                if [ "$result" != "[]" ] && [ -n "$result" ]; then
+                  if [ -z "$CONTAINERS" ]; then
+                    CONTAINERS="$container"
+                  else
+                    CONTAINERS="${CONTAINERS},${container}"
+                  fi
                 fi
               fi
             done
-            CONTAINERS="${CONTAINERS#all,}"
+            echo "Containers to update: $CONTAINERS"
+          fi
+
+          if [ -z "$CONTAINERS" ]; then
+            echo "No containers need updating"
+            exit 0
           fi
 
           # Update each container
