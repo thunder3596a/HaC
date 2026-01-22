@@ -39,13 +39,15 @@ jobs:
           COMPOSE_MAP["music-assistant"]="Docker-Critical/Home/MusicAssistant/musicassistant.yml"
           COMPOSE_MAP["esphome"]="Docker-Critical/Home/HomeAssistant/homeassistant.yml"
           COMPOSE_MAP["matter-server"]="Docker-Critical/Home/HomeAssistant/homeassistant.yml"
-          COMPOSE_MAP["mariadb"]="Docker-Critical/Home/HomeAssistant/homeassistant.yml"
-          COMPOSE_MAP["mosquitto"]="Docker-Critical/Home/HomeAssistant/homeassistant.yml"
+          COMPOSE_MAP["homeassistant-db"]="Docker-Critical/Home/HomeAssistant/homeassistant.yml"
+          COMPOSE_MAP["homeassistant-mqtt"]="Docker-Critical/Home/HomeAssistant/homeassistant.yml"
           COMPOSE_MAP["traefik"]="Docker-Critical/Networking/Proxy/proxy.yml"
           COMPOSE_MAP["authelia"]="Docker-Critical/Auth/Authelia.yml"
-          COMPOSE_MAP["forgejo"]="Docker-Critical/Tools/Forgejo/forgejo.yml"
-          COMPOSE_MAP["influxdb"]="Docker-Critical/Tools/InfluxDB/influxdb.yml"
-          COMPOSE_MAP["netbox"]="Docker-Critical/Home/NetBox/netbox.yml"
+          COMPOSE_MAP["authelia-db"]="Docker-Critical/Auth/Authelia.yml"
+          COMPOSE_MAP["lldap"]="Docker-Critical/Auth/Authelia.yml"
+          COMPOSE_MAP["omada-controller"]="Docker-Critical/Networking/Omada/omada.yml"
+          COMPOSE_MAP["avahi"]="Docker-Critical/Home/HomeAssistant/homeassistant.yml"
+          COMPOSE_MAP["rtl_433"]="Docker-Critical/Home/RTL-SDR/rtl-sdr.yml"
 
           updated=""
 
@@ -102,20 +104,33 @@ jobs:
 
           echo "Updated containers: ${updated%, }"
 
+      - name: Wait for services to stabilize
+        run: sleep 15
+
       - name: Notify Home Assistant of completion
+        continue-on-error: true
         env:
           HA_URL: ${{ vars.HA_URL }}
           HA_TOKEN: ${{ secrets.HA_LONG_LIVED_TOKEN }}
           CONTAINERS: ${{ github.event.inputs.containers }}
         run: |
-          curl -s -X POST \
-            -H "Authorization: Bearer ${HA_TOKEN}" \
-            -H "Content-Type: application/json" \
-            -d "{
-              \"event_type\": \"docker_updates_applied\",
-              \"event_data\": {
-                \"host\": \"docker-critical\",
-                \"containers\": \"${CONTAINERS}\"
-              }
-            }" \
-            "${HA_URL}/api/events/docker_updates_applied"
+          # Retry up to 3 times with 10 second delay
+          for i in 1 2 3; do
+            if curl -s --fail --max-time 30 -X POST \
+              -H "Authorization: Bearer ${HA_TOKEN}" \
+              -H "Content-Type: application/json" \
+              -d "{
+                \"event_type\": \"docker_updates_applied\",
+                \"event_data\": {
+                  \"host\": \"docker-critical\",
+                  \"containers\": \"${CONTAINERS}\"
+                }
+              }" \
+              "${HA_URL}/api/events/docker_updates_applied"; then
+              echo "Successfully notified Home Assistant"
+              exit 0
+            fi
+            echo "Attempt $i failed, retrying in 10 seconds..."
+            sleep 10
+          done
+          echo "Failed to notify Home Assistant after 3 attempts"
