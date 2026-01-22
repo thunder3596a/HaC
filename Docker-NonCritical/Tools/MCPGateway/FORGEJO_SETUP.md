@@ -16,7 +16,7 @@ Add these to **Settings → Secrets**:
 |-------------|-------------|---------|
 | `MCP_DB_ROOT_PASSWORD` | MariaDB root password for MCP Gateway database | `super_secure_root_password_123` |
 | `MCP_DB_PASSWORD` | MariaDB user password for MCP Gateway | `secure_mcpuser_password_456` |
-| `HOMEASSISTANT_TOKEN` | Home Assistant long-lived access token | `eyJ0eXAiOiJKV1QiLCJhbGc...` |
+| `HA_LONG_LIVED_TOKEN` | Home Assistant long-lived access token | `eyJ0eXAiOiJKV1QiLCJhbGc...` |
 | `OPNSENSE_API_KEY` | OPNsense API key | `XZt8D3kL9mN...` |
 | `OPNSENSE_API_SECRET` | OPNsense API secret | `pQw7rS2vT8y...` |
 | `NETBOX_API_TOKEN` | NetBox API token | `0123456789abcdef0123456789abcdef01234567` |

@@ -67,7 +67,7 @@ services:
       - mcpnet
     environment:
       - HASS_URL=${HOMEASSISTANT_URL}
-      - HASS_TOKEN=${HOMEASSISTANT_TOKEN}
+      - HASS_TOKEN=${HA_LONG_LIVED_TOKEN}
       - MCP_TRANSPORT=sse
     labels:
       - com.centurylinklabs.watchtower.enable=true

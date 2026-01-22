@@ -46,7 +46,7 @@ jobs:
           MCP_DB_ROOT_PASSWORD: ${{ secrets.MCP_DB_ROOT_PASSWORD }}
           MCP_DB_PASSWORD: ${{ secrets.MCP_DB_PASSWORD }}
           HOMEASSISTANT_URL: ${{ vars.HOMEASSISTANT_URL }}
-          HOMEASSISTANT_TOKEN: ${{ secrets.HOMEASSISTANT_TOKEN }}
+          HA_LONG_LIVED_TOKEN: ${{ secrets.HA_LONG_LIVED_TOKEN }}
           OPNSENSE_URL: ${{ vars.OPNSENSE_URL }}
           OPNSENSE_API_KEY: ${{ secrets.OPNSENSE_API_KEY }}
           OPNSENSE_API_SECRET: ${{ secrets.OPNSENSE_API_SECRET }}
@@ -62,7 +62,7 @@ jobs:
           HOMEBOX_TOKEN: ${{ secrets.HOMEBOX_TOKEN }}
         run: |
           # Validate required secrets
-          for var in MCP_DB_ROOT_PASSWORD MCP_DB_PASSWORD HOMEASSISTANT_TOKEN OPNSENSE_API_KEY OPNSENSE_API_SECRET NETBOX_API_TOKEN N8N_API_KEY OMADA_USERNAME OMADA_PASSWORD HOMEBOX_TOKEN; do
+          for var in MCP_DB_ROOT_PASSWORD MCP_DB_PASSWORD HA_LONG_LIVED_TOKEN OPNSENSE_API_KEY OPNSENSE_API_SECRET NETBOX_API_TOKEN N8N_API_KEY OMADA_USERNAME OMADA_PASSWORD HOMEBOX_TOKEN; do
             eval val=\$$var
             if [ -z "$val" ]; then
               echo "Missing required secret: $var" >&2
