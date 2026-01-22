@@ -1,0 +1,162 @@
+services:
+  # IBM ContextForge MCP Gateway - Central gateway for all MCP servers
+  mcp-gateway:
+    image: ghcr.io/ibm/mcp-context-forge:latest
+    container_name: mcp-gateway
+    restart: unless-stopped
+    networks:
+      - mcpnet
+      - aiproxy
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=mysql://mcpuser:${MCP_DB_PASSWORD}@mariadb:3306/mcpgateway
+      - REDIS_URL=redis://redis:6379
+      - NODE_ENV=production
+      - ADMIN_UI_ENABLED=true
+    depends_on:
+      - mariadb
+      - redis
+    volumes:
+      - /srv/mcp-gateway/config:/app/config
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+      - traefik.enable=true
+      - traefik.http.routers.mcpgateway.entrypoints=websecure
+      - traefik.http.routers.mcpgateway.rule=Host(`mcp.${DOMAIN_NAME}`)
+      - traefik.http.routers.mcpgateway.service=mcpgateway
+      - traefik.http.services.mcpgateway.loadbalancer.server.port=3000
+      - traefik.http.routers.mcpgateway.tls.certresolver=${CERTRESOLVER}
+      - traefik.http.routers.mcpgateway.tls.domains[0].main=mcp.${DOMAIN_NAME}
+
+  # MariaDB for MCP Gateway
+  mariadb:
+    image: mariadb:latest
+    container_name: mcp-mariadb
+    restart: unless-stopped
+    networks:
+      - mcpnet
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MCP_DB_ROOT_PASSWORD}
+      - MYSQL_DATABASE=mcpgateway
+      - MYSQL_USER=mcpuser
+      - MYSQL_PASSWORD=${MCP_DB_PASSWORD}
+    volumes:
+      - /srv/mcp-gateway/mariadb:/var/lib/mysql
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+
+  # Redis for MCP Gateway caching and federation
+  redis:
+    image: redis:alpine
+    container_name: mcp-redis
+    restart: unless-stopped
+    networks:
+      - mcpnet
+    volumes:
+      - /srv/mcp-gateway/redis:/data
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+
+  # Home Assistant MCP Server
+  homeassistant-mcp:
+    image: ghcr.io/tevonsb/homeassistant-mcp:latest
+    container_name: mcp-homeassistant
+    restart: unless-stopped
+    networks:
+      - mcpnet
+    environment:
+      - HASS_URL=${HOMEASSISTANT_URL}
+      - HASS_TOKEN=${HOMEASSISTANT_TOKEN}
+      - MCP_TRANSPORT=sse
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+
+  # OPNsense MCP Server
+  opnsense-mcp:
+    image: node:20-alpine
+    container_name: mcp-opnsense
+    restart: unless-stopped
+    networks:
+      - mcpnet
+    working_dir: /app
+    command: npx -y @pixelworlds/opnsense-mcp-server
+    environment:
+      - OPNSENSE_URL=${OPNSENSE_URL}
+      - OPNSENSE_API_KEY=${OPNSENSE_API_KEY}
+      - OPNSENSE_API_SECRET=${OPNSENSE_API_SECRET}
+      - MCP_TRANSPORT=sse
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+
+  # NetBox MCP Server
+  netbox-mcp:
+    image: node:20-alpine
+    container_name: mcp-netbox
+    restart: unless-stopped
+    networks:
+      - mcpnet
+    working_dir: /app
+    command: npx -y @netboxlabs/netbox-mcp-server
+    environment:
+      - NETBOX_URL=${NETBOX_URL}
+      - NETBOX_API_TOKEN=${NETBOX_API_TOKEN}
+      - MCP_TRANSPORT=sse
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+
+  # n8n MCP Server (custom implementation)
+  n8n-mcp:
+    build:
+      context: ./mcp-servers/n8n
+      dockerfile: Dockerfile
+    container_name: mcp-n8n
+    restart: unless-stopped
+    networks:
+      - mcpnet
+    environment:
+      - N8N_URL=${N8N_URL}
+      - N8N_API_KEY=${N8N_API_KEY}
+      - MCP_TRANSPORT=sse
+    labels:
+      - com.centurylinklabs.watchtower.enable=false
+
+  # TP-Link Omada MCP Server (custom implementation)
+  omada-mcp:
+    build:
+      context: ./mcp-servers/omada
+      dockerfile: Dockerfile
+    container_name: mcp-omada
+    restart: unless-stopped
+    networks:
+      - mcpnet
+    environment:
+      - OMADA_URL=${OMADA_URL}
+      - OMADA_USERNAME=${OMADA_USERNAME}
+      - OMADA_PASSWORD=${OMADA_PASSWORD}
+      - OMADA_SITE_ID=${OMADA_SITE_ID}
+      - MCP_TRANSPORT=sse
+    labels:
+      - com.centurylinklabs.watchtower.enable=false
+
+  # HomeBox MCP Server (custom implementation)
+  homebox-mcp:
+    build:
+      context: ./mcp-servers/homebox
+      dockerfile: Dockerfile
+    container_name: mcp-homebox
+    restart: unless-stopped
+    networks:
+      - mcpnet
+    environment:
+      - HOMEBOX_URL=${HOMEBOX_URL}
+      - HOMEBOX_TOKEN=${HOMEBOX_TOKEN}
+      - MCP_TRANSPORT=sse
+    labels:
+      - com.centurylinklabs.watchtower.enable=false
+
+networks:
+  mcpnet:
+    driver: bridge
+  aiproxy:
+    external: true
