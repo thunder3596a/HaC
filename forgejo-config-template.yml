@@ -1,0 +1,88 @@
+# Forgejo Repository Configuration Template
+# Copy these values into Forgejo → Repository Settings → Actions
+
+# ============================================================================
+# VARIABLES (Repository Settings → Actions → Variables)
+# ============================================================================
+
+DOMAIN_NAME: "u-acres.com"
+TZ: "America/Chicago"
+CERTRESOLVER: "cloudflare"
+CLOUDFLARE_EMAIL: "YOUR_CLOUDFLARE_EMAIL_HERE"
+LETS_ENCRYPT_EMAIL: "YOUR_LETSENCRYPT_EMAIL_HERE"
+HA_URL: "https://ha.u-acres.com"
+
+# ============================================================================
+# SECRETS (Repository Settings → Actions → Secrets)
+# ============================================================================
+
+# --- Database Passwords ---
+# Get these from your current MariaDB setup or .env files
+HOMEASSISTANT_MARIADB_ROOT_PASSWORD: "YOUR_MARIADB_ROOT_PASSWORD_HERE"
+HOMEASSISTANT_MARIADB_PASSWORD: "YOUR_MARIADB_HA_USER_PASSWORD_HERE"
+
+# --- Cloudflare API Tokens ---
+# Create at: https://dash.cloudflare.com/profile/api-tokens
+# DNS Token needs: Zone.DNS.Edit permission
+# Zone Token needs: Zone.Zone.Read permission
+CLOUDFLARE_DNS_API_TOKEN: "YOUR_CLOUDFLARE_DNS_API_TOKEN_HERE"
+CLOUDFLARE_ZONE_API_TOKEN: "YOUR_CLOUDFLARE_ZONE_API_TOKEN_HERE"
+
+# --- Home Assistant Long-Lived Access Token ---
+# Create at: Home Assistant → Your Profile → Long-Lived Access Tokens
+HA_LONG_LIVED_TOKEN: "YOUR_HA_LONG_LIVED_ACCESS_TOKEN_HERE"
+
+# --- Forgejo API Tokens ---
+# Create at: Forgejo → Settings → Applications → Generate New Token
+# Required permissions: repository (read/write), actions (read/write)
+
+# Token for Home Assistant to trigger workflows (MUST include "token " prefix)
+forgejo_token: "token YOUR_FORGEJO_API_TOKEN_HERE"
+
+# Token for workflows to checkout code (WITHOUT "token " prefix)
+# This can be the SAME token as above, just without the "token " prefix
+FORGEJO_TOKEN: "YOUR_FORGEJO_API_TOKEN_HERE"
+
+# --- Forgejo Workflow Dispatch URLs ---
+# These are already correct for your setup (nicholas/docker on git.u-acres.com)
+forgejo_workflow_url_critical: "https://git.u-acres.com/api/v1/repos/nicholas/docker/actions/workflows/check-updates-critical.yml/dispatches"
+
+forgejo_workflow_url_noncritical: "https://git.u-acres.com/api/v1/repos/nicholas/docker/actions/workflows/check-updates-noncritical.yml/dispatches"
+
+forgejo_workflow_url_apply_critical: "https://git.u-acres.com/api/v1/repos/nicholas/docker/actions/workflows/apply-updates-critical.yml/dispatches"
+
+forgejo_workflow_url_apply_noncritical: "https://git.u-acres.com/api/v1/repos/nicholas/docker/actions/workflows/apply-updates-noncritical.yml/dispatches"
+
+# ============================================================================
+# NOTES
+# ============================================================================
+
+# Values already confirmed from your setup:
+# ✓ DOMAIN_NAME: u-acres.com (from Traefik and HA configs)
+# ✓ TZ: America/Chicago (from compose files)
+# ✓ CERTRESOLVER: cloudflare (from Traefik config)
+# ✓ HA_URL: https://ha.u-acres.com (from workflows)
+# ✓ Workflow URLs: Using git.u-acres.com and nicholas/docker repo
+
+# You already have these in Home Assistant's secrets.yaml:
+# - forgejo_token (starts with "token ")
+# - forgejo_workflow_url_apply_critical
+# - forgejo_workflow_url_apply_noncritical
+# Just copy the SAME values to Forgejo repository settings
+
+# How to add in Forgejo:
+# 1. Go to: https://git.u-acres.com/nicholas/docker/settings/actions/variables
+# 2. For each VARIABLE above: Click "Add Variable", paste name and value
+# 3. Go to: https://git.u-acres.com/nicholas/docker/settings/actions/secrets
+# 4. For each SECRET above: Click "Add Secret", paste name and value
+# 5. Save all changes
+
+# Git Authentication Error Fix:
+# The error "could not read Username" is fixed by adding FORGEJO_TOKEN to checkout step.
+# This has been added to apply-updates-critical.yml already:
+#
+# - name: Checkout repository
+#   uses: actions/checkout@v4
+#   with:
+#     token: ${{ secrets.FORGEJO_TOKEN }}  # <-- This fixes the git auth error
+#     ref: main
