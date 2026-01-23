@@ -33,48 +33,25 @@ jobs:
           LETS_ENCRYPT_EMAIL: ${{ vars.LETS_ENCRYPT_EMAIL }}
           CONTAINERS: ${{ github.event.inputs.containers }}
         run: |
-          # Map containers to their compose files and service names
+          # Build container maps from Docker labels (ha.monitor=true)
           declare -A COMPOSE_MAP
           declare -A SERVICE_MAP
 
-          COMPOSE_MAP["homeassistant"]="Docker-Critical/Home/HomeAssistant/homeassistant.yml"
-          SERVICE_MAP["homeassistant"]="homeassistant"
+          # Query Docker API for all containers with ha.monitor=true
+          containers_json=$(curl -s http://localhost:2375/containers/json?all=true)
 
-          COMPOSE_MAP["music-assistant"]="Docker-Critical/Home/MusicAssistant/musicassistant.yml"
-          SERVICE_MAP["music-assistant"]="music-assistant"
+          # Parse JSON and build maps
+          while IFS= read -r line; do
+            container_name=$(echo "$line" | jq -r '.name')
+            compose_file=$(echo "$line" | jq -r '.compose_file')
+            service_name=$(echo "$line" | jq -r '.service_name')
 
-          COMPOSE_MAP["esphome"]="Docker-Critical/Home/HomeAssistant/homeassistant.yml"
-          SERVICE_MAP["esphome"]="esphome"
-
-          COMPOSE_MAP["matter-server"]="Docker-Critical/Home/HomeAssistant/homeassistant.yml"
-          SERVICE_MAP["matter-server"]="matter-server"
-
-          COMPOSE_MAP["homeassistant-db"]="Docker-Critical/Home/HomeAssistant/homeassistant.yml"
-          SERVICE_MAP["homeassistant-db"]="mariadb"
-
-          COMPOSE_MAP["homeassistant-mqtt"]="Docker-Critical/Home/HomeAssistant/homeassistant.yml"
-          SERVICE_MAP["homeassistant-mqtt"]="mosquitto"
-
-          COMPOSE_MAP["traefik"]="Docker-Critical/Networking/Proxy/proxy.yml"
-          SERVICE_MAP["traefik"]="traefik"
-
-          COMPOSE_MAP["authelia"]="Docker-Critical/Auth/Authelia.yml"
-          SERVICE_MAP["authelia"]="authelia"
-
-          COMPOSE_MAP["authelia-db"]="Docker-Critical/Auth/Authelia.yml"
-          SERVICE_MAP["authelia-db"]="authelia-db"
-
-          COMPOSE_MAP["lldap"]="Docker-Critical/Auth/Authelia.yml"
-          SERVICE_MAP["lldap"]="lldap"
-
-          COMPOSE_MAP["omada-controller"]="Docker-Critical/Networking/Omada/omada.yml"
-          SERVICE_MAP["omada-controller"]="omada-controller"
-
-          COMPOSE_MAP["avahi"]="Docker-Critical/Home/HomeAssistant/homeassistant.yml"
-          SERVICE_MAP["avahi"]="avahi"
-
-          COMPOSE_MAP["rtl_433"]="Docker-Critical/Home/RTL-SDR/rtl-sdr.yml"
-          SERVICE_MAP["rtl_433"]="rtl_433"
+            if [ -n "$container_name" ] && [ "$container_name" != "null" ]; then
+              COMPOSE_MAP["$container_name"]="$compose_file"
+              SERVICE_MAP["$container_name"]="$service_name"
+              echo "Registered: $container_name -> $compose_file (service: $service_name)"
+            fi
+          done < <(echo "$containers_json" | jq -c '.[] | select(.Labels["ha.monitor"] == "true") | {name: .Names[0] | ltrimstr("/"), compose_file: .Labels["ha.compose-file"], service_name: .Labels["ha.service-name"]}')
 
           updated=""
 

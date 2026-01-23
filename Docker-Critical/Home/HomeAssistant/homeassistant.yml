@@ -12,6 +12,11 @@ services:
     volumes:
       - /srv/avahi:/config
       - /var/run/dbus:/var/run/dbus:ro
+    labels:
+      - ha.monitor=true
+      - ha.category=home
+      - ha.compose-file=Docker-Critical/Home/HomeAssistant/homeassistant.yml
+      - ha.service-name=avahi
 
   homeassistant:
     image: ghcr.io/home-assistant/home-assistant:latest
@@ -48,6 +53,10 @@ services:
       - traefik.http.routers.homeassistant.tls.domains[0].main=ha.${DOMAIN_NAME}
       - traefik.http.services.homeassistant.loadbalancer.server.port=8123
       - com.centurylinklabs.watchtower.enable=true
+      - ha.monitor=true
+      - ha.category=home
+      - ha.compose-file=Docker-Critical/Home/HomeAssistant/homeassistant.yml
+      - ha.service-name=homeassistant
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8123/"]
       interval: 30s
@@ -75,6 +84,11 @@ services:
       - TZ=${TZ:-America/Chicago}
     volumes:
       - /srv/homeassistant/mariadb:/var/lib/mysql
+    labels:
+      - ha.monitor=true
+      - ha.category=home
+      - ha.compose-file=Docker-Critical/Home/HomeAssistant/homeassistant.yml
+      - ha.service-name=mariadb
     healthcheck:
       test: ["CMD-SHELL", "mariadb-admin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD"]
       interval: 30s
@@ -97,6 +111,11 @@ services:
       - /srv/homeassistant/mosquitto/config:/mosquitto/config
       - /srv/homeassistant/mosquitto/data:/mosquitto/data
       - /srv/homeassistant/mosquitto/log:/mosquitto/log
+    labels:
+      - ha.monitor=true
+      - ha.category=home
+      - ha.compose-file=Docker-Critical/Home/HomeAssistant/homeassistant.yml
+      - ha.service-name=mosquitto
     healthcheck:
       test:
         ["CMD", "mosquitto_sub", "-h", "127.0.0.1", "-t", "$$SYS/#", "-C", "1"]
@@ -116,6 +135,11 @@ services:
     volumes:
       - /srv/homeassistant/matter:/data
       - /run/dbus:/run/dbus:ro
+    labels:
+      - ha.monitor=true
+      - ha.category=home
+      - ha.compose-file=Docker-Critical/Home/HomeAssistant/homeassistant.yml
+      - ha.service-name=matter-server
     healthcheck:
       test:
         [
@@ -154,6 +178,10 @@ services:
       - traefik.http.routers.esphome.tls.domains[0].main=esphome.${DOMAIN_NAME}
       - traefik.http.services.esphome.loadbalancer.server.port=6052
       - com.centurylinklabs.watchtower.enable=true
+      - ha.monitor=true
+      - ha.category=home
+      - ha.compose-file=Docker-Critical/Home/HomeAssistant/homeassistant.yml
+      - ha.service-name=esphome
     volumes:
       - /srv/esphome:/config
     healthcheck:
