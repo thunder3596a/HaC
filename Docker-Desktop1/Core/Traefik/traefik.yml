@@ -24,6 +24,12 @@ services:
       - ha.category=networking
       - ha.compose-file=Docker-Desktop1/Core/Traefik/traefik.yml
       - ha.service-name=traefik
+      # Traefik routing
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.entrypoints=websecure"
+      - "traefik.http.routers.dashboard.rule=Host(`docker-desktop1-traefik.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.tls.certresolver=${CERTRESOLVER:-cloudflare}"
 
     command:
       - "--api=true"
@@ -64,13 +70,6 @@ services:
       - CF_ZONE_API_TOKEN=${CLOUDFLARE_ZONE_API_TOKEN}
       - LETS_ENCRYPT_EMAIL=${LETS_ENCRYPT_EMAIL}
       - TZ=${TZ}
-
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.dashboard.entrypoints=websecure"
-      - "traefik.http.routers.dashboard.rule=Host(`docker-desktop1-traefik.${DOMAIN_NAME}`)"
-      - "traefik.http.routers.dashboard.service=api@internal"
-      - "traefik.http.routers.dashboard.tls.certresolver=${CERTRESOLVER:-cloudflare}"
 
     networks:
       - aiproxy
