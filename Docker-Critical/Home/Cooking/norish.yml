@@ -62,6 +62,10 @@ services:
       - "traefik.http.routers.norish.tls.domains[0].main=norish.${DOMAIN_NAME}"
       - "traefik.http.services.norish.loadbalancer.server.port=3000"
       - "traefik.http.routers.norish.middlewares=authelia@docker"
+      - "ha.monitor=true"
+      - "ha.category=home"
+      - "ha.compose-file=Docker-Critical/Home/Cooking/norish.yml"
+      - "ha.service-name=norish"
 
   db:
     image: postgres:17-alpine
@@ -75,6 +79,11 @@ services:
       - homeproxy
     volumes:
       - /srv/norish/postgres:/var/lib/postgresql/data
+    labels:
+      - "ha.monitor=true"
+      - "ha.category=home"
+      - "ha.compose-file=Docker-Critical/Home/Cooking/norish.yml"
+      - "ha.service-name=db"
 
   # Chrome headless
   chrome-headless:
@@ -90,6 +99,11 @@ services:
       - "--remote-debugging-address=0.0.0.0"
       - "--remote-debugging-port=3000"
       - "--headless"
+    labels:
+      - "ha.monitor=true"
+      - "ha.category=home"
+      - "ha.compose-file=Docker-Critical/Home/Cooking/norish.yml"
+      - "ha.service-name=chrome-headless"
 
   # Redis for real-time events and job queues
   redis:
@@ -100,6 +114,11 @@ services:
       - homeproxy
     volumes:
       - /srv/norish/redis_data:/data
+    labels:
+      - "ha.monitor=true"
+      - "ha.category=home"
+      - "ha.compose-file=Docker-Critical/Home/Cooking/norish.yml"
+      - "ha.service-name=redis"
 networks:
   homeproxy:
     external: true

@@ -1,6 +1,7 @@
 services:
   web:
     image: ghcr.io/karakeep-app/karakeep:release
+    container_name: karakeep
     restart: unless-stopped
     volumes:
       - ${KARAKEEP_DATA:-/srv/karakeep/data}:/data
@@ -15,6 +16,10 @@ services:
       - traefik.http.routers.kara.tls.certresolver=${CERTRESOLVER:-cloudflare}
       - traefik.http.routers.kara.tls.domains[0].main=kara.${DOMAIN_NAME}
       - com.centurylinklabs.watchtower.enable=true
+      - "ha.monitor=true"
+      - "ha.category=tools"
+      - "ha.compose-file=Docker-Critical/Home/KaraKeep/karakeep.yml"
+      - "ha.service-name=web"
     environment:
       MEILI_ADDR: ${MEILI_ADDR:-http://localhost:7700}
       BROWSER_WEB_URL: ${BROWSER_WEB_URL:-http://localhost:9222}

@@ -46,6 +46,10 @@ services:
       - traefik.http.routers.git-ssh.entrypoints=ssh
       - traefik.http.routers.git-ssh.service=git-ssh
       - traefik.http.services.git-ssh.loadbalancer.server.port=2222
+      - "ha.monitor=true"
+      - "ha.category=management"
+      - "ha.compose-file=Docker-Critical/Management/Git - Forgejo/git.yml"
+      - "ha.service-name=forgejo"
   git-db:
     image: postgres:14
     container_name: git-db
@@ -58,5 +62,9 @@ services:
       - gitproxy
     labels:
       - com.centurylinklabs.watchtower.enable=true
+      - "ha.monitor=true"
+      - "ha.category=management"
+      - "ha.compose-file=Docker-Critical/Management/Git - Forgejo/git.yml"
+      - "ha.service-name=git-db"
     volumes:
       - /srv/git/postgres:/var/lib/postgresql/data

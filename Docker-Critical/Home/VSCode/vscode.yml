@@ -20,6 +20,10 @@ services:
       - traefik.http.routers.vscode.tls.domains[0].main=vscode.${DOMAIN_NAME}
       - traefik.http.services.vscode.loadbalancer.server.port=8080
       - com.centurylinklabs.watchtower.enable=true
+      - "ha.monitor=true"
+      - "ha.category=tools"
+      - "ha.compose-file=Docker-Critical/Home/VSCode/vscode.yml"
+      - "ha.service-name=vscode"
     volumes:
       - /srv/vscode:/home/coder/.local/share/code-server
 

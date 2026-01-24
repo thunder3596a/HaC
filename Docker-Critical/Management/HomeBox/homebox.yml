@@ -1,6 +1,7 @@
 services:
   homebox:
     image: ghcr.io/hay-kot/homebox:latest
+    container_name: homebox
     environment:
       - PUID=568
       - PGID=568
@@ -19,6 +20,10 @@ services:
       - traefik.http.routers.homebox.tls.domains[0].main=homebox.u-acres.com
       - com.centurylinklabs.watchtower.enable=true
       - traefik.enable=true
+      - "ha.monitor=true"
+      - "ha.category=management"
+      - "ha.compose-file=Docker-Critical/Management/HomeBox/homebox.yml"
+      - "ha.service-name=homebox"
     volumes:
       - /srv/homebox/data:/app/data
       - /srv/homebox/config:/app/config

@@ -44,6 +44,10 @@ services:
       - "traefik.http.middlewares.omada-headers.headers.customrequestheaders.Host=omada.${DOMAIN_NAME}:8043"
       - "traefik.http.middlewares.omada-headers.headers.customresponseheaders.Host=omada.${DOMAIN_NAME}"
       - "com.centurylinklabs.watchtower.enable=true"
+      - "ha.monitor=true"
+      - "ha.category=networking"
+      - "ha.compose-file=Docker-Critical/Networking/Omada/omada.yml"
+      - "ha.service-name=omada-controller"
     volumes:
       - /srv/omada/data:/opt/tplink/EAPController/data
       - /mnt/hdd/logs/omada:/opt/tplink/EAPController/logs

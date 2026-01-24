@@ -29,6 +29,10 @@ services:
       - "traefik.http.routers.kiwix.tls.certresolver=${CERTRESOLVER:-cloudflare}"
       - "traefik.http.routers.kiwix.tls.domains[0].main=library.${DOMAIN_NAME}"
       - com.centurylinklabs.watchtower.enable=true
+      - "ha.monitor=true"
+      - "ha.category=home"
+      - "ha.compose-file=Docker-Critical/Home/Doomsday/library.yml"
+      - "ha.service-name=kiwix-serve"
 networks:
   homeproxy:
     external: True

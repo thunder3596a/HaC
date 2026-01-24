@@ -25,6 +25,10 @@ services:
       - traefik.http.routers.musicassistant.service=musicassistant
       - traefik.http.services.musicassistant.loadbalancer.server.port=8095
       - com.centurylinklabs.watchtower.enable=true
+      - "ha.monitor=true"
+      - "ha.category=home"
+      - "ha.compose-file=Docker-Critical/Home/MusicAssistant/musicassistant.yml"
+      - "ha.service-name=music-assistant"
     healthcheck:
       # Change from curl to wget (wget is available in the image):
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8095/ || exit 1"]

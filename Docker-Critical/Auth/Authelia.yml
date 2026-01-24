@@ -18,6 +18,10 @@ services:
       - "traefik.http.routers.authelia.tls.certresolver=${CERTRESOLVER:-cloudflare}"
       - "traefik.http.routers.authelia.tls.domains[0].main=authelia.${DOMAIN_NAME}"
       - "com.centurylinklabs.watchtower.enable=true"
+      - "ha.monitor=true"
+      - "ha.category=auth"
+      - "ha.compose-file=Docker-Critical/Auth/Authelia.yml"
+      - "ha.service-name=authelia"
     depends_on:
       - authelia-db
   authelia-db:
@@ -28,6 +32,11 @@ services:
       - authnet
     volumes:
       - /srv/authelia/postgres:/var/lib/postgresql/data
+    labels:
+      - "ha.monitor=true"
+      - "ha.category=auth"
+      - "ha.compose-file=Docker-Critical/Auth/Authelia.yml"
+      - "ha.service-name=authelia-db"
     environment:
       - POSTGRES_DB=authelia
       - POSTGRES_USER=authelia
@@ -55,6 +64,10 @@ services:
       - "traefik.http.routers.lldap.tls=true"
       - "traefik.http.services.lldap.loadbalancer.server.port=17170"
       - "traefik.http.routers.lldap.middlewares=authelia@docker"
+      - "ha.monitor=true"
+      - "ha.category=auth"
+      - "ha.compose-file=Docker-Critical/Auth/Authelia.yml"
+      - "ha.service-name=lldap"
 
 networks:
   authnet:

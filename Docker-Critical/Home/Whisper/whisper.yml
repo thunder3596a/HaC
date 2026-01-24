@@ -17,6 +17,10 @@ services:
       - traefik.http.routers.whisper.tls.domains[0].main=whisper.${DOMAIN_NAME}
       - traefik.http.services.whisper.loadbalancer.server.port=7860
       - com.centurylinklabs.watchtower.enable=true
+      - "ha.monitor=true"
+      - "ha.category=tools"
+      - "ha.compose-file=Docker-Critical/Home/Whisper/whisper.yml"
+      - "ha.service-name=whisper"
     volumes:
       - /srv/whisper:/root/.cache/whisper
     devices:

@@ -19,6 +19,10 @@ services:
       - traefik.http.routers.nut.tls.domains[0].main=nut.${DOMAIN_NAME}
       - traefik.http.services.nut.loadbalancer.server.port=3493
       - com.centurylinklabs.watchtower.enable=true
+      - "ha.monitor=true"
+      - "ha.category=home"
+      - "ha.compose-file=Docker-Critical/Home/NUT/nut.yml"
+      - "ha.service-name=nut"
     volumes:
       - /srv/nut:/config
     devices:

@@ -17,6 +17,10 @@ services:
       -F mqtt://${MQTT_HOST:-homeassistant-mqtt}:${MQTT_PORT:-1883},user=${MQTT_USER:-mqtt},pass=${MQTT_PASSWORD:-mqtt},retain=1,devices=homeassistant/devices/[/model][/id],events=homeassistant/events/[/model][/id],states=homeassistant/states/[/model][/id]
     labels:
       - com.centurylinklabs.watchtower.enable=true
+      - "ha.monitor=true"
+      - "ha.category=home"
+      - "ha.compose-file=Docker-Critical/Home/RTL-SDR/rtl-sdr.yml"
+      - "ha.service-name=rtl_433"
 
 networks:
   homeproxy:

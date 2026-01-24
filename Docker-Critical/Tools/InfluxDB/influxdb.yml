@@ -24,6 +24,10 @@ services:
       - traefik.http.routers.influxdb.service=influxdb
       - traefik.http.services.influxdb.loadbalancer.server.port=8086
       - com.centurylinklabs.watchtower.enable=true
+      - "ha.monitor=true"
+      - "ha.category=tools"
+      - "ha.compose-file=Docker-Critical/Tools/InfluxDB/influxdb.yml"
+      - "ha.service-name=influxdb"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8086/health"]
       interval: 30s

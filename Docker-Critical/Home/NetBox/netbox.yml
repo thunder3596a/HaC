@@ -75,6 +75,10 @@ services:
       - traefik.http.routers.netbox.tls.certresolver=${CERTRESOLVER:-cloudflare}
       - traefik.http.routers.netbox.tls.domains[0].main=netbox.${DOMAIN_NAME}
       - com.centurylinklabs.watchtower.enable=true
+      - "ha.monitor=true"
+      - "ha.category=tools"
+      - "ha.compose-file=Docker-Critical/Home/NetBox/netbox.yml"
+      - "ha.service-name=netbox"
 
   netbox-worker:
     image: netboxcommunity/netbox:latest
@@ -93,6 +97,11 @@ services:
       REDIS_HOST: ${NETBOX_REDIS_HOST}
       SECRET_KEY: ${NETBOX_SECRET_KEY}
     command: /opt/netbox/venv/bin/python /opt/netbox/netbox/manage.py rqworker
+    labels:
+      - "ha.monitor=true"
+      - "ha.category=tools"
+      - "ha.compose-file=Docker-Critical/Home/NetBox/netbox.yml"
+      - "ha.service-name=netbox-worker"
 
   netbox-housekeeping:
     image: netboxcommunity/netbox:latest
@@ -111,6 +120,11 @@ services:
       REDIS_HOST: ${NETBOX_REDIS_HOST}
       SECRET_KEY: ${NETBOX_SECRET_KEY}
     command: /opt/netbox/housekeeping.sh
+    labels:
+      - "ha.monitor=true"
+      - "ha.category=tools"
+      - "ha.compose-file=Docker-Critical/Home/NetBox/netbox.yml"
+      - "ha.service-name=netbox-housekeeping"
 
   netbox-postgres:
     image: postgres:15-alpine
@@ -124,6 +138,11 @@ services:
       POSTGRES_PASSWORD: ${NETBOX_DB_PASSWORD}
     volumes:
       - /srv/netbox/postgres:/var/lib/postgresql/data
+    labels:
+      - "ha.monitor=true"
+      - "ha.category=tools"
+      - "ha.compose-file=Docker-Critical/Home/NetBox/netbox.yml"
+      - "ha.service-name=netbox-postgres"
 
   netbox-redis:
     image: redis:7-alpine
@@ -134,6 +153,11 @@ services:
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - /srv/netbox/redis:/data
+    labels:
+      - "ha.monitor=true"
+      - "ha.category=tools"
+      - "ha.compose-file=Docker-Critical/Home/NetBox/netbox.yml"
+      - "ha.service-name=netbox-redis"
 
 networks:
   toolsproxy:

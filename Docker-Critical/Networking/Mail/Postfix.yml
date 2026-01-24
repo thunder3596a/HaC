@@ -35,6 +35,11 @@ services:
       # SASL (Mailtrap requires this)
       POSTFIX_smtp_sasl_auth_enable: "yes"
       POSTFIX_smtp_sasl_security_options: "noanonymous"
+    labels:
+      - "ha.monitor=true"
+      - "ha.category=networking"
+      - "ha.compose-file=Docker-Critical/Networking/Mail/Postfix.yml"
+      - "ha.service-name=smtp-relay"
 
     volumes:
       - /srv/smtp-relay/spool:/var/spool/postfix

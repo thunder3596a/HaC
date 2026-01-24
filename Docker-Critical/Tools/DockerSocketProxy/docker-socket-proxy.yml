@@ -36,6 +36,11 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     ports:
       - "2375:2375"
+    labels:
+      - "ha.monitor=true"
+      - "ha.category=tools"
+      - "ha.compose-file=Docker-Critical/Tools/DockerSocketProxy/docker-socket-proxy.yml"
+      - "ha.service-name=docker-socket-proxy"
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:2375/version"]
       interval: 30s

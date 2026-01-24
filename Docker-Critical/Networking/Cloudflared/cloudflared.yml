@@ -9,6 +9,10 @@ services:
       - TZ=${TZ:-America/Chicago}
     labels:
       - com.centurylinklabs.watchtower.enable=true
+      - "ha.monitor=true"
+      - "ha.category=networking"
+      - "ha.compose-file=Docker-Critical/Networking/Cloudflared/cloudflared.yml"
+      - "ha.service-name=cloudflared"
     volumes:
       - /srv/cloudflared:/config
     command: tunnel --config /config/config.yml run
