@@ -7,10 +7,12 @@ on:
         description: 'Containers to update (comma-separated, or "all" for all with updates)'
         required: false
         default: 'all'
+        type: string
       bootstrap:
-        description: 'Bootstrap mode: recreate all containers to apply labels (true/false)'
+        description: 'Bootstrap mode: recreate all containers to apply labels'
         required: false
-        default: 'false'
+        default: false
+        type: boolean
 
 jobs:
   apply-updates:
