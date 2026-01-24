@@ -30,6 +30,11 @@ services:
       - "traefik.http.routers.dashboard.rule=Host(`docker-desktop1-traefik.${DOMAIN_NAME}`)"
       - "traefik.http.routers.dashboard.service=api@internal"
       - "traefik.http.routers.dashboard.tls.certresolver=${CERTRESOLVER:-cloudflare}"
+      - "traefik.http.routers.ollama.entrypoints=websecure"
+      - "traefik.http.routers.ollama.rule=Host(`docker-desktop1-traefik.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.ollama.service=ollama"
+      - "traefik.http.routers.ollama.tls.certresolver=${CERTRESOLVER:-cloudflare}"
+      - "traefik.http.services.ollama.loadbalancer.server.port=11434"
 
     command:
       - "--api=true"
