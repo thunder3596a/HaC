@@ -22,7 +22,7 @@ container:
     - /var/run/docker.sock
   docker_host: unix:///var/run/docker.sock
   force_pull: false
-  image: node:22-alpine
+  image: docker:24-cli-alpine3.19
 
 host:
   workdir_parent: /data/workspace

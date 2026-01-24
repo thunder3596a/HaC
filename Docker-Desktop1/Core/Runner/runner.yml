@@ -18,7 +18,7 @@ services:
     # Install Node.js and run daemon
     entrypoint: |
       sh -c "
-        apk add --no-cache nodejs npm curl &&
+        apk add --no-cache nodejs npm curl docker-cli-compose &&
         act_runner daemon --config /config.yaml
       "
 
