@@ -1,0 +1,26 @@
+log:
+  level: info
+
+runner:
+  file: /data/.runner
+  capacity: 2
+  timeout: 3h
+  insecure: false
+  fetch_timeout: 5s
+  fetch_interval: 2s
+
+cache:
+  enabled: true
+  dir: /data/cache
+
+container:
+  network: host
+  privileged: false
+  options:
+  workdir_parent: /data/workspace
+  valid_volumes:
+    - /var/run/docker.sock
+  docker_host: unix:///var/run/docker.sock
+
+host:
+  workdir_parent: /data/workspace

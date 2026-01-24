@@ -1,0 +1,59 @@
+name: Deploy Traefik (Desktop1)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "Docker-Desktop1/Core/Traefik/traefik.yml"
+      - ".forgejo/workflows/deploy-traefik-desktop1.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: docker-desktop1
+    defaults:
+      run:
+        shell: sh
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify compose file exists
+        run: ls -l "./Docker-Desktop1/Core/Traefik/traefik.yml"
+
+      - name: Deploy Traefik (Desktop1)
+        working-directory: "./Docker-Desktop1/Core/Traefik"
+        env:
+          CLOUDFLARE_EMAIL: ${{ vars.CLOUDFLARE_EMAIL }}
+          CLOUDFLARE_DNS_API_TOKEN: ${{ secrets.CLOUDFLARE_DNS_API_TOKEN }}
+          CLOUDFLARE_ZONE_API_TOKEN: ${{ secrets.CLOUDFLARE_ZONE_API_TOKEN }}
+          LETS_ENCRYPT_EMAIL: ${{ vars.LETS_ENCRYPT_EMAIL }}
+          DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
+          CERTRESOLVER: ${{ vars.CERTRESOLVER }}
+          TZ: ${{ vars.TZ }}
+        run: |
+          for var in CLOUDFLARE_EMAIL CLOUDFLARE_DNS_API_TOKEN CLOUDFLARE_ZONE_API_TOKEN LETS_ENCRYPT_EMAIL DOMAIN_NAME TZ; do
+            eval val=\$$var
+            if [ -z "$val" ]; then
+              echo "Missing required variable: $var" >&2
+              exit 1
+            fi
+          done
+
+          defined_image=$(grep -m1 'image:' traefik.yml | awk '{print $2}')
+          running_image=$(docker inspect -f '{{.Config.Image}}' traefik 2>/dev/null || echo "none")
+          checksum=$(sha256sum traefik.yml | awk '{print $1}')
+          old=$(cat ~/.docker-desktop1/.traefik_checksum 2>/dev/null || echo "")
+
+          if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
+            echo "Redeploying Traefik (Desktop1)..."
+            mkdir -p ~/.docker-desktop1
+
+            docker compose -p traefik down --remove-orphans || true
+            docker compose -p traefik -f traefik.yml up -d --force-recreate
+            echo "$checksum" > ~/.docker-desktop1/.traefik_checksum
+          else
+            echo "No changes detected; skipping redeploy"
+          fi

@@ -54,34 +54,39 @@ jobs:
           # Extract defined image
           defined_image=$(grep -m1 'image:' Postfix.yml | awk '{print $2}')
 
-          # Extract running image from remote host
+          # Extract running image
           running_image=$(docker inspect -f '{{.Config.Image}}' smtp-relay 2>/dev/null || echo "none")
 
           # Compute checksum of compose file
           checksum=$(sha256sum Postfix.yml | awk '{print $1}')
-          old=$(cat .postfix_checksum 2>/dev/null || echo "")
+          old=$(sudo cat /srv/smtp-relay/.postfix_checksum 2>/dev/null || echo "")
 
           echo "Defined: $defined_image"
           echo "Running: $running_image"
           echo "Checksum: $checksum vs $old"
 
           if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
-            echo "Redeploying Postfix SMTP Relay on remote host (truenas01)"
+            echo "Redeploying Postfix SMTP Relay..."
 
-            # Copy compose file to remote host
-            scp Postfix.yml runner@truenas01:/tmp/Postfix.yml
+            # Copy compose file to deployment location
+            sudo mkdir -p /srv/smtp-relay
+            sudo cp Postfix.yml /srv/smtp-relay/
+            sudo chmod 644 /srv/smtp-relay/Postfix.yml
 
-            # Stop old containers if they exist (service name and legacy name)
-            ssh runner@truenas01 "docker rm -f postfix smtp-relay || true"
+            cd /srv/smtp-relay
 
-            # Bring stack down cleanly (scoped to project 'postfix' so other stacks are untouched)
-            ssh runner@truenas01 "docker compose -p postfix -f /tmp/Postfix.yml down --remove-orphans || true"
+            # Deploy stack with environment vars
+            env SMTP_RELAYHOST=$SMTP_RELAYHOST \
+              SMTP_USERNAME=$SMTP_USERNAME \
+              SMTP_PASSWORD=$SMTP_PASSWORD \
+              ALLOWED_SENDER_DOMAINS=$ALLOWED_SENDER_DOMAINS \
+              SMTP_HOSTNAME_POSTFIX=$SMTP_HOSTNAME_POSTFIX \
+              DOMAIN_NAME=$DOMAIN_NAME \
+              SENDER_DOMAIN=$SENDER_DOMAIN \
+              TZ=${TZ:-America/Chicago} \
+              docker compose -p postfix -f Postfix.yml up -d --force-recreate
 
-            # Deploy stack (scoped to project 'postfix') with environment vars passed through
-            ssh runner@truenas01 "SMTP_RELAYHOST=$SMTP_RELAYHOST SMTP_USERNAME=$SMTP_USERNAME SMTP_PASSWORD=$SMTP_PASSWORD ALLOWED_SENDER_DOMAINS=$ALLOWED_SENDER_DOMAINS SMTP_HOSTNAME_POSTFIX=$SMTP_HOSTNAME_POSTFIX DOMAIN_NAME=$DOMAIN_NAME SENDER_DOMAIN=$SENDER_DOMAIN docker compose -p postfix -f /tmp/Postfix.yml up -d --force-recreate"
-
-            # Save checksum locally for next comparison
-            echo "$checksum" > .postfix_checksum
+            sudo sh -c "echo '$checksum' > /srv/smtp-relay/.postfix_checksum"
           else
             echo "No redeploy needed"
           fi

@@ -1,0 +1,239 @@
+# Continue.dev Configuration for Local AI Coding
+# Optimized for RTX 4070 Super (12GB VRAM) + Ollama via Traefik + MCP Gateway
+
+name: homelab-ai-coding
+
+# =============================================================================
+# MODELS - Optimized for 12GB VRAM (RTX 4070 Super)
+# =============================================================================
+models:
+  # Primary chat model - best quality for 12GB
+  - name: qwen2.5-coder:14b
+    provider: ollama
+    model: qwen2.5-coder:14b
+    apiBase: https://ollama.u-acres.com
+    title: "Qwen 2.5 Coder 14B"
+    systemMessage: |
+      You are an expert software engineer. You write clean, maintainable code.
+      Follow best practices and consider security implications.
+      Be concise and direct. Focus on solving the problem efficiently.
+
+  # Secondary model - faster, still excellent
+  - name: qwen2.5-coder:7b
+    provider: ollama
+    model: qwen2.5-coder:7b
+    apiBase: https://ollama.u-acres.com
+    title: "Qwen 2.5 Coder 7B (Fast)"
+
+  # DeepSeek Coder V2 - excellent reasoning
+  - name: deepseek-coder-v2:16b
+    provider: ollama
+    model: deepseek-coder-v2:16b
+    apiBase: https://ollama.u-acres.com
+    title: "DeepSeek Coder V2 16B"
+
+  # Lightweight option for quick tasks
+  - name: qwen2.5-coder:3b
+    provider: ollama
+    model: qwen2.5-coder:3b
+    apiBase: https://ollama.u-acres.com
+    title: "Qwen 2.5 Coder 3B (Instant)"
+
+# =============================================================================
+# TAB AUTOCOMPLETE - Fast, runs alongside chat model (~2GB)
+# =============================================================================
+tabAutocompleteModel:
+  provider: ollama
+  model: qwen2.5-coder:3b
+  apiBase: https://ollama.u-acres.com
+  title: "Autocomplete (3B)"
+
+tabAutocompleteOptions:
+  debounceDelay: 200
+  maxPromptTokens: 2048
+  multilineCompletions: auto
+  useCache: true
+  useSuffix: true
+  disableInFiles:
+    - "*.md"
+    - "*.txt"
+    - "*.json"
+
+# =============================================================================
+# EMBEDDINGS - For semantic code search (~275MB)
+# =============================================================================
+embeddingsProvider:
+  provider: ollama
+  model: nomic-embed-text
+  apiBase: https://ollama.u-acres.com
+
+# =============================================================================
+# CONTEXT PROVIDERS - What the AI can see
+# =============================================================================
+contextProviders:
+  - name: code
+    params:
+      nFinal: 10
+      nRetrieve: 25
+      useReranking: false
+
+  - name: docs
+    params: {}
+
+  - name: diff
+    params: {}
+
+  - name: terminal
+    params: {}
+
+  - name: problems
+    params: {}
+
+  - name: folder
+    params: {}
+
+  - name: codebase
+    params:
+      nFinal: 10
+      nRetrieve: 40
+      useReranking: false
+
+  - name: url
+    params: {}
+
+  - name: search
+    params: {}
+
+  - name: open
+    params: {}
+
+  - name: tree
+    params: {}
+
+  - name: os
+    params: {}
+
+# =============================================================================
+# SLASH COMMANDS - Quick actions
+# =============================================================================
+slashCommands:
+  - name: edit
+    description: Edit selected code
+
+  - name: comment
+    description: Add comments to code
+
+  - name: share
+    description: Export chat to markdown
+
+  - name: cmd
+    description: Generate shell commands
+
+  - name: commit
+    description: Generate git commit message
+
+  - name: review
+    description: Code review selected code
+
+  - name: test
+    description: Generate unit tests
+
+  - name: fix
+    description: Fix errors in code
+
+  - name: explain
+    description: Explain how code works
+
+  - name: refactor
+    description: Refactor selected code
+
+# =============================================================================
+# MCP SERVERS - Model Context Protocol connections
+# =============================================================================
+experimental:
+  modelContextProtocolServers:
+    # Central MCP Gateway - all homelab services (HA, n8n, Omada, OPNsense, NetBox, HomeBox)
+    - name: homelab-gateway
+      transport: sse
+      url: https://mcp.u-acres.com
+      timeout: 30000
+
+    # Forgejo MCP for git operations
+    - name: forgejo
+      transport: stdio
+      command: c:/Users/Nicho/OneDrive/Home-Lab/Tools/AI/MCP/forgejo-mcp/forgejo-mcp.exe
+      args:
+        - "--transport"
+        - "stdio"
+        - "--url"
+        - "https://git.u-acres.com"
+      env:
+        FORGEJO_ACCESS_TOKEN: "${FORGEJO_ACCESS_TOKEN}"
+
+    # Playwright for browser automation
+    - name: playwright
+      transport: stdio
+      command: npx
+      args:
+        - "@playwright/mcp@latest"
+
+    # Filesystem MCP for broader file access
+    - name: filesystem
+      transport: stdio
+      command: npx
+      args:
+        - "-y"
+        - "@modelcontextprotocol/server-filesystem"
+        - "c:/Users/Nicho/Repos"
+        - "c:/Users/Nicho/OneDrive"
+
+    # Git MCP for enhanced git operations
+    - name: git
+      transport: stdio
+      command: npx
+      args:
+        - "-y"
+        - "@modelcontextprotocol/server-git"
+
+# =============================================================================
+# DOCS - Reference documentation
+# =============================================================================
+docs:
+  - name: Docker
+    startUrl: https://docs.docker.com/
+
+  - name: Home Assistant
+    startUrl: https://www.home-assistant.io/docs/
+
+  - name: TypeScript
+    startUrl: https://www.typescriptlang.org/docs/
+
+  - name: React
+    startUrl: https://react.dev/reference/
+
+  - name: Node.js
+    startUrl: https://nodejs.org/docs/
+
+  - name: Python
+    startUrl: https://docs.python.org/3/
+
+  - name: Go
+    startUrl: https://pkg.go.dev/
+
+# =============================================================================
+# ANALYTICS & BEHAVIOR - Full privacy
+# =============================================================================
+analytics:
+  clientKey: null
+  url: null
+
+allowAnonymousTelemetry: false
+
+ui:
+  fontSize: 14
+  codeBlockToolbarPosition: top
+  displayRawMarkdown: false
+
+requestOptions:
+  timeout: 120000
+  verifySsl: true

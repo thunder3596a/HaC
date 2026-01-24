@@ -1,0 +1,41 @@
+networks:
+  aiproxy:
+    external: true
+
+services:
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    restart: unless-stopped
+
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - WEBUI_AUTH=false
+      - ENABLE_SIGNUP=false
+      - DEFAULT_MODELS=qwen2.5-coder:14b
+      - ENABLE_OLLAMA_API=true
+      - ENABLE_OPENAI_API=false
+      - ENABLE_RAG_WEB_SEARCH=false
+
+    volumes:
+      - openwebui_data:/app/backend/data
+
+    networks:
+      - aiproxy
+
+    depends_on:
+      ollama:
+        condition: service_healthy
+
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.openwebui.entrypoints=websecure"
+      - "traefik.http.routers.openwebui.rule=Host(`ai-desktop.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.openwebui.service=openwebui"
+      - "traefik.http.services.openwebui.loadbalancer.server.port=8080"
+      - "traefik.http.routers.openwebui.tls.certresolver=${CERTRESOLVER:-cloudflare}"
+      - "traefik.http.routers.openwebui.tls.domains[0].main=ai-desktop.${DOMAIN_NAME}"
+
+volumes:
+  openwebui_data:
+    name: openwebui_data

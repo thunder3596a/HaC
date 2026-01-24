@@ -1,0 +1,51 @@
+networks:
+  aiproxy:
+    external: true
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+
+    # NVIDIA GPU passthrough (4070 Super - 12GB VRAM)
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_KEEP_ALIVE=10m
+      - OLLAMA_NUM_PARALLEL=2
+      - OLLAMA_MAX_LOADED_MODELS=2
+      - OLLAMA_FLASH_ATTENTION=1
+      - OLLAMA_NUM_CTX=8192
+
+    volumes:
+      - ollama_data:/root/.ollama
+
+    networks:
+      - aiproxy
+
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ollama.entrypoints=websecure"
+      - "traefik.http.routers.ollama.rule=Host(`ollama.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.ollama.service=ollama"
+      - "traefik.http.services.ollama.loadbalancer.server.port=11434"
+      - "traefik.http.routers.ollama.tls.certresolver=${CERTRESOLVER:-cloudflare}"
+      - "traefik.http.routers.ollama.tls.domains[0].main=ollama.${DOMAIN_NAME}"
+
+volumes:
+  ollama_data:
+    name: ollama_data

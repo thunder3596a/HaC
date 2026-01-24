@@ -1,0 +1,22 @@
+services:
+  forgejo-runner:
+    image: gitea/act_runner:latest
+    container_name: forgejo-runner
+    restart: unless-stopped
+
+    volumes:
+      # Docker socket for running containers
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Runner data persistence
+      - runner_data:/data
+      # Config
+      - ./config.yaml:/config.yaml
+
+    working_dir: /data
+
+    # Run daemon - registration stored in volume
+    command: ["act_runner", "daemon", "--config", "/config.yaml"]
+
+volumes:
+  runner_data:
+    name: forgejo_runner_data
