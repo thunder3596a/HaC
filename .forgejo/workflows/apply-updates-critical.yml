@@ -49,31 +49,44 @@ jobs:
 
           if [ "$BOOTSTRAP" = "true" ]; then
             echo "=== BOOTSTRAP MODE: Building maps from git compose files ==="
+            echo "DEBUG: Current directory is $(pwd)"
+            echo "DEBUG: Looking for compose files..."
+
             # Find all compose files with ha.monitor=true labels in git
-            while IFS= read -r compose_file; do
+            compose_files=$(find Docker-Critical -name "*.yml" -type f 2>/dev/null || echo "")
+            echo "DEBUG: Found compose files: $compose_files"
+
+            for compose_file in $compose_files; do
               if [ -f "$compose_file" ]; then
-                # Extract services with ha.monitor=true label
-                # Find line number where services: section starts
-                services_line=$(grep -n "^services:" "$compose_file" | head -1 | cut -d: -f1)
+                # Check if this file has ha.monitor=true
+                if grep -q "ha.monitor=true" "$compose_file"; then
+                  echo "DEBUG: Processing $compose_file"
 
-                # For each ha.monitor=true, find the service it belongs to
-                while IFS= read -r monitor_line; do
-                  # Search backwards from label to find the service name (last service definition before this line)
-                  service_name=$(sed -n "${services_line},${monitor_line}p" "$compose_file" | grep "^  [a-z][a-z0-9_-]*:$" | tail -1 | sed 's/://g' | xargs)
+                  # Find line number where services: section starts
+                  services_line=$(grep -n "^services:" "$compose_file" | head -1 | cut -d: -f1)
+                  echo "DEBUG: services: found at line $services_line"
 
-                  if [ -n "$service_name" ]; then
-                    # Find container_name for this service
-                    container_name=$(grep -A 20 "^  $service_name:" "$compose_file" | grep "container_name:" | head -1 | awk '{print $2}')
+                  # Get all line numbers where ha.monitor=true appears
+                  monitor_lines=$(grep -n "ha.monitor=true" "$compose_file" | cut -d: -f1)
 
-                    if [ -n "$container_name" ] && [ "$container_name" != "null" ]; then
-                      COMPOSE_MAP["$container_name"]="$compose_file"
-                      SERVICE_MAP["$container_name"]="$service_name"
-                      echo "Registered (bootstrap): $container_name -> $compose_file (service: $service_name)"
+                  for monitor_line in $monitor_lines; do
+                    # Search backwards from label to find the service name
+                    service_name=$(sed -n "${services_line},${monitor_line}p" "$compose_file" | grep "^  [a-z][a-z0-9_-]*:$" | tail -1 | sed 's/://g' | xargs)
+
+                    if [ -n "$service_name" ]; then
+                      # Find container_name for this service
+                      container_name=$(grep -A 20 "^  $service_name:" "$compose_file" | grep "container_name:" | head -1 | awk '{print $2}')
+
+                      if [ -n "$container_name" ] && [ "$container_name" != "null" ]; then
+                        COMPOSE_MAP["$container_name"]="$compose_file"
+                        SERVICE_MAP["$container_name"]="$service_name"
+                        echo "Registered (bootstrap): $container_name -> $compose_file (service: $service_name)"
+                      fi
                     fi
-                  fi
-                done < <(grep -n "ha.monitor=true" "$compose_file" | cut -d: -f1)
+                  done
+                fi
               fi
-            done < <(find Docker-Critical -name "*.yml" -type f)
+            done
           else
             echo "=== NORMAL MODE: Building maps from running container labels ==="
             # Query Docker API for all containers with ha.monitor=true
