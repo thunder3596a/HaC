@@ -16,13 +16,15 @@ cache:
 container:
   network: host
   privileged: false
-  options:
+  options: "--entrypoint= --rm"
   workdir_parent: /data/workspace
   valid_volumes:
     - /var/run/docker.sock
   docker_host: unix:///var/run/docker.sock
   force_pull: false
-  image: docker:24-cli-alpine3.19
+  image: node:18-alpine
+  env:
+    - DOCKER_HOST=unix:///var/run/docker.sock
 
 host:
   workdir_parent: /data/workspace
