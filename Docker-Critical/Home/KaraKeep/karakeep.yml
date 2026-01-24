@@ -19,7 +19,7 @@ services:
       - "ha.monitor=true"
       - "ha.category=tools"
       - "ha.compose-file=Docker-Critical/Home/KaraKeep/karakeep.yml"
-      - "ha.service-name=web"
+      - "ha.service-name=karakeep"
     environment:
       MEILI_ADDR: ${MEILI_ADDR:-http://localhost:7700}
       BROWSER_WEB_URL: ${BROWSER_WEB_URL:-http://localhost:9222}
