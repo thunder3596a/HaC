@@ -40,15 +40,15 @@ jobs:
           defined_image=$(grep -m1 'image:' openwebui.yml | awk '{print $2}')
           running_image=$(docker inspect -f '{{.Config.Image}}' open-webui 2>/dev/null || echo "none")
           checksum=$(sha256sum openwebui.yml | awk '{print $1}')
-          old=$(cat ~/.docker-desktop1/.openwebui_checksum 2>/dev/null || echo "")
+          old=$(cat ~/.docker-noncritical/.openwebui_checksum 2>/dev/null || echo "")
 
           if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
-            echo "Redeploying Open WebUI (Desktop1)..."
-            mkdir -p ~/.docker-desktop1
+            echo "Redeploying Open WebUI (NonCritical)..."
+            mkdir -p ~/.docker-noncritical
 
             docker compose -p openwebui down --remove-orphans || true
             docker compose -p openwebui -f openwebui.yml up -d --force-recreate
-            echo "$checksum" > ~/.docker-desktop1/.openwebui_checksum
+            echo "$checksum" > ~/.docker-noncritical/.openwebui_checksum
           else
             echo "No changes detected; skipping redeploy"
           fi
