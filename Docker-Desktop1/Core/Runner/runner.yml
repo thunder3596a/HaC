@@ -5,6 +5,23 @@ services:
     restart: unless-stopped
     user: root
 
+    # Resource limits for gaming performance
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+        reservations:
+          memory: 128M
+          cpus: '0.2'
+
+    labels:
+      # Home Assistant monitoring
+      - ha.monitor=true
+      - ha.category=tools
+      - ha.compose-file=Docker-Desktop1/Core/Runner/runner.yml
+      - ha.service-name=forgejo-runner
+
     volumes:
       # Docker socket for running containers
       - /var/run/docker.sock:/var/run/docker.sock

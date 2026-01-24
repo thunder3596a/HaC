@@ -18,6 +18,13 @@ services:
           memory: 64M
           cpus: '0.1'
 
+    labels:
+      # Home Assistant monitoring
+      - ha.monitor=true
+      - ha.category=networking
+      - ha.compose-file=Docker-Desktop1/Core/Traefik/traefik.yml
+      - ha.service-name=traefik
+
     command:
       - "--api=true"
       - "--api.dashboard=true"
