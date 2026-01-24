@@ -20,14 +20,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Docker CLI
-        run: |
-          if ! command -v docker >/dev/null 2>&1; then
-            echo "Installing Docker CLI..."
-            apk add --no-cache docker-cli docker-cli-compose
-          fi
-          docker --version
-
       - name: Verify compose file exists
         run: ls -l "./Docker-Desktop1/Core/Traefik/traefik.yml"
 
