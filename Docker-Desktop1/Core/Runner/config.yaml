@@ -21,6 +21,9 @@ container:
   valid_volumes:
     - /var/run/docker.sock
   docker_host: unix:///var/run/docker.sock
+  force_pull: false
+  # Use an image with Node.js and common tools for running workflow jobs
+  image: node:18-bullseye
 
 host:
   workdir_parent: /data/workspace
