@@ -7,6 +7,10 @@ on:
         description: 'Containers to update (comma-separated, or "all" for all with updates)'
         required: false
         default: 'all'
+      bootstrap:
+        description: 'Bootstrap mode: recreate all containers to apply labels (true/false)'
+        required: false
+        default: 'false'
 
 jobs:
   apply-updates:
@@ -35,30 +39,57 @@ jobs:
           CLOUDFLARE_ZONE_API_TOKEN: ${{ secrets.CLOUDFLARE_ZONE_API_TOKEN }}
           LETS_ENCRYPT_EMAIL: ${{ vars.LETS_ENCRYPT_EMAIL }}
           CONTAINERS: ${{ github.event.inputs.containers }}
+          BOOTSTRAP: ${{ github.event.inputs.bootstrap }}
         run: |
-          # Build container maps from Docker labels (ha.monitor=true)
+          # Build container maps from Docker labels (ha.monitor=true) OR from git compose files (bootstrap mode)
           declare -A COMPOSE_MAP
           declare -A SERVICE_MAP
 
-          # Query Docker API for all containers with ha.monitor=true
-          containers_json=$(curl -s http://localhost:2375/containers/json?all=true)
+          if [ "$BOOTSTRAP" = "true" ]; then
+            echo "=== BOOTSTRAP MODE: Building maps from git compose files ==="
+            # Find all compose files with ha.monitor=true labels in git
+            while IFS= read -r compose_file; do
+              if [ -f "$compose_file" ]; then
+                # Extract services with ha.monitor=true label
+                while IFS= read -r line; do
+                  service_name=$(echo "$line" | cut -d: -f1)
+                  container_name=$(grep -A 20 "^  $service_name:" "$compose_file" | grep "container_name:" | head -1 | awk '{print $2}')
 
-          # Parse JSON and build maps
-          while IFS= read -r line; do
-            container_name=$(echo "$line" | jq -r '.name')
-            compose_file=$(echo "$line" | jq -r '.compose_file')
-            service_name=$(echo "$line" | jq -r '.service_name')
+                  if [ -n "$container_name" ] && [ "$container_name" != "null" ]; then
+                    COMPOSE_MAP["$container_name"]="$compose_file"
+                    SERVICE_MAP["$container_name"]="$service_name"
+                    echo "Registered (bootstrap): $container_name -> $compose_file (service: $service_name)"
+                  fi
+                done < <(grep -B 5 "ha.monitor=true" "$compose_file" | grep "^  [a-z]" | grep ":" || true)
+              fi
+            done < <(find Docker-Critical -name "*.yml" -type f)
+          else
+            echo "=== NORMAL MODE: Building maps from running container labels ==="
+            # Query Docker API for all containers with ha.monitor=true
+            containers_json=$(curl -s http://localhost:2375/containers/json?all=true)
 
-            if [ -n "$container_name" ] && [ "$container_name" != "null" ]; then
-              COMPOSE_MAP["$container_name"]="$compose_file"
-              SERVICE_MAP["$container_name"]="$service_name"
-              echo "Registered: $container_name -> $compose_file (service: $service_name)"
-            fi
-          done < <(echo "$containers_json" | jq -c '.[] | select(.Labels["ha.monitor"] == "true") | {name: .Names[0] | ltrimstr("/"), compose_file: .Labels["ha.compose-file"], service_name: .Labels["ha.service-name"]}')
+            # Parse JSON and build maps
+            while IFS= read -r line; do
+              container_name=$(echo "$line" | jq -r '.name')
+              compose_file=$(echo "$line" | jq -r '.compose_file')
+              service_name=$(echo "$line" | jq -r '.service_name')
+
+              if [ -n "$container_name" ] && [ "$container_name" != "null" ]; then
+                COMPOSE_MAP["$container_name"]="$compose_file"
+                SERVICE_MAP["$container_name"]="$service_name"
+                echo "Registered: $container_name -> $compose_file (service: $service_name)"
+              fi
+            done < <(echo "$containers_json" | jq -c '.[] | select(.Labels["ha.monitor"] == "true") | {name: .Names[0] | ltrimstr("/"), compose_file: .Labels["ha.compose-file"], service_name: .Labels["ha.service-name"]}')
+          fi
 
           updated=""
 
-          if [ "$CONTAINERS" = "all" ]; then
+          if [ "$BOOTSTRAP" = "true" ]; then
+            # Bootstrap mode: recreate ALL containers from compose files to apply labels
+            echo "=== BOOTSTRAP: Will recreate all containers to apply labels ==="
+            CONTAINERS=$(IFS=,; echo "${!COMPOSE_MAP[*]}")
+            echo "Containers to bootstrap: $CONTAINERS"
+          elif [ "$CONTAINERS" = "all" ]; then
             # Check all and update those with available updates
             chmod +x ./scripts/check-docker-updates.sh
             CONTAINERS=""
