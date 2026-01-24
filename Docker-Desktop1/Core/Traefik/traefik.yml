@@ -30,11 +30,6 @@ services:
       - "traefik.http.routers.dashboard.rule=Host(`docker-desktop1-traefik.${DOMAIN_NAME}`)"
       - "traefik.http.routers.dashboard.service=api@internal"
       - "traefik.http.routers.dashboard.tls.certresolver=${CERTRESOLVER:-cloudflare}"
-      - "traefik.http.routers.ollama.entrypoints=websecure"
-      - "traefik.http.routers.ollama.rule=Host(`docker-desktop1-traefik.${DOMAIN_NAME}`)"
-      - "traefik.http.routers.ollama.service=ollama"
-      - "traefik.http.routers.ollama.tls.certresolver=${CERTRESOLVER:-cloudflare}"
-      - "traefik.http.services.ollama.loadbalancer.server.port=11434"
 
     command:
       - "--api=true"
@@ -67,6 +62,11 @@ services:
       - "--providers.docker.exposedbydefault=false"
       - "--providers.docker.network=aiproxy"
 
+      # File provider for native services
+      - "--providers.file=true"
+      - "--providers.file.directory=/etc/traefik/dynamic"
+      - "--providers.file.watch=true"
+
     environment:
       - CLOUDFLARE_EMAIL=${CLOUDFLARE_EMAIL}
       - CLOUDFLARE_DNS_API_TOKEN=${CLOUDFLARE_DNS_API_TOKEN}
@@ -79,6 +79,9 @@ services:
     networks:
       - aiproxy
 
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
     ports:
       - "80:80"
       - "443:443"
@@ -87,6 +90,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - traefik_data:/etc/traefik
+      - ./dynamic:/etc/traefik/dynamic:ro
 
 volumes:
   traefik_data:

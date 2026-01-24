@@ -1,0 +1,15 @@
+http:
+  routers:
+    ollama:
+      rule: "Host(`ollama.u-acres.com`)"
+      entryPoints:
+        - websecure
+      service: ollama
+      tls:
+        certResolver: cloudflare
+
+  services:
+    ollama:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:11434"
