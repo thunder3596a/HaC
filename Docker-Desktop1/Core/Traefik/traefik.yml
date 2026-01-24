@@ -8,6 +8,16 @@ services:
     container_name: traefik
     restart: unless-stopped
 
+    # Resource limits for gaming performance
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '1.0'
+        reservations:
+          memory: 64M
+          cpus: '0.1'
+
     command:
       - "--api=true"
       - "--api.dashboard=true"
