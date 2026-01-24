@@ -3,6 +3,7 @@ services:
     image: gitea/act_runner:latest
     container_name: forgejo-runner
     restart: unless-stopped
+    user: root
 
     volumes:
       # Docker socket for running containers
@@ -14,8 +15,12 @@ services:
 
     working_dir: /data
 
-    # Run daemon - registration stored in volume
-    command: ["act_runner", "daemon", "--config", "/config.yaml"]
+    # Install Node.js and run daemon
+    entrypoint: |
+      sh -c "
+        apk add --no-cache nodejs npm curl &&
+        act_runner daemon --config /config.yaml
+      "
 
 volumes:
   runner_data:
