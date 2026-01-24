@@ -1,0 +1,41 @@
+networks:
+  toolsproxy:
+    external: true
+
+services:
+  searx:
+    image: searxng/searxng:latest
+    container_name: searx
+    restart: unless-stopped
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+        reservations:
+          memory: 128M
+          cpus: '0.2'
+
+    labels:
+      # Home Assistant monitoring
+      - ha.monitor=true
+      - ha.category=tools
+      - ha.compose-file=Docker-NonCritical/Tools/SearX/searx.yml
+      - ha.service-name=searx
+      # Traefik routing
+      - traefik.enable=true
+      - traefik.http.routers.searx.entrypoints=websecure
+      - traefik.http.routers.searx.rule=Host(`search.${DOMAIN_NAME}`)
+      - traefik.http.routers.searx.service=searx
+      - traefik.http.services.searx.loadbalancer.server.port=8080
+      - traefik.http.routers.searx.tls.certresolver=${CERTRESOLVER}
+      # Watchtower updates
+      - com.centurylinklabs.watchtower.enable=true
+
+    networks:
+      - toolsproxy
+
+    volumes:
+      - /srv/searx/config:/etc/searx

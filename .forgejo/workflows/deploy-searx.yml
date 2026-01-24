@@ -1,0 +1,54 @@
+name: Deploy SearX
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "Docker-NonCritical/Tools/SearX/searx.yml"
+      - ".forgejo/workflows/deploy-searx.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: docker-noncritical
+    defaults:
+      run:
+        shell: sh
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify compose file exists
+        run: ls -l "./Docker-NonCritical/Tools/SearX/searx.yml"
+
+      - name: Deploy SearX
+        working-directory: "./Docker-NonCritical/Tools/SearX"
+        env:
+          DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
+          CERTRESOLVER: ${{ vars.CERTRESOLVER }}
+        run: |
+          for var in DOMAIN_NAME CERTRESOLVER; do
+            eval val=\$$var
+            if [ -z "$val" ]; then
+              echo "Missing required variable: $var" >&2
+              exit 1
+            fi
+          done
+
+          defined_image=$(grep -m1 'image:' searx.yml | awk '{print $2}')
+          running_image=$(docker inspect -f '{{.Config.Image}}' searx 2>/dev/null || echo "none")
+          checksum=$(sha256sum searx.yml | awk '{print $1}')
+          old=$(cat ~/.docker-noncritical/.searx_checksum 2>/dev/null || echo "")
+
+          if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
+            echo "Redeploying SearX..."
+            mkdir -p ~/.docker-noncritical
+
+            docker compose -p searx down --remove-orphans || true
+            docker compose -p searx -f searx.yml up -d --force-recreate
+            echo "$checksum" > ~/.docker-noncritical/.searx_checksum
+          else
+            echo "No changes detected; skipping redeploy"
+          fi
