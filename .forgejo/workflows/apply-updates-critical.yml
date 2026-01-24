@@ -53,16 +53,31 @@ jobs:
             while IFS= read -r compose_file; do
               if [ -f "$compose_file" ]; then
                 # Extract services with ha.monitor=true label
-                while IFS= read -r line; do
-                  service_name=$(echo "$line" | cut -d: -f1)
-                  container_name=$(grep -A 20 "^  $service_name:" "$compose_file" | grep "container_name:" | head -1 | awk '{print $2}')
+                # First, find line numbers of services: and ha.monitor=true
+                services_line=$(grep -n "^services:" "$compose_file" | head -1 | cut -d: -f1)
 
-                  if [ -n "$container_name" ] && [ "$container_name" != "null" ]; then
-                    COMPOSE_MAP["$container_name"]="$compose_file"
-                    SERVICE_MAP["$container_name"]="$service_name"
-                    echo "Registered (bootstrap): $container_name -> $compose_file (service: $service_name)"
+                # For each ha.monitor=true, find the service it belongs to
+                while IFS= read -r monitor_line; do
+                  # Search backwards from this label to find the service name
+                  service_name=$(awk -v line="$monitor_line" -v start="$services_line" '
+                    NR >= start && NR < line && /^  [a-z][a-z0-9_-]*:$/ {
+                      name = $1;
+                      sub(/:$/, "", name);
+                    }
+                    NR == line { print name; exit }
+                  ' "$compose_file")
+
+                  if [ -n "$service_name" ]; then
+                    # Find container_name for this service
+                    container_name=$(grep -A 20 "^  $service_name:" "$compose_file" | grep "container_name:" | head -1 | awk '{print $2}')
+
+                    if [ -n "$container_name" ] && [ "$container_name" != "null" ]; then
+                      COMPOSE_MAP["$container_name"]="$compose_file"
+                      SERVICE_MAP["$container_name"]="$service_name"
+                      echo "Registered (bootstrap): $container_name -> $compose_file (service: $service_name)"
+                    fi
                   fi
-                done < <(grep -B 5 "ha.monitor=true" "$compose_file" | grep "^  [a-z]" | grep ":" || true)
+                done < <(grep -n "ha.monitor=true" "$compose_file" | cut -d: -f1)
               fi
             done < <(find Docker-Critical -name "*.yml" -type f)
           else
