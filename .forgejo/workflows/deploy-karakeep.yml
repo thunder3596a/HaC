@@ -43,15 +43,15 @@ jobs:
             fi
           done
 
-          defined_image=$(grep -m1 'image:' Home/KaraKeep/karakeep.yml | awk '{print $2}')
+          defined_image=$(grep -m1 'image:' Docker-Critical/Home/KaraKeep/karakeep.yml | awk '{print $2}')
           running_image=$(docker inspect -f '{{.Config.Image}}' karakeep 2>/dev/null || echo "none")
-          checksum=$(sha256sum Home/KaraKeep/karakeep.yml | awk '{print $1}')
+          checksum=$(sha256sum Docker-Critical/Home/KaraKeep/karakeep.yml | awk '{print $1}')
           old=$(sudo cat /srv/karakeep/.karakeep_checksum 2>/dev/null || echo "")
 
           if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
             echo "Redeploying KaraKeep..."
             sudo mkdir -p /srv/karakeep
-            sudo cp Home/KaraKeep/karakeep.yml /srv/karakeep/
+            sudo cp Docker-Critical/Home/KaraKeep/karakeep.yml /srv/karakeep/
             sudo chmod 644 /srv/karakeep/karakeep.yml
 
             cd /srv/karakeep
