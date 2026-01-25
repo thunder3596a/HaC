@@ -7,6 +7,18 @@ services:
   forgejo:
     image: codeberg.org/forgejo/forgejo:13
     container_name: forgejo
+    restart: unless-stopped
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '2.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+
     environment:
       - USER_UID=568
       - USER_GID=568
@@ -24,47 +36,64 @@ services:
       - SSH_LISTEN_PORT=2222
       - FORGEJO__ui__THEMES=forgejo-light,forgejo-dark,sage-modern
       - FORGEJO__ui__DEFAULT_THEME=sage-modern
-    restart: always
+
     networks:
       - gitproxy
+
     volumes:
       - /srv/git/data:/data
       - ./sage-modern.css:/data/gitea/public/assets/css/theme-sage-modern.css
+
     ports:
-      - 192.168.19.11:3000:3000
+      - "3000:3000"
+      - "2222:2222"
+
     labels:
+      # Home Assistant monitoring
+      - ha.monitor=true
+      - ha.category=management
+      - ha.compose-file=Docker-Critical/Management/Git - Forgejo/git.yml
+      - ha.service-name=forgejo
+      # Traefik routing
       - traefik.enable=true
+      - traefik.docker.network=gitproxy
       - traefik.http.routers.git.rule=Host(`git.${DOMAIN_NAME}`)
       - traefik.http.routers.git.entrypoints=websecure
       - traefik.http.routers.git.service=git
-      - traefik.docker.network=gitproxy
       - traefik.http.services.git.loadbalancer.server.port=3000
-      - traefik.http.routers.git.tls.certresolver=${CERTRESOLVER:-cloudflare}
-      - traefik.http.routers.git.tls.domains[0].main=git.${DOMAIN_NAME}
-      - com.centurylinklabs.watchtower.enable=true
-      - traefik.http.routers.git-ssh.rule="HostSNI(`*`)"
-      - traefik.http.routers.git-ssh.entrypoints=ssh
-      - traefik.http.routers.git-ssh.service=git-ssh
-      - traefik.http.services.git-ssh.loadbalancer.server.port=2222
-      - "ha.monitor=true"
-      - "ha.category=management"
-      - "ha.compose-file=Docker-Critical/Management/Git - Forgejo/git.yml"
-      - "ha.service-name=forgejo"
+      - traefik.http.routers.git.tls.certresolver=${CERTRESOLVER}
+
   git-db:
-    image: postgres:14
+    image: postgres:15
     container_name: git-db
-    restart: always
+    restart: unless-stopped
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.2'
+
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${GIT_DB_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
+
     networks:
       - gitproxy
-    labels:
-      - com.centurylinklabs.watchtower.enable=true
-      - "ha.monitor=true"
-      - "ha.category=management"
-      - "ha.compose-file=Docker-Critical/Management/Git - Forgejo/git.yml"
-      - "ha.service-name=git-db"
+
     volumes:
       - /srv/git/postgres:/var/lib/postgresql/data
+
+    labels:
+      # Home Assistant monitoring
+      - ha.monitor=true
+      - ha.category=management
+      - ha.compose-file=Docker-Critical/Management/Git - Forgejo/git.yml
+      - ha.service-name=git-db
+      # Watchtower updates
+      - com.centurylinklabs.watchtower.enable=true
