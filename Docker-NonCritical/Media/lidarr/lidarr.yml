@@ -18,6 +18,10 @@ services:
       - traefik.http.routers.lidarr.tls.certresolver=${CERTRESOLVER:-cloudflare}
       - traefik.http.routers.lidarr.tls.domains[0].main=lidarr.${DOMAIN_NAME}
       - com.centurylinklabs.watchtower.enable=true
+      - "ha.monitor=true"
+      - "ha.category=media"
+      - "ha.compose-file=Docker-NonCritical/Media/lidarr/lidarr.yml"
+      - "ha.service-name=lidarr"
     volumes:
       - /srv/lidarr/config:/config
       - /mnt/data:/data

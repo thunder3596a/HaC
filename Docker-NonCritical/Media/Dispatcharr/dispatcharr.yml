@@ -22,6 +22,10 @@ services:
       - traefik.http.routers.dispatcharr.tls.certresolver=${CERTRESOLVER:-cloudflare}
       - traefik.http.routers.dispatcharr.tls.domains[0].main=dispatcharr.${DOMAIN_NAME}
       - com.centurylinklabs.watchtower.enable=true
+      - "ha.monitor=true"
+      - "ha.category=media"
+      - "ha.compose-file=Docker-NonCritical/Media/Dispatcharr/dispatcharr.yml"
+      - "ha.service-name=dispatcharr"
     volumes:
       - /srv/dispatcharr/data:/data
       # Process Priority Configuration (Optional)

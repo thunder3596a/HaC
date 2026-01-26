@@ -69,6 +69,11 @@ services:
 
       # Watchtower
       - "com.centurylinklabs.watchtower.enable=true"
+      # Home Assistant monitoring
+      - "ha.monitor=true"
+      - "ha.category=networking"
+      - "ha.compose-file=Docker-NonCritical/Networking/Proxy/proxy.yml"
+      - "ha.service-name=traefik"
 
     networks:
       - toolsproxy

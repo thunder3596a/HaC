@@ -18,6 +18,10 @@ services:
       - traefik.http.routers.readarr.tls.certresolver=${CERTRESOLVER:-cloudflare}
       - traefik.http.routers.readarr.tls.domains[0].main=readarr.${DOMAIN_NAME}
       - com.centurylinklabs.watchtower.enable=true
+      - "ha.monitor=true"
+      - "ha.category=media"
+      - "ha.compose-file=Docker-NonCritical/Media/readarr/readarr.yml"
+      - "ha.service-name=readarr"
     volumes:
       - /srv/readarr/config:/config
       - /mnt/data:/data

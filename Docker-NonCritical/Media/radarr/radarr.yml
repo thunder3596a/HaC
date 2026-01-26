@@ -18,6 +18,10 @@ services:
       - traefik.http.routers.radarr.tls.certresolver=${CERTRESOLVER:-cloudflare}
       - traefik.http.routers.radarr.tls.domains[0].main=radarr.${DOMAIN_NAME}
       - com.centurylinklabs.watchtower.enable=true
+      - "ha.monitor=true"
+      - "ha.category=media"
+      - "ha.compose-file=Docker-NonCritical/Media/radarr/radarr.yml"
+      - "ha.service-name=radarr"
     volumes:
       - /srv/radarr/config:/config
       - /mnt/data:/data

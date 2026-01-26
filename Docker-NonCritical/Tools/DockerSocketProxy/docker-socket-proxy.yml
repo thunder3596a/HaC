@@ -42,6 +42,11 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
+    labels:
+      - "ha.monitor=true"
+      - "ha.category=tools"
+      - "ha.compose-file=Docker-NonCritical/Tools/DockerSocketProxy/docker-socket-proxy.yml"
+      - "ha.service-name=docker-socket-proxy-noncritical"
 
 networks:
   mediaproxy:

@@ -19,6 +19,10 @@ services:
       - traefik.http.routers.flare.tls.certresolver=${CERTRESOLVER:-cloudflare}
       - traefik.http.routers.flare.tls.domains[0].main=flare.${DOMAIN_NAME}
       - com.centurylinklabs.watchtower.enable=true
+      - "ha.monitor=true"
+      - "ha.category=media"
+      - "ha.compose-file=Docker-NonCritical/Media/flaresolverr/flaresolverr.yml"
+      - "ha.service-name=flaresolverr"
 
 networks:
   mediaproxy:

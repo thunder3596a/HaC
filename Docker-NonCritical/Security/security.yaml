@@ -2,6 +2,7 @@ services:
   wazuh.manager:
     image: wazuh/wazuh-manager:5.0.0
     hostname: wazuh.manager
+    container_name: wazuh-manager
     restart: always
     labels:
       - "traefik.enable=true"
@@ -10,6 +11,10 @@ services:
       - "traefik.http.routers.wazuh.tls=true"
       - "traefik.http.routers.wazuh.rule=Host(`wazuh.u-acres.com`)"
       - "traefik.http.services.wazuh.loadbalancer.server.port=55000"
+      - "ha.monitor=true"
+      - "ha.category=security"
+      - "ha.compose-file=Docker-NonCritical/Security/security.yaml"
+      - "ha.service-name=wazuh.manager"
     ports:
       - "1514:1514" # Wazuh agent communication
       - "1515:1515" # Wazuh API
@@ -47,7 +52,13 @@ services:
   wazuh.indexer:
     image: wazuh/wazuh-indexer:5.0.0
     hostname: wazuh.indexer
+    container_name: wazuh-indexer
     restart: always
+    labels:
+      - "ha.monitor=true"
+      - "ha.category=security"
+      - "ha.compose-file=Docker-NonCritical/Security/security.yaml"
+      - "ha.service-name=wazuh.indexer"
     ports:
       - "9200:9200"
     environment:
@@ -72,7 +83,13 @@ services:
   wazuh.dashboard:
     image: wazuh/wazuh-dashboard:5.0.0
     hostname: wazuh.dashboard
-    restart: always m
+    container_name: wazuh-dashboard
+    restart: always
+    labels:
+      - "ha.monitor=true"
+      - "ha.category=security"
+      - "ha.compose-file=Docker-NonCritical/Security/security.yaml"
+      - "ha.service-name=wazuh.dashboard"
     environment:
       - INDEXER_USERNAME=admin
       - INDEXER_PASSWORD=${WAZUH_INDEXER_PASSWORD}

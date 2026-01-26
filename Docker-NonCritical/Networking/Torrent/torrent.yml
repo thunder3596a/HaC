@@ -50,7 +50,11 @@ services:
       - traefik.http.routers.gluetun.service=gluetun
       - traefik.http.services.gluetun.loadbalancer.server.port=8000
       - traefik.http.routers.gluetun.tls.certresolver=${CERTRESOLVER:-cloudflare}
-      - traefik.http.routers.gluetun.tls.domains[0].main=gluetun.${DOMAIN_NAME} 
+      - traefik.http.routers.gluetun.tls.domains[0].main=gluetun.${DOMAIN_NAME}
+      - "ha.monitor=true"
+      - "ha.category=networking"
+      - "ha.compose-file=Docker-NonCritical/Networking/Torrent/torrent.yml"
+      - "ha.service-name=gluetun"
     security_opt:
       - no-new-privileges:true
   qbittorrent:
@@ -81,6 +85,10 @@ services:
       - traefik.http.routers.qbit.tls.certresolver=${CERTRESOLVER:-cloudflare}
       - traefik.http.routers.qbit.tls.domains[0].main=qbit.${DOMAIN_NAME}
       - com.centurylinklabs.watchtower.enable=true
+      - "ha.monitor=true"
+      - "ha.category=networking"
+      - "ha.compose-file=Docker-NonCritical/Networking/Torrent/torrent.yml"
+      - "ha.service-name=qbittorrent"
 
   nzbget:
     image: linuxserver/nzbget:latest
@@ -108,6 +116,10 @@ services:
       - traefik.http.routers.nzbget.tls.certresolver=${CERTRESOLVER:-cloudflare}
       - traefik.http.routers.nzbget.tls.domains[0].main=nzbget.${DOMAIN_NAME}
       - com.centurylinklabs.watchtower.enable=true
+      - "ha.monitor=true"
+      - "ha.category=networking"
+      - "ha.compose-file=Docker-NonCritical/Networking/Torrent/torrent.yml"
+      - "ha.service-name=nzbget"
 networks:
   torrentproxy:
     external: true

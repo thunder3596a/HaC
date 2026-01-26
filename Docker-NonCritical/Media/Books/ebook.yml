@@ -16,6 +16,10 @@ services:
       - traefik.http.routers.audiobookshelf.tls.certresolver=${CERTRESOLVER:-cloudflare}
       - traefik.http.routers.audiobookshelf.tls.domains[0].main=audiobooks.${DOMAIN_NAME}
       - com.centurylinklabs.watchtower.enable=true
+      - "ha.monitor=true"
+      - "ha.category=media"
+      - "ha.compose-file=Docker-NonCritical/Media/Books/ebook.yml"
+      - "ha.service-name=audiobookshelf"
     volumes:
       - /mnt/data/media/audiobooks:/audiobooks
       - /mnt/data/media/podcasts:/podcasts
@@ -41,6 +45,10 @@ services:
       - traefik.http.routers.kavita.tls.certresolver=${CERTRESOLVER:-cloudflare}
       - traefik.http.routers.kavita.tls.domains[0].main=kavita.${DOMAIN_NAME}
       - com.centurylinklabs.watchtower.enable=true
+      - "ha.monitor=true"
+      - "ha.category=media"
+      - "ha.compose-file=Docker-NonCritical/Media/Books/ebook.yml"
+      - "ha.service-name=kavita"
     volumes:
       - /srv/kavita/config:/config
       - /mnt/data/media:/data

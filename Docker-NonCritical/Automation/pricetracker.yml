@@ -3,6 +3,7 @@ version: '3.8'
 services:
   pricetracker:
     image: cybrarist/discount-bandit:v4
+    container_name: pricetracker
     ports:
       - "8080:80"
     volumes:
@@ -18,10 +19,21 @@ services:
     restart: unless-stopped
     networks:
       - toolsproxy
+    labels:
+      - "ha.monitor=true"
+      - "ha.category=automation"
+      - "ha.compose-file=Docker-NonCritical/Automation/pricetracker.yml"
+      - "ha.service-name=pricetracker"
   db:
     image: sqlite:latest
+    container_name: pricetracker-db
     volumes:
       - ./database:/var/lib/sqlite
+    labels:
+      - "ha.monitor=true"
+      - "ha.category=automation"
+      - "ha.compose-file=Docker-NonCritical/Automation/pricetracker.yml"
+      - "ha.service-name=db"
 networks:
   toolsproxy:
     external: true

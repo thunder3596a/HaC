@@ -18,3 +18,8 @@ services:
           devices:
             - capabilities: [gpu]
     runtime: nvidia
+    labels:
+      - "ha.monitor=true"
+      - "ha.category=automation"
+      - "ha.compose-file=Docker-NonCritical/Automation/comfy.yml"
+      - "ha.service-name=comfyui"

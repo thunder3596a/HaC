@@ -30,6 +30,7 @@ services:
   #and later we're going to plug a firewall bouncer to it
   crowdsec:
     image: crowdsecurity/crowdsec
+    container_name: crowdsec
     restart: always
     environment:
       #this is the list of collections we want to install
@@ -46,11 +47,17 @@ services:
     networks:
       crowdsec_test:
         ipv4_address: 172.20.0.4
+    labels:
+      - "ha.monitor=true"
+      - "ha.category=security"
+      - "ha.compose-file=Docker-NonCritical/Security/Crowdsec/crowdsec.yml"
+      - "ha.service-name=crowdsec"
   
   #metabase, because security is cool, but dashboards are cooler
   dashboard:
     #we're using a custom Dockerfile so that metabase pops with pre-configured dashboards
     build: ./crowdsec/dashboard
+    container_name: crowdsec-dashboard
     restart: always
     ports:
       - 3000:3000
@@ -64,6 +71,11 @@ services:
     networks:
       crowdsec_test:
         ipv4_address: 172.20.0.5
+    labels:
+      - "ha.monitor=true"
+      - "ha.category=security"
+      - "ha.compose-file=Docker-NonCritical/Security/Crowdsec/crowdsec.yml"
+      - "ha.service-name=dashboard"
 
 volumes:
   logs:

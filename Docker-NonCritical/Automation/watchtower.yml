@@ -10,4 +10,9 @@ services:
       - TZ=America/Chicago
       - WATCHTOWER_CLEANUP=true           # Remove old images after update
       - WATCHTOWER_POLL_INTERVAL=300      # Check every 5 minutes
-      - WATCHTOWER_LABEL_ENABLE=true 
+      - WATCHTOWER_LABEL_ENABLE=true
+    labels:
+      - "ha.monitor=true"
+      - "ha.category=automation"
+      - "ha.compose-file=Docker-NonCritical/Automation/watchtower.yml"
+      - "ha.service-name=watchtower"

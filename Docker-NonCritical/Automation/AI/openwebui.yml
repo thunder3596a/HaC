@@ -35,6 +35,10 @@ services:
       - "traefik.http.services.openwebui.loadbalancer.server.port=8080"
       - "traefik.http.routers.openwebui.tls.certresolver=${CERTRESOLVER:-cloudflare}"
       - "traefik.http.routers.openwebui.tls.domains[0].main=ai-desktop.${DOMAIN_NAME}"
+      - "ha.monitor=true"
+      - "ha.category=automation"
+      - "ha.compose-file=Docker-NonCritical/Automation/AI/openwebui.yml"
+      - "ha.service-name=open-webui"
 
 volumes:
   openwebui_data:

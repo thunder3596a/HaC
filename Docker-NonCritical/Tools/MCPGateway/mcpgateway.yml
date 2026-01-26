@@ -28,6 +28,10 @@ services:
       - traefik.http.services.mcpgateway.loadbalancer.server.port=3000
       - traefik.http.routers.mcpgateway.tls.certresolver=${CERTRESOLVER}
       - traefik.http.routers.mcpgateway.tls.domains[0].main=mcp.${DOMAIN_NAME}
+      - "ha.monitor=true"
+      - "ha.category=tools"
+      - "ha.compose-file=Docker-NonCritical/Tools/MCPGateway/mcpgateway.yml"
+      - "ha.service-name=mcp-gateway"
 
   # MariaDB for MCP Gateway
   mariadb:
@@ -45,6 +49,10 @@ services:
       - /srv/mcp-gateway/mariadb:/var/lib/mysql
     labels:
       - com.centurylinklabs.watchtower.enable=true
+      - "ha.monitor=true"
+      - "ha.category=tools"
+      - "ha.compose-file=Docker-NonCritical/Tools/MCPGateway/mcpgateway.yml"
+      - "ha.service-name=mariadb"
 
   # Redis for MCP Gateway caching and federation
   redis:
@@ -57,6 +65,10 @@ services:
       - /srv/mcp-gateway/redis:/data
     labels:
       - com.centurylinklabs.watchtower.enable=true
+      - "ha.monitor=true"
+      - "ha.category=tools"
+      - "ha.compose-file=Docker-NonCritical/Tools/MCPGateway/mcpgateway.yml"
+      - "ha.service-name=redis"
 
   # Home Assistant MCP Server
   homeassistant-mcp:
@@ -71,6 +83,10 @@ services:
       - MCP_TRANSPORT=sse
     labels:
       - com.centurylinklabs.watchtower.enable=true
+      - "ha.monitor=true"
+      - "ha.category=tools"
+      - "ha.compose-file=Docker-NonCritical/Tools/MCPGateway/mcpgateway.yml"
+      - "ha.service-name=homeassistant-mcp"
 
   # OPNsense MCP Server
   opnsense-mcp:
@@ -88,6 +104,10 @@ services:
       - MCP_TRANSPORT=sse
     labels:
       - com.centurylinklabs.watchtower.enable=true
+      - "ha.monitor=true"
+      - "ha.category=tools"
+      - "ha.compose-file=Docker-NonCritical/Tools/MCPGateway/mcpgateway.yml"
+      - "ha.service-name=opnsense-mcp"
 
   # NetBox MCP Server
   netbox-mcp:
@@ -104,6 +124,10 @@ services:
       - MCP_TRANSPORT=sse
     labels:
       - com.centurylinklabs.watchtower.enable=true
+      - "ha.monitor=true"
+      - "ha.category=tools"
+      - "ha.compose-file=Docker-NonCritical/Tools/MCPGateway/mcpgateway.yml"
+      - "ha.service-name=netbox-mcp"
 
   # n8n MCP Server (custom implementation)
   n8n-mcp:
@@ -120,6 +144,10 @@ services:
       - MCP_TRANSPORT=sse
     labels:
       - com.centurylinklabs.watchtower.enable=false
+      - "ha.monitor=true"
+      - "ha.category=tools"
+      - "ha.compose-file=Docker-NonCritical/Tools/MCPGateway/mcpgateway.yml"
+      - "ha.service-name=n8n-mcp"
 
   # TP-Link Omada MCP Server (custom implementation)
   omada-mcp:
@@ -138,6 +166,10 @@ services:
       - MCP_TRANSPORT=sse
     labels:
       - com.centurylinklabs.watchtower.enable=false
+      - "ha.monitor=true"
+      - "ha.category=tools"
+      - "ha.compose-file=Docker-NonCritical/Tools/MCPGateway/mcpgateway.yml"
+      - "ha.service-name=omada-mcp"
 
   # HomeBox MCP Server (custom implementation)
   homebox-mcp:
@@ -154,6 +186,10 @@ services:
       - MCP_TRANSPORT=sse
     labels:
       - com.centurylinklabs.watchtower.enable=false
+      - "ha.monitor=true"
+      - "ha.category=tools"
+      - "ha.compose-file=Docker-NonCritical/Tools/MCPGateway/mcpgateway.yml"
+      - "ha.service-name=homebox-mcp"
 
 networks:
   mcpnet:

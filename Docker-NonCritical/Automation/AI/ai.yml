@@ -25,6 +25,10 @@ services:
       - traefik.http.services.ollama.loadbalancer.server.port=11434
       - traefik.http.routers.ollama.tls.certresolver=${CERTRESOLVER:-cloudflare}
       - traefik.http.routers.ollama.tls.domains[0].main=ollama.u-acres.com
+      - "ha.monitor=true"
+      - "ha.category=automation"
+      - "ha.compose-file=Docker-NonCritical/Automation/AI/ai.yml"
+      - "ha.service-name=ollama"
 networks:
   aiproxy:
     external: true

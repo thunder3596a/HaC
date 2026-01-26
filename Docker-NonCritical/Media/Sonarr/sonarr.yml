@@ -20,6 +20,10 @@ services:
       - traefik.http.routers.sonarr.tls.certresolver=${CERTRESOLVER:-cloudflare}
       - traefik.http.routers.sonarr.tls.domains[0].main=sonarr.${DOMAIN_NAME}
       - com.centurylinklabs.watchtower.enable=true
+      - "ha.monitor=true"
+      - "ha.category=media"
+      - "ha.compose-file=Docker-NonCritical/Media/Sonarr/sonarr.yml"
+      - "ha.service-name=sonarr"
     volumes:
       - /srv/sonarr/config:/config
       - /mnt/data:/data

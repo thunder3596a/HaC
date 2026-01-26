@@ -21,6 +21,10 @@ services:
       - traefik.http.routers.plex.tls.domains[0].main=plex.${DOMAIN_NAME}
       - traefik.http.services.plex.loadbalancer.server.port=32400
       - com.centurylinklabs.watchtower.enable=true
+      - "ha.monitor=true"
+      - "ha.category=media"
+      - "ha.compose-file=Docker-NonCritical/Media/Plex/plex.yml"
+      - "ha.service-name=plex"
     volumes:
       - /srv/plex/config:/config
       - /mnt/data/media/movies:/movies
