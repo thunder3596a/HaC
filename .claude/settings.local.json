@@ -5,7 +5,8 @@
       "Bash(powershell:*)",
       "Bash(where:*)",
       "Bash(docker restart:*)",
-      "Bash(docker logs:*)"
+      "Bash(docker logs:*)",
+      "Bash(ssh nicholas@docker-critical:*)"
     ]
   }
 }
