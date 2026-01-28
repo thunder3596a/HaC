@@ -6,7 +6,12 @@
       "Bash(where:*)",
       "Bash(docker restart:*)",
       "Bash(docker logs:*)",
-      "Bash(ssh nicholas@docker-critical:*)"
+      "Bash(ssh nicholas@docker-critical:*)",
+      "Bash(git push)",
+      "Bash(scp:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(sshpass -p 'NuAg2019!@#' ssh nicholas@docker-critical \"docker exec homeassistant python3 -c \"\"import yaml; f=open\\(''/config/secrets.yaml''\\); s=yaml.safe_load\\(f\\); print\\(''Token length:'', len\\(s.get\\(''forgejo_token'', ''''\\)\\)\\)\"\"\")"
     ]
   }
 }
