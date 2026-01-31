@@ -13,11 +13,11 @@ services:
       - homeproxy
     labels:
       - traefik.http.routers.homebox.entrypoints=websecure
-      - traefik.http.routers.homebox.rule=Host(`homebox.u-acres.com`)
+      - traefik.http.routers.homebox.rule=Host(`homebox.${DOMAIN_NAME}`)
       - traefik.http.routers.homebox.service=homebox
       - traefik.http.services.homebox.loadbalancer.server.port=7745
       - traefik.http.routers.homebox.tls.certresolver=${CERTRESOLVER:-cloudflare}
-      - traefik.http.routers.homebox.tls.domains[0].main=homebox.u-acres.com
+      - traefik.http.routers.homebox.tls.domains[0].main=homebox.${DOMAIN_NAME}
       - com.centurylinklabs.watchtower.enable=true
       - traefik.enable=true
       - "ha.monitor=true"
