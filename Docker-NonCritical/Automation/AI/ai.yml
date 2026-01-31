@@ -20,11 +20,11 @@ services:
       - com.centurylinklabs.watchtower.enable=true
       - traefik.enable=true
       - traefik.http.routers.ollama.entrypoints=websecure
-      - traefik.http.routers.ollama.rule=Host(`ollama.u-acres.com`)
+      - traefik.http.routers.ollama.rule=Host(`ollama.${DOMAIN_NAME}`)
       - traefik.http.routers.ollama.service=ollama
       - traefik.http.services.ollama.loadbalancer.server.port=11434
       - traefik.http.routers.ollama.tls.certresolver=${CERTRESOLVER:-cloudflare}
-      - traefik.http.routers.ollama.tls.domains[0].main=ollama.u-acres.com
+      - traefik.http.routers.ollama.tls.domains[0].main=ollama.${DOMAIN_NAME}
       - "ha.monitor=true"
       - "ha.category=automation"
       - "ha.compose-file=Docker-NonCritical/Automation/AI/ai.yml"

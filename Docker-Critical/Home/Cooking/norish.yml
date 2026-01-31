@@ -13,7 +13,7 @@ services:
     environment:
       # Core settings (required)
       AUTH_URL: https://norish.${DOMAIN_NAME}
-      DATABASE_URL: postgres://postgres:${NORISH_DB_PASSWORD}@norish-db:5432/norish
+      DATABASE_URL: postgres://${NORISH_DB_USERNAME:-postgres}:${NORISH_DB_PASSWORD}@norish-db:5432/norish
       MASTER_KEY: ${NORISH_MASTER_KEY} # Secret
       CHROME_WS_ENDPOINT: ws://chrome-headless:3000
       REDIS_URL: redis://redis:6379
@@ -72,7 +72,7 @@ services:
     container_name: norish-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
+      POSTGRES_USER: ${NORISH_DB_USERNAME:-postgres}
       POSTGRES_PASSWORD: ${NORISH_DB_PASSWORD}
       POSTGRES_DB: norish
     networks:

@@ -14,7 +14,7 @@ services:
       - traefik.docker.network=mediaproxy
       - traefik.enable=true
       - traefik.http.routers.flare.entrypoints=websecure
-      - traefik.http.routers.flare.rule=Host(`flare.u-acres.com`)
+      - traefik.http.routers.flare.rule=Host(`flare.${DOMAIN_NAME}`)
       - traefik.http.routers.flare.service=flare
       - traefik.http.services.flare.loadbalancer.server.port=8191
       - com.centurylinklabs.watchtower.enable=true
@@ -30,7 +30,7 @@ services:
     image: linuxserver/lidarr
     labels:
       - traefik.http.routers.lidarr.entrypoints=websecure
-      - traefik.http.routers.lidarr.rule=Host(`lidarr.u-acres.com`)
+      - traefik.http.routers.lidarr.rule=Host(`lidarr.${DOMAIN_NAME}`)
       - traefik.http.routers.lidarr.service=lidarr
       - traefik.http.services.lidarr.loadbalancer.server.port=8686
       - com.centurylinklabs.watchtower.enable=true
@@ -51,7 +51,7 @@ services:
     image: linuxserver/overseerr:latest
     labels:
       - traefik.http.routers.overseerr.entrypoints=websecure
-      - traefik.http.routers.overseerr.rule=Host(`request.u-acres.com`)
+      - traefik.http.routers.overseerr.rule=Host(`request.${DOMAIN_NAME}`)
       - traefik.http.routers.overseerr.service=overseerr
       - traefik.http.services.overseerr.loadbalancer.server.port=5055
       - com.centurylinklabs.watchtower.enable=true
@@ -70,7 +70,7 @@ services:
     image: ghcr.io/linuxserver/prowlarr:latest
     labels:
       - traefik.http.routers.prowlarr.entrypoints=websecure
-      - traefik.http.routers.prowlarr.rule=Host(`prowlarr.u-acres.com`)
+      - traefik.http.routers.prowlarr.rule=Host(`prowlarr.${DOMAIN_NAME}`)
       - traefik.http.routers.prowlarr.service=prowlarr
       - traefik.http.services.prowlarr.loadbalancer.server.port=9696
       - com.centurylinklabs.watchtower.enable=true
@@ -89,7 +89,7 @@ services:
     image: ghcr.io/linuxserver/radarr:latest
     labels:
       - traefik.http.routers.radarr.entrypoints=websecure
-      - traefik.http.routers.radarr.rule=Host(`radarr.u-acres.com`)
+      - traefik.http.routers.radarr.rule=Host(`radarr.${DOMAIN_NAME}`)
       - traefik.http.routers.radarr.service=radarr
       - traefik.http.services.radarr.loadbalancer.server.port=7878
       - com.centurylinklabs.watchtower.enable=true
@@ -109,7 +109,7 @@ services:
     image: linuxserver/readarr:0.4.19-nightly
     labels:
       - traefik.http.routers.readarr.entrypoints=websecure
-      - traefik.http.routers.readarr.rule=Host(`readarr.u-acres.com`)
+      - traefik.http.routers.readarr.rule=Host(`readarr.${DOMAIN_NAME}`)
       - traefik.http.routers.readarr.service=readarr
       - traefik.http.services.readarr.loadbalancer.server.port=8787
       - com.centurylinklabs.watchtower.enable=true
@@ -132,7 +132,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.sonarr.entrypoints=websecure
-      - traefik.http.routers.sonarr.rule=Host(`sonarr.u-acres.com`)
+      - traefik.http.routers.sonarr.rule=Host(`sonarr.${DOMAIN_NAME}`)
       - traefik.http.routers.sonarr.service=sonarr
       - traefik.http.services.sonarr.loadbalancer.server.port=8989
       - com.centurylinklabs.watchtower.enable=true

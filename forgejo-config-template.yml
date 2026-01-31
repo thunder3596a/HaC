@@ -10,7 +10,7 @@ TZ: "America/Chicago"
 CERTRESOLVER: "cloudflare"
 CLOUDFLARE_EMAIL: "YOUR_CLOUDFLARE_EMAIL_HERE"
 LETS_ENCRYPT_EMAIL: "YOUR_LETSENCRYPT_EMAIL_HERE"
-HA_URL: "https://ha.u-acres.com"
+HA_URL: "https://ha.${DOMAIN_NAME}"  # Will resolve to https://ha.u-acres.com
 
 # ============================================================================
 # SECRETS (Repository Settings → Actions → Secrets)
@@ -61,7 +61,7 @@ forgejo_workflow_url_apply_noncritical: "https://git.u-acres.com/api/v1/repos/ni
 # ✓ DOMAIN_NAME: u-acres.com (from Traefik and HA configs)
 # ✓ TZ: America/Chicago (from compose files)
 # ✓ CERTRESOLVER: cloudflare (from Traefik config)
-# ✓ HA_URL: https://ha.u-acres.com (from workflows)
+# ✓ HA_URL: https://ha.${DOMAIN_NAME} (derived from DOMAIN_NAME)
 # ✓ Workflow URLs: Using git.u-acres.com and nicholas/docker repo
 
 # You already have these in Home Assistant's secrets.yaml:

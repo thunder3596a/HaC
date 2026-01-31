@@ -13,8 +13,8 @@ services:
       - DB_CONNECTION=sqlite
       - APP_TIMEZONE=UTC
       - THEME_COLOR=Red
-      - APP_URL=https://pricetracker.u-acres.com
-      - ASSET_URL=https://pricetracker.u-acres.com
+      - APP_URL=https://pricetracker.${DOMAIN_NAME}
+      - ASSET_URL=https://pricetracker.${DOMAIN_NAME}
       - EXCHANGE_RATE_API_KEY=""
     restart: unless-stopped
     networks:

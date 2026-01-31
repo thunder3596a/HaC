@@ -10,7 +10,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - DATABASE_URL=mysql://mcpuser:${MCP_DB_PASSWORD}@mariadb:3306/mcpgateway
+      - DATABASE_URL=mysql://${MCP_DB_USERNAME:-mcpuser}:${MCP_DB_PASSWORD}@mariadb:3306/mcpgateway
       - REDIS_URL=redis://redis:6379
       - NODE_ENV=production
       - ADMIN_UI_ENABLED=true
@@ -43,7 +43,7 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=${MCP_DB_ROOT_PASSWORD}
       - MYSQL_DATABASE=mcpgateway
-      - MYSQL_USER=mcpuser
+      - MYSQL_USER=${MCP_DB_USERNAME:-mcpuser}
       - MYSQL_PASSWORD=${MCP_DB_PASSWORD}
     volumes:
       - /srv/mcp-gateway/mariadb:/var/lib/mysql

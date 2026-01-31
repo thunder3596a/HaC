@@ -9,7 +9,7 @@ services:
       - "traefik.http.routers.wazuh.entrypoints=websecure"
       - "traefik.http.routers.opencti.service=wazuh"
       - "traefik.http.routers.wazuh.tls=true"
-      - "traefik.http.routers.wazuh.rule=Host(`wazuh.u-acres.com`)"
+      - "traefik.http.routers.wazuh.rule=Host(`wazuh.${DOMAIN_NAME}`)"
       - "traefik.http.services.wazuh.loadbalancer.server.port=55000"
       - "ha.monitor=true"
       - "ha.category=security"
@@ -24,13 +24,13 @@ services:
       - secproxy 
     environment:
       - INDEXER_URL=https://wazuh.indexer:9200
-      - INDEXER_USERNAME=admin
+      - INDEXER_USERNAME=${WAZUH_INDEXER_USERNAME:-admin}
       - INDEXER_PASSWORD=${WAZUH_INDEXER_PASSWORD}
       - FILEBEAT_SSL_VERIFICATION_MODE=full
       - SSL_CERTIFICATE_AUTHORITIES=/etc/ssl/root-ca.pem
       - SSL_CERTIFICATE=/etc/ssl/filebeat.pem
       - SSL_KEY=/etc/ssl/filebeat.key
-      - API_USERNAME=wazuh-wui 
+      - API_USERNAME=${WAZUH_API_USERNAME:-wazuh-wui}
       - API_PASSWORD=${WAZUH_API_PASSWORD}
     volumes:
       - wazuh_api_configuration:/var/ossec/api/configuration
@@ -91,12 +91,12 @@ services:
       - "ha.compose-file=Docker-NonCritical/Security/security.yaml"
       - "ha.service-name=wazuh.dashboard"
     environment:
-      - INDEXER_USERNAME=admin
+      - INDEXER_USERNAME=${WAZUH_INDEXER_USERNAME:-admin}
       - INDEXER_PASSWORD=${WAZUH_INDEXER_PASSWORD}
       - WAZUH_API_URL=https://wazuh.manager
-      - DASHBOARD_USERNAME=kibanaserver
+      - DASHBOARD_USERNAME=${WAZUH_DASHBOARD_USERNAME:-kibanaserver}
       - DASHBOARD_PASSWORD=${WAZUH_DASHBOARD_PASSWORD}
-      - API_USERNAME=wazuh-wui
+      - API_USERNAME=${WAZUH_API_USERNAME:-wazuh-wui}
       - API_PASSWORD=${WAZUH_API_PASSWORD}
     volumes:
       - ./config/wazuh_indexer_ssl_certs/wazuh.dashboard.pem:/usr/share/wazuh-dashboard/certs/wazuh-dashboard.pem

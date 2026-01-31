@@ -44,8 +44,8 @@ services:
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
 
       # TLS + ACME via Cloudflare
-      - "--entrypoints.websecure.http.tls.domains[0].main=u-acres.com"
-      - "--entrypoints.websecure.http.tls.domains[0].sans=*.u-acres.com"
+      - "--entrypoints.websecure.http.tls.domains[0].main=${DOMAIN_NAME}"
+      - "--entrypoints.websecure.http.tls.domains[0].sans=*.${DOMAIN_NAME}"
       - "--certificatesresolvers.cloudflare.acme.email=${LETS_ENCRYPT_EMAIL}"
       - "--certificatesresolvers.cloudflare.acme.dnschallenge=true"
       - "--certificatesresolvers.cloudflare.acme.dnschallenge.delaybeforecheck=0"
