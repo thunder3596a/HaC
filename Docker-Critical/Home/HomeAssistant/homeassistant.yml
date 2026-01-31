@@ -29,8 +29,7 @@ services:
       - NET_BROADCAST
       - SYS_ADMIN
       - SYS_RESOURCE
-    networks:
-      - homeproxy
+    network_mode: host
     dns:
       - 192.168.19.2
     environment:
@@ -51,7 +50,7 @@ services:
       - traefik.http.routers.homeassistant.tls=true
       - traefik.http.routers.homeassistant.tls.certresolver=${CERTRESOLVER:-cloudflare}
       - traefik.http.routers.homeassistant.tls.domains[0].main=ha.${DOMAIN_NAME}
-      - traefik.http.services.homeassistant.loadbalancer.server.port=8123
+      - traefik.http.services.homeassistant.loadbalancer.server.url=http://192.168.19.51:8123
       - com.centurylinklabs.watchtower.enable=true
       - ha.monitor=true
       - ha.category=home
@@ -63,8 +62,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
-    ports:
-      - "8123:8123"
     depends_on:
       - mariadb
       - mosquitto
