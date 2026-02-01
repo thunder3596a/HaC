@@ -31,6 +31,9 @@ jobs:
           DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
           CERTRESOLVER: ${{ vars.CERTRESOLVER }}
           TZ: ${{ vars.TZ }}
+          DNS_SERVER: ${{ vars.DNS_SERVER }}
+          HA_HOST_IP: ${{ vars.HA_HOST_IP }}
+          ZIGBEE_COORDINATOR_IP: ${{ vars.ZIGBEE_COORDINATOR_IP }}
           HOMEASSISTANT_MARIADB_ROOT_PASSWORD: ${{ secrets.HOMEASSISTANT_MARIADB_ROOT_PASSWORD }}
           HOMEASSISTANT_MARIADB_PASSWORD: ${{ secrets.HOMEASSISTANT_MARIADB_PASSWORD }}
         run: |
@@ -52,7 +55,7 @@ jobs:
             echo "Redeploying Home Assistant"
 
             # Deploy
-            DOMAIN_NAME=$DOMAIN_NAME CERTRESOLVER=$CERTRESOLVER TZ=$TZ HOMEASSISTANT_MARIADB_ROOT_PASSWORD=$HOMEASSISTANT_MARIADB_ROOT_PASSWORD HOMEASSISTANT_MARIADB_PASSWORD=$HOMEASSISTANT_MARIADB_PASSWORD docker compose -p homeassistant -f homeassistant.yml up -d --force-recreate
+            DOMAIN_NAME=$DOMAIN_NAME CERTRESOLVER=$CERTRESOLVER TZ=$TZ DNS_SERVER=$DNS_SERVER HA_HOST_IP=$HA_HOST_IP ZIGBEE_COORDINATOR_IP=$ZIGBEE_COORDINATOR_IP HOMEASSISTANT_MARIADB_ROOT_PASSWORD=$HOMEASSISTANT_MARIADB_ROOT_PASSWORD HOMEASSISTANT_MARIADB_PASSWORD=$HOMEASSISTANT_MARIADB_PASSWORD docker compose -p homeassistant -f homeassistant.yml up -d --force-recreate
 
             # Save checksum
             echo "$checksum" > .homeassistant_checksum

@@ -159,8 +159,8 @@ services:
     dns:
       - ${DNS_SERVER}
     extra_hosts:
-      - "slzb-06-zigbeebluetooth-e42018.local:${ZIGBEE_COORDINATOR_IP}"
-      - "slzb-06.local:${ZIGBEE_COORDINATOR_IP}"
+      - "slzb-06-zigbeebluetooth-e42018.local:${ZIGBEE_COORDINATOR_IP:-127.0.0.1}"
+      - "slzb-06.local:${ZIGBEE_COORDINATOR_IP:-127.0.0.1}"
       # Add more ESPHome devices as needed:
       # - "device-name.local:192.168.x.x"
     environment:
