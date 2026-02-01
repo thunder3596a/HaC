@@ -17,8 +17,8 @@ Add these to your **Forgejo Repository Settings → Variables** (plaintext):
 ### Core Configuration
 | Variable | Default | Description | Example |
 |----------|---------|-------------|---------|
-| `DOMAIN_NAME` | - | Primary domain for Traefik routing | `u-acres.com` |
-| `NETBOX_ALLOWED_HOSTS` | - | Comma-separated hosts NetBox accepts | `netbox.u-acres.com,192.168.1.100` |
+| `DOMAIN_NAME` | - | Primary domain for Traefik routing | `example.com` |
+| `NETBOX_ALLOWED_HOSTS` | - | Comma-separated hosts NetBox accepts | `netbox.example.com,192.168.1.100` |
 | `NETBOX_DB_NAME` | - | PostgreSQL database name | `netbox` |
 | `NETBOX_DB_USER` | - | PostgreSQL database user | `netbox` |
 | `NETBOX_DB_HOST` | - | PostgreSQL host (usually `netbox-postgres`) | `netbox-postgres` |
@@ -30,24 +30,24 @@ Add these to your **Forgejo Repository Settings → Variables** (plaintext):
 ### Email Configuration
 | Variable | Default | Description | Example |
 |----------|---------|-------------|---------|
-| `NETBOX_EMAIL_FROM` | - | Sender email address | `netbox@u-acres.com` |
-| `NETBOX_EMAIL_SERVER` | - | SMTP server hostname | `mail.u-acres.com` |
+| `NETBOX_EMAIL_FROM` | - | Sender email address | `netbox@example.com` |
+| `NETBOX_EMAIL_SERVER` | - | SMTP server hostname | `mail.example.com` |
 | `NETBOX_EMAIL_PORT` | - | SMTP server port | `587` |
 
 ### TrueNAS Scale Sync
 | Variable | Default | Description | Example |
 |----------|---------|-------------|---------|
-| `TRUENAS_URL` | `https://truenas01.u-acres.com` | TrueNAS web UI URL | `https://truenas01.u-acres.com` |
+| `TRUENAS_URL` | `https://truenas01.example.com` | TrueNAS web UI URL | `https://truenas01.example.com` |
 
 ### OPNsense Sync
 | Variable | Default | Description | Example |
 |----------|---------|-------------|---------|
-| `OPNSENSE_URL` | `https://opnsense.u-acres.com` | OPNsense web UI URL | `https://opnsense.u-acres.com` |
+| `OPNSENSE_URL` | `https://opnsense.example.com` | OPNsense web UI URL | `https://opnsense.example.com` |
 
 ### Omada Controller Sync
 | Variable | Default | Description | Example |
 |----------|---------|-------------|---------|
-| `OMADA_URL` | `https://omada.u-acres.com` | Omada Controller web UI URL | `https://omada.u-acres.com` |
+| `OMADA_URL` | `https://omada.example.com` | Omada Controller web UI URL | `https://omada.example.com` |
 | `OMADA_SITE_NAME` | `Default` | Name of site in Omada Controller | `Default` or `Home-Lab` |
 
 ### Docker Sync
@@ -310,8 +310,8 @@ Add all variables from the [Environment Variables](#environment-variables) secti
 
 **Example:**
 ```
-DOMAIN_NAME=u-acres.com
-TRUENAS_URL=https://truenas01.u-acres.com
+DOMAIN_NAME=example.com
+TRUENAS_URL=https://truenas01.example.com
 VERIFY_SSL=false
 ```
 
@@ -472,8 +472,8 @@ VERIFY_SSL=false docker exec netbox /opt/netbox/netbox/scripts/run_sync.sh
 **Solution:**
 1. Verify URLs are correct in Forgejo Variables
 2. Check firewall rules allow outbound connections
-3. Test DNS resolution: `nslookup truenas01.u-acres.com`
-4. Test API connectivity: `curl -k https://opnsense.u-acres.com/api/core/system/status`
+3. Test DNS resolution: `nslookup truenas01.example.com`
+4. Test API connectivity: `curl -k https://opnsense.example.com/api/core/system/status`
 
 ---
 

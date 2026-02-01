@@ -31,7 +31,7 @@ Add these to **Settings → Variables**:
 
 | Variable Name | Description | Example |
 |---------------|-------------|---------|
-| `DOMAIN_NAME` | Your base domain name | `u-acres.com` |
+| `DOMAIN_NAME` | Your base domain name | `example.com` |
 | `CERTRESOLVER` | Traefik certificate resolver | `cloudflare` |
 | `HOMEASSISTANT_URL` | Home Assistant URL | `http://homeassistant:8123` |
 | `OPNSENSE_URL` | OPNsense firewall URL | `https://opnsense.local` |
@@ -109,7 +109,7 @@ After configuring all secrets and variables:
 
 4. Access the MCP Gateway admin UI:
    - Local: http://your-server:3000
-   - External: https://mcp.u-acres.com (or your domain)
+   - External: https://mcp.example.com (or your domain)
 
 ## Security Notes
 

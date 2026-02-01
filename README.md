@@ -485,4 +485,4 @@ Personal home automation infrastructure. Configuration patterns based on best pr
 ---
 
 **Last Updated:** January 2, 2026  
-**Maintainer:** nicholas@u-acres.com
+**Maintainer:** your-email@example.com

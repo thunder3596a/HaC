@@ -3,7 +3,7 @@
 ## ⚡ Required Forgejo Variables (Plaintext)
 
 ```
-DOMAIN_NAME=u-acres.com
+DOMAIN_NAME=example.com
 TZ=America/Chicago
 ```
 
@@ -19,7 +19,7 @@ OMADA_PASSWORD=<your Omada admin password>
 
 - **Container Name:** `omada-controller`
 - **Image:** `mbentley/omada-controller:latest`
-- **Web UI:** https://omada.u-acres.com
+- **Web UI:** https://omada.example.com
 - **Default Ports:**
   - Management HTTPS: 8043
   - Portal HTTPS: 8843
@@ -34,7 +34,7 @@ OMADA_PASSWORD=<your Omada admin password>
 ## 🌐 Network
 
 - **Network:** `toolsproxy` (external)
-- **Traefik Route:** `omada.u-acres.com`
+- **Traefik Route:** `omada.example.com`
 
 ## 🚀 Deployment
 
@@ -59,12 +59,12 @@ mkdir -p /mnt/Apps/Omada/data /mnt/Apps/Omada/logs
 
 # Deploy
 cd /tmp
-DOMAIN_NAME=u-acres.com TZ=America/Chicago docker compose -p omada -f omada.yml up -d
+DOMAIN_NAME=example.com TZ=America/Chicago docker compose -p omada -f omada.yml up -d
 ```
 
 ## 🔧 Initial Setup
 
-1. Access https://omada.u-acres.com
+1. Access https://omada.example.com
 2. Follow the setup wizard:
    - Set controller name
    - Create admin account (use these credentials for `OMADA_USERNAME` and `OMADA_PASSWORD` secrets if using NetBox sync)
@@ -83,7 +83,7 @@ DOMAIN_NAME=u-acres.com TZ=America/Chicago docker compose -p omada -f omada.yml 
 - [ ] `/mnt/Apps/Omada` directory exists on truenas01
 - [ ] `toolsproxy` network exists
 - [ ] Traefik is running and configured
-- [ ] DNS record for `omada.u-acres.com` points to Traefik
+- [ ] DNS record for `omada.example.com` points to Traefik
 - [ ] Workflow file pushed to `.forgejo/workflows/deploy-omada.yml`
 
 ## 🔍 Troubleshooting
@@ -119,7 +119,7 @@ docker compose -p omada -f /tmp/omada.yml up -d
 ### NetBox Sync
 If you're using the NetBox sync scripts (as seen in [NetBox SETUP_QUICK_REFERENCE.md](../Home/NetBox/SETUP_QUICK_REFERENCE.md)), ensure you set:
 
-- `OMADA_URL` = `https://omada.u-acres.com`
+- `OMADA_URL` = `https://omada.example.com`
 - `OMADA_USERNAME` = admin username (secret)
 - `OMADA_PASSWORD` = admin password (secret)
 - `OMADA_SITE_NAME` = `Default` (or your site name)

@@ -4,7 +4,7 @@
 
 ### 1. Get Your Forgejo API Token
 
-1. Go to: https://git.u-acres.com/user/settings/applications
+1. Go to: https://git.example.com/user/settings/applications
 2. Click "Generate New Token"
 3. Token name: `docker-workflows`
 4. Select permissions:
@@ -15,7 +15,7 @@
 
 ### 2. Add Forgejo Secrets
 
-Go to: https://git.u-acres.com/nicholas/docker/settings/actions/secrets
+Go to: https://git.example.com/your-username/docker/settings/actions/secrets
 
 Click "Add Secret" for each of these:
 
@@ -35,23 +35,23 @@ Click "Add Secret" for each of these:
 
 | Secret Name | Value (from HA secrets.yaml) |
 |------------|------------------------------|
-| `forgejo_workflow_url_critical` | `https://git.u-acres.com/api/v1/repos/nicholas/docker/actions/workflows/check-updates-critical.yml/dispatches` |
-| `forgejo_workflow_url_noncritical` | `https://git.u-acres.com/api/v1/repos/nicholas/docker/actions/workflows/check-updates-noncritical.yml/dispatches` |
-| `forgejo_workflow_url_apply_critical` | `https://git.u-acres.com/api/v1/repos/nicholas/docker/actions/workflows/apply-updates-critical.yml/dispatches` |
-| `forgejo_workflow_url_apply_noncritical` | `https://git.u-acres.com/api/v1/repos/nicholas/docker/actions/workflows/apply-updates-noncritical.yml/dispatches` |
+| `forgejo_workflow_url_critical` | `https://git.example.com/api/v1/repos/your-username/docker/actions/workflows/check-updates-critical.yml/dispatches` |
+| `forgejo_workflow_url_noncritical` | `https://git.example.com/api/v1/repos/your-username/docker/actions/workflows/check-updates-noncritical.yml/dispatches` |
+| `forgejo_workflow_url_apply_critical` | `https://git.example.com/api/v1/repos/your-username/docker/actions/workflows/apply-updates-critical.yml/dispatches` |
+| `forgejo_workflow_url_apply_noncritical` | `https://git.example.com/api/v1/repos/your-username/docker/actions/workflows/apply-updates-noncritical.yml/dispatches` |
 
 ### 3. Add Forgejo Variables
 
-Go to: https://git.u-acres.com/nicholas/docker/settings/actions/variables
+Go to: https://git.example.com/your-username/docker/settings/actions/variables
 
 Click "Add Variable" for each of these:
 
 | Variable Name | Value |
 |--------------|-------|
-| `DOMAIN_NAME` | `u-acres.com` |
+| `DOMAIN_NAME` | `example.com` |
 | `TZ` | `America/Chicago` |
 | `CERTRESOLVER` | `cloudflare` |
-| `HA_URL` | `https://ha.u-acres.com` |
+| `HA_URL` | `https://ha.example.com` |
 | `CLOUDFLARE_EMAIL` | Your Cloudflare email |
 | `LETS_ENCRYPT_EMAIL` | Your Let's Encrypt email |
 
@@ -73,7 +73,7 @@ Developer Tools → YAML → Restart
 
 ### 6. Test the Workflow
 
-1. Go to: https://git.u-acres.com/nicholas/docker/actions
+1. Go to: https://git.example.com/your-username/docker/actions
 2. Find "Apply Updates - Docker Critical"
 3. Click "Run workflow"
 4. Watch the output - should see "Registered: container-name → compose-file"
@@ -93,7 +93,7 @@ Developer Tools → YAML → Restart
 
 ### Home Assistant sensors show "unknown"
 - **Fix**: Make sure script is copied and executable
-- Test manually: `/config/get-docker-containers.sh http://192.168.19.51:2375`
+- Test manually: `/config/get-docker-containers.sh http://YOUR_DOCKER_HOST_IP:2375`
 
 ## Next Steps After Setup
 

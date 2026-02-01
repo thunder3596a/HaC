@@ -14,7 +14,7 @@ from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 # Configuration
-OMADA_URL = os.getenv('OMADA_URL', 'https://omada.u-acres.com')
+OMADA_URL = os.getenv('OMADA_URL', 'https://omada.example.com')
 OMADA_USERNAME = os.getenv('OMADA_USERNAME', '')
 OMADA_PASSWORD = os.getenv('OMADA_PASSWORD', '')
 OMADA_SITE_NAME = os.getenv('OMADA_SITE_NAME', 'Default')

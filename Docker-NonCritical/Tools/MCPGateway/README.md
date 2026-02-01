@@ -91,7 +91,7 @@ docker compose ps
 
 Access the MCP Gateway admin UI:
 - Local: http://localhost:3000
-- External: https://mcp.u-acres.com (via Traefik)
+- External: https://mcp.example.com (via Traefik)
 
 ## MCP Server Capabilities
 

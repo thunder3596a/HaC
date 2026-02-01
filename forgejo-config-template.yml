@@ -5,12 +5,12 @@
 # VARIABLES (Repository Settings → Actions → Variables)
 # ============================================================================
 
-DOMAIN_NAME: "u-acres.com"
+DOMAIN_NAME: "example.com"
 TZ: "America/Chicago"
 CERTRESOLVER: "cloudflare"
 CLOUDFLARE_EMAIL: "YOUR_CLOUDFLARE_EMAIL_HERE"
 LETS_ENCRYPT_EMAIL: "YOUR_LETSENCRYPT_EMAIL_HERE"
-HA_URL: "https://ha.${DOMAIN_NAME}"  # Will resolve to https://ha.u-acres.com
+HA_URL: "https://ha.${DOMAIN_NAME}"  # Will resolve to https://ha.example.com
 
 # ============================================================================
 # SECRETS (Repository Settings → Actions → Secrets)
@@ -44,25 +44,25 @@ forgejo_token: "token YOUR_FORGEJO_API_TOKEN_HERE"
 FORGEJO_TOKEN: "YOUR_FORGEJO_API_TOKEN_HERE"
 
 # --- Forgejo Workflow Dispatch URLs ---
-# These are already correct for your setup (nicholas/docker on git.u-acres.com)
-forgejo_workflow_url_critical: "https://git.u-acres.com/api/v1/repos/nicholas/docker/actions/workflows/check-updates-critical.yml/dispatches"
+# These are already correct for your setup (your-username/docker on git.example.com)
+forgejo_workflow_url_critical: "https://git.example.com/api/v1/repos/your-username/docker/actions/workflows/check-updates-critical.yml/dispatches"
 
-forgejo_workflow_url_noncritical: "https://git.u-acres.com/api/v1/repos/nicholas/docker/actions/workflows/check-updates-noncritical.yml/dispatches"
+forgejo_workflow_url_noncritical: "https://git.example.com/api/v1/repos/your-username/docker/actions/workflows/check-updates-noncritical.yml/dispatches"
 
-forgejo_workflow_url_apply_critical: "https://git.u-acres.com/api/v1/repos/nicholas/docker/actions/workflows/apply-updates-critical.yml/dispatches"
+forgejo_workflow_url_apply_critical: "https://git.example.com/api/v1/repos/your-username/docker/actions/workflows/apply-updates-critical.yml/dispatches"
 
-forgejo_workflow_url_apply_noncritical: "https://git.u-acres.com/api/v1/repos/nicholas/docker/actions/workflows/apply-updates-noncritical.yml/dispatches"
+forgejo_workflow_url_apply_noncritical: "https://git.example.com/api/v1/repos/your-username/docker/actions/workflows/apply-updates-noncritical.yml/dispatches"
 
 # ============================================================================
 # NOTES
 # ============================================================================
 
 # Values already confirmed from your setup:
-# ✓ DOMAIN_NAME: u-acres.com (from Traefik and HA configs)
+# ✓ DOMAIN_NAME: example.com (from Traefik and HA configs)
 # ✓ TZ: America/Chicago (from compose files)
 # ✓ CERTRESOLVER: cloudflare (from Traefik config)
 # ✓ HA_URL: https://ha.${DOMAIN_NAME} (derived from DOMAIN_NAME)
-# ✓ Workflow URLs: Using git.u-acres.com and nicholas/docker repo
+# ✓ Workflow URLs: Using git.example.com and nicholas/docker repo
 
 # You already have these in Home Assistant's secrets.yaml:
 # - forgejo_token (starts with "token ")
@@ -71,9 +71,9 @@ forgejo_workflow_url_apply_noncritical: "https://git.u-acres.com/api/v1/repos/ni
 # Just copy the SAME values to Forgejo repository settings
 
 # How to add in Forgejo:
-# 1. Go to: https://git.u-acres.com/nicholas/docker/settings/actions/variables
+# 1. Go to: https://git.example.com/your-username/docker/settings/actions/variables
 # 2. For each VARIABLE above: Click "Add Variable", paste name and value
-# 3. Go to: https://git.u-acres.com/nicholas/docker/settings/actions/secrets
+# 3. Go to: https://git.example.com/your-username/docker/settings/actions/secrets
 # 4. For each SECRET above: Click "Add Secret", paste name and value
 # 5. Save all changes
 

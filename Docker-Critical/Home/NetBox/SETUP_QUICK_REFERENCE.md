@@ -3,19 +3,19 @@
 ## ⚡ Required Forgejo Variables (Plaintext)
 
 ```
-DOMAIN_NAME=u-acres.com
-NETBOX_ALLOWED_HOSTS=netbox.u-acres.com,192.168.1.100
+DOMAIN_NAME=example.com
+NETBOX_ALLOWED_HOSTS=netbox.example.com,192.168.1.100
 NETBOX_DB_NAME=netbox
 NETBOX_DB_USER=netbox
 NETBOX_DB_HOST=netbox-postgres
 NETBOX_REDIS_HOST=netbox-redis
 NETBOX_METRICS_ENABLED=false
-NETBOX_EMAIL_FROM=netbox@u-acres.com
-NETBOX_EMAIL_SERVER=mail.u-acres.com
+NETBOX_EMAIL_FROM=netbox@example.com
+NETBOX_EMAIL_SERVER=mail.example.com
 NETBOX_EMAIL_PORT=587
-TRUENAS_URL=https://truenas01.u-acres.com
-OPNSENSE_URL=https://opnsense.u-acres.com
-OMADA_URL=https://omada.u-acres.com
+TRUENAS_URL=https://truenas01.example.com
+OPNSENSE_URL=https://opnsense.example.com
+OMADA_URL=https://omada.example.com
 OMADA_SITE_NAME=Default
 DOCKER_HOST=truenas01
 DOCKER_SITE=homelab

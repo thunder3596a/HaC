@@ -1,7 +1,9 @@
+# NOTE: Traefik file provider does not support environment variables.
+# Update the domain below to match your DOMAIN_NAME before deploying.
 http:
   routers:
     ollama:
-      rule: "Host(`ollama.u-acres.com`)"
+      rule: "Host(`ollama.example.com`)"  # UPDATE: Replace example.com with your domain
       entryPoints:
         - websecure
       service: ollama

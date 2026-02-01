@@ -13,7 +13,7 @@ from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 # Configuration
-OPNSENSE_URL = os.getenv('OPNSENSE_URL', 'https://opnsense.u-acres.com')
+OPNSENSE_URL = os.getenv('OPNSENSE_URL', 'https://opnsense.example.com')
 OPNSENSE_API_KEY = os.getenv('OPNSENSE_API_KEY', '')
 OPNSENSE_API_SECRET = os.getenv('OPNSENSE_API_SECRET', '')
 NETBOX_URL = os.getenv('NETBOX_URL', 'http://localhost:8080')

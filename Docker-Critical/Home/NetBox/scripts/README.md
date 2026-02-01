@@ -65,9 +65,9 @@ These scripts sync infrastructure data from TrueNAS Scale and OPNsense into NetB
 Add these to your Forgejo repository Variables/Secrets:
 
 **Variables:**
-- `TRUENAS_URL` = `https://truenas01.u-acres.com`
-- `OPNSENSE_URL` = `https://opnsense.u-acres.com` (adjust to your firewall's URL)
-- `OMADA_URL` = `https://omada.u-acres.com` (adjust to your Omada controller URL)
+- `TRUENAS_URL` = `https://truenas01.example.com`
+- `OPNSENSE_URL` = `https://opnsense.example.com` (adjust to your firewall's URL)
+- `OMADA_URL` = `https://omada.example.com` (adjust to your Omada controller URL)
 - `OMADA_SITE_NAME` = `Default` (or your site name in Omada)
 - `DOCKER_HOST` = `truenas01` (name of your Docker host)
 - `DOCKER_SITE` = `homelab` (NetBox site name for Docker resources)

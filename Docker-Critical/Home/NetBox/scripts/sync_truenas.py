@@ -13,7 +13,7 @@ from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 # Configuration
-TRUENAS_URL = os.getenv('TRUENAS_URL', 'https://truenas01.u-acres.com')
+TRUENAS_URL = os.getenv('TRUENAS_URL', 'https://truenas01.example.com')
 TRUENAS_API_KEY = os.getenv('TRUENAS_API_KEY', '')
 NETBOX_URL = os.getenv('NETBOX_URL', 'http://localhost:8080')
 NETBOX_TOKEN = os.getenv('NETBOX_TOKEN', '')
