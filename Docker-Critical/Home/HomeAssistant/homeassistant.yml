@@ -31,7 +31,7 @@ services:
       - SYS_RESOURCE
     network_mode: host
     dns:
-      - 192.168.19.2
+      - ${DNS_SERVER}
     environment:
       - TZ=${TZ:-America/Chicago}
     devices:
@@ -50,7 +50,7 @@ services:
       - traefik.http.routers.homeassistant.tls=true
       - traefik.http.routers.homeassistant.tls.certresolver=${CERTRESOLVER:-cloudflare}
       - traefik.http.routers.homeassistant.tls.domains[0].main=ha.${DOMAIN_NAME}
-      - traefik.http.services.homeassistant.loadbalancer.server.url=http://192.168.19.51:8123
+      - traefik.http.services.homeassistant.loadbalancer.server.url=http://${HA_HOST_IP}:8123
       - com.centurylinklabs.watchtower.enable=true
       - ha.monitor=true
       - ha.category=home
@@ -157,7 +157,7 @@ services:
     networks:
       - homeproxy
     dns:
-      - 192.168.19.2
+      - ${DNS_SERVER}
     extra_hosts:
       - "slzb-06-zigbeebluetooth-e42018.local:${ZIGBEE_COORDINATOR_IP}"
       - "slzb-06.local:${ZIGBEE_COORDINATOR_IP}"
