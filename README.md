@@ -2,7 +2,7 @@
 
 Complete Docker infrastructure for a self-hosted home automation and media center, organized into critical and non-critical services with automated deployment via Forgejo CI/CD.
 
-## 🏗️ Architecture Overview
+## Architecture Overview
 
 ### Deployment Model
 - **Git-based:** Configuration managed through Forgejo (self-hosted Git server)
@@ -28,7 +28,7 @@ Complete Docker infrastructure for a self-hosted home automation and media cente
 
 ---
 
-## 📁 Repository Structure
+## Repository Structure
 
 ```
 docker/
@@ -42,7 +42,7 @@ docker/
 
 ---
 
-## 🟢 Docker-Critical Services
+## Docker-Critical Services
 
 Services running on **docker-critical** (critical host).
 
@@ -168,7 +168,7 @@ Services running on **docker-critical** (critical host).
 
 ---
 
-## 🔴 Docker-NonCritical Services
+## Docker-NonCritical Services
 
 Services running on **docker-noncritical** (non-critical host). Can restart without affecting home automation.
 
@@ -262,7 +262,7 @@ Services running on **docker-noncritical** (non-critical host). Can restart with
 
 ---
 
-## 🚀 Deployment
+## Deployment
 
 ### Deployment Hosts
 
@@ -320,7 +320,7 @@ Encrypted secrets (set in repository settings):
 
 ---
 
-## 📦 Data Locations
+## Data Locations
 
 ### Critical Services
 Persistent data on primary host (tiered):
@@ -371,7 +371,7 @@ Persistent data on docker-noncritical:
 
 ---
 
-## 🔄 Migration
+## Migration
 
 See [MIGRATION.md](Docker-Critical/MIGRATION.md) for detailed instructions on migrating services from TrueNAS to Home Assistant.
 
@@ -385,7 +385,7 @@ sudo ./migrate-to-homeassistant.sh
 
 ---
 
-## 🛠️ Development & Customization
+## Development & Customization
 
 ### Adding a New Service
 
@@ -436,7 +436,7 @@ sudo ./migrate-to-homeassistant.sh
 
 ---
 
-## 📋 Service Dependencies
+## Service Dependencies
 
 ```
 Traefik (Critical)
@@ -462,7 +462,7 @@ Traefik (NonCritical)
 
 ---
 
-## 🔐 Security Notes
+## Security Notes
 
 - **Split Horizon DNS:** Not needed - Unbound on OpnSense provides local DNS overrides
 - **External Access:** Via Cloudflare Tunnel to avoid port forwarding
@@ -472,7 +472,7 @@ Traefik (NonCritical)
 
 ---
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Service won't start
 ```bash
@@ -509,7 +509,7 @@ sudo chown -R 568:568 /srv/<service>/
 
 ---
 
-## ✍️ License & Attribution
+## License & Attribution
 **Maintainer:** Nicholas Underwood
 Personal home automation infrastructure. Configuration patterns based on best practices for self-hosted services.
 
