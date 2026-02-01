@@ -33,9 +33,14 @@ jobs:
           CERTRESOLVER: ${{ vars.CERTRESOLVER }}
           VPN_SERVICE_PROVIDER: ${{ vars.VPN_SERVICE_PROVIDER }}
           VPN_SERVER_COUNTRIES: ${{ vars.VPN_SERVER_COUNTRIES }}
+          LAN_SUBNET: ${{ vars.LAN_SUBNET }}
           OPENVPN_USER: ${{ secrets.OPENVPN_USER }}
           OPENVPN_PASSWORD: ${{ secrets.OPENVPN_PASSWORD }}
         run: |
+          if [ -z "$LAN_SUBNET" ]; then
+            echo "LAN_SUBNET is not set. Define it in Forgejo variables (e.g., 192.168.1.0/24)."
+            exit 1
+          fi
           # Extract defined images
           defined_gluetun=$(grep -m1 'image:.*gluetun' torrent.yml | awk '{print $2}')
           defined_qbittorrent=$(grep -m1 'image:.*qbittorrent' torrent.yml | awk '{print $2}')
@@ -67,11 +72,11 @@ jobs:
             # Deploy
             PUID=$PUID PGID=$PGID TZ=$TZ DOMAIN_NAME=$DOMAIN_NAME CERTRESOLVER=$CERTRESOLVER \
               VPN_SERVICE_PROVIDER=$VPN_SERVICE_PROVIDER VPN_SERVER_COUNTRIES=$VPN_SERVER_COUNTRIES \
-              OPENVPN_USER=$OPENVPN_USER OPENVPN_PASSWORD=$OPENVPN_PASSWORD \
+              LAN_SUBNET=$LAN_SUBNET OPENVPN_USER=$OPENVPN_USER OPENVPN_PASSWORD=$OPENVPN_PASSWORD \
               docker compose -p torrent -f torrent.yml down --remove-orphans || true
             PUID=$PUID PGID=$PGID TZ=$TZ DOMAIN_NAME=$DOMAIN_NAME CERTRESOLVER=$CERTRESOLVER \
               VPN_SERVICE_PROVIDER=$VPN_SERVICE_PROVIDER VPN_SERVER_COUNTRIES=$VPN_SERVER_COUNTRIES \
-              OPENVPN_USER=$OPENVPN_USER OPENVPN_PASSWORD=$OPENVPN_PASSWORD \
+              LAN_SUBNET=$LAN_SUBNET OPENVPN_USER=$OPENVPN_USER OPENVPN_PASSWORD=$OPENVPN_PASSWORD \
               docker compose -p torrent -f torrent.yml up -d --force-recreate
 
             # Save checksum
