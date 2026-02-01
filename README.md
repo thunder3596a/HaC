@@ -71,6 +71,10 @@ Services running on **docker-critical** (critical host).
   - Relays outbound mail for internal services
   - Credentials via Forgejo secrets
 
+- **Cloudflared** (`Cloudflared/cloudflared.yml`) - Cloudflare Tunnel
+  - Secure external access without port forwarding
+  - Automatic DNS and certificate management
+
 ### Home Automation Core
 - **Home Assistant** (`HomeAssistant/homeassistant.yml`) - Home automation hub
   - Core automation and smart home control
@@ -86,6 +90,18 @@ Services running on **docker-critical** (critical host).
   - MQTT integration with Home Assistant
   - Weather station and sensor data decoding
   - Config: `/srv/rtl-sdr/`
+
+- **Govee2MQTT** (`Govee2MQTT/govee2mqtt.yml`) - Govee device MQTT bridge
+  - Integrates Govee lights and sensors with Home Assistant
+  - MQTT-based control and monitoring
+  
+- **NUT (Network UPS Tools)** (`NUT/nut.yml`) - UPS monitoring
+  - Battery backup monitoring and management
+  - Automatic shutdown coordination
+  
+- **Whisper** (`Whisper/whisper.yml`) - Speech recognition
+  - Local speech-to-text processing
+  - Privacy-focused voice assistant integration
 
 ### Infrastructure Services
 - **Forgejo** (`Management/Git - Forgejo/git.yml`) - Self-hosted Git server
@@ -108,23 +124,38 @@ Services running on **docker-critical** (critical host).
   - Flux query language for complex aggregations
   - Dashboard at `influx.${DOMAIN_NAME}`
 
-### Home Services
-- **Norish** (`Home/Cooking/norish.yml`) - Recipe management
-  - Recipe storage and organization
-  - PostgreSQL + Redis backends
-  - Dashboard via Traefik route (`norish.${DOMAIN_NAME}`)
-  
-- **HomeBox** (`Management/HomeBox/homebox.yml`) - Household management
-  - Inventory and asset tracking
-  - Dashboard at `homebox.${DOMAIN_NAME}`
+- **Docker Socket Proxy** (`Tools/DockerSocketProxy/docker-socket-proxy.yml`) - Secure Docker API access
+  - Restricts Docker socket access for Traefik and monitoring
+  - Security layer for Docker daemon
 
-- **Kiwix** (`Home/Doomsday/library.yml`) - Offline content library
+- **N8N** (`Tools/N8N/n8n.yml`) - Workflow automation
+  - No-code automation platform
+  - Integration with external APIs and services
+  - Dashboard at `n8n.${DOMAIN_NAME}`
+
+### Home Services
+- **Norish** (Tools/Kiwix/kiwix.yml`) - Offline content library
   - Wikipedia and documentation mirrors
   - Read-only media mount
   - Dashboard at `kiwix.${DOMAIN_NAME}`
 
 - **KaraKeep** (`Home/KaraKeep/karakeep.yml`) - Media library management
   - Video collection organization
+  - Meilisearch integration for full-text search
+  - Dashboard at `kara.${DOMAIN_NAME}`
+
+- **Music Assistant** (`Home/MusicAssistant/musicassistant.yml`) - Music server and player management
+  - Unified music library from multiple providers (Spotify, Plex, Jellyfin, local files)
+  - Multi-player support (Sonos, AirPlay, Google Cast, DLNA, etc.)
+  - Local audio file streaming with quality selection
+  - Host network mode for mDNS/player discovery
+  - Dashboard at `music.${DOMAIN_NAME}`
+
+### Finance
+- **Actual Budget** (`Finance/finance.yml`) - Personal finance management
+  - Budget tracking and expense management
+  - Bank synchronization and reporting
+  - Dashboard at `budgetganization
   - Meilisearch integration for full-text search
   - Dashboard at `kara.${DOMAIN_NAME}`
 
@@ -479,10 +510,10 @@ sudo chown -R 568:568 /srv/<service>/
 ---
 
 ## ✍️ License & Attribution
-
+**Maintainer:** Nicholas Underwood
 Personal home automation infrastructure. Configuration patterns based on best practices for self-hosted services.
 
 ---
 
-**Last Updated:** January 2, 2026  
-**Maintainer:** your-email@example.com
+**Last Updated:** January 31, 2026  
+**Maintainer:** Nicholas Underwood

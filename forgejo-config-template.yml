@@ -62,7 +62,7 @@ forgejo_workflow_url_apply_noncritical: "https://git.example.com/api/v1/repos/yo
 # ✓ TZ: America/Chicago (from compose files)
 # ✓ CERTRESOLVER: cloudflare (from Traefik config)
 # ✓ HA_URL: https://ha.${DOMAIN_NAME} (derived from DOMAIN_NAME)
-# ✓ Workflow URLs: Using git.example.com and nicholas/docker repo
+# ✓ Workflow URLs: Using git.example.com and your-username/docker repo
 
 # You already have these in Home Assistant's secrets.yaml:
 # - forgejo_token (starts with "token ")

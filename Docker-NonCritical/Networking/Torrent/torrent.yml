@@ -25,7 +25,7 @@ services:
       - SERVER_COUNTRIES=${VPN_SERVER_COUNTRIES}
       - HTTPPROXY=off
       - SHADOWSOCKS=off
-      - FIREWALL_OUTBOUND_SUBNETS=172.20.0.0/16,192.168.19.0/24
+      - FIREWALL_OUTBOUND_SUBNETS=172.20.0.0/16,${LAN_SUBNET}
       #      - FIREWALL_VPN_INPUT_PORTS=12345 #uncomment or remove this line based on the notes below
       - UPDATER_PERIOD=24h
       - HEALTH_VPN_DURATION_ADDITION=20s

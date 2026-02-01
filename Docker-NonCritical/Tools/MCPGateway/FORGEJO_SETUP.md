@@ -34,10 +34,10 @@ Add these to **Settings → Variables**:
 | `DOMAIN_NAME` | Your base domain name | `example.com` |
 | `CERTRESOLVER` | Traefik certificate resolver | `cloudflare` |
 | `HOMEASSISTANT_URL` | Home Assistant URL | `http://homeassistant:8123` |
-| `OPNSENSE_URL` | OPNsense firewall URL | `https://opnsense.local` |
+| `OPNSENSE_URL` | OPNsense firewall URL | `https://opnsense.example.com` |
 | `NETBOX_URL` | NetBox URL | `http://netbox:8080` |
 | `N8N_URL` | n8n workflow automation URL | `http://n8n:5678` |
-| `OMADA_URL` | TP-Link Omada controller URL | `https://omada.local:8043` |
+| `OMADA_URL` | TP-Link Omada controller URL | `https://omada.example.com:8043` |
 | `OMADA_SITE_ID` | Omada site ID | `Default` |
 | `HOMEBOX_URL` | HomeBox inventory URL | `http://homebox:7745` |
 
@@ -143,7 +143,7 @@ docker logs mcp-gateway
 ### Network Connection Issues
 Verify service URLs are accessible from the Docker host:
 ```bash
-curl -k https://opnsense.local/api/
+curl -k https://opnsense.example.com/api/
 curl http://homeassistant:8123/api/
 ```
 

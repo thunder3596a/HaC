@@ -3,3 +3,14 @@
 .vscode/
 .github/copilot-instructions.md
 nul
+
+# Workflow artifacts
+.*_checksum
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# IDE settings (use VSCode Settings Sync instead)
+*.code-workspace
