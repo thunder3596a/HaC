@@ -134,13 +134,17 @@ Services running on **docker-critical** (critical host).
   - Dashboard at `n8n.${DOMAIN_NAME}`
 
 ### Home Services
-- **Kiwix** (`Tools/Kiwix/kiwix.yml`) - Offline content library
-  - Wikipedia and documentation mirrors
-  - Read-only media mount
-  - Dashboard at `kiwix.${DOMAIN_NAME}`
 
-- **KaraKeep** (`Home/KaraKeep/karakeep.yml`) - Media library management
-  - Video collection organization
+- **Norish** (`Home/Cooking/norish.yml`) - Recipe manager
+  - Recipe collection and meal planning
+  - Web page recipe clipping with headless Chrome
+  - OIDC authentication via Authelia
+  - PostgreSQL + Redis backends
+  - Dashboard at `norish.${DOMAIN_NAME}`
+
+- **KaraKeep** (`Home/KaraKeep/karakeep.yml`) - Bookmark manager
+  - Save and organize bookmarks and links
+  - Web page archiving and screenshots
   - Meilisearch integration for full-text search
   - Dashboard at `kara.${DOMAIN_NAME}`
 
@@ -151,20 +155,20 @@ Services running on **docker-critical** (critical host).
   - Host network mode for mDNS/player discovery
   - Dashboard at `music.${DOMAIN_NAME}`
 
-### Finance
-- **Actual Budget** (`Finance/finance.yml`) - Personal finance management
-  - Budget tracking and expense management
-  - Bank synchronization and reporting
-  - Dashboard at `budget.${DOMAIN_NAME}`
-  - Meilisearch integration for full-text search
-  - Dashboard at `kara.${DOMAIN_NAME}`
+- **HomeBox** (`Management/HomeBox/homebox.yml`) - Home inventory management
+  - Track household items and their locations
+  - Asset management and organization
+  - Dashboard at `homebox.${DOMAIN_NAME}`
 
-- **Music Assistant** (`Home/MusicAssistant/musicassistant.yml`) - Music server and player management
-  - Unified music library from multiple providers (Spotify, Plex, Jellyfin, local files)
-  - Multi-player support (Sonos, AirPlay, Google Cast, DLNA, etc.)
-  - Local audio file streaming with quality selection
-  - Host network mode for mDNS/player discovery
-  - Dashboard at `music.${DOMAIN_NAME}`
+- **Kiwix** (`Tools/Kiwix/kiwix.yml`) - Offline Wikipedia mirror
+  - Wikipedia and documentation archives
+  - Read-only ZIM file mount
+  - Dashboard at `wikipedia.${DOMAIN_NAME}`
+
+- **Doomsday Library** (`Home/Doomsday/library.yml`) - Offline content library
+  - Additional offline content archives
+  - Kiwix-serve for ZIM files
+  - Dashboard at `library.${DOMAIN_NAME}`
 
 ---
 
@@ -230,6 +234,18 @@ Services running on **docker-noncritical** (non-critical host). Can restart with
 - **Dispatcharr** (`Media/Dispatcharr/dispatcharr.yml`) - Notification router
   - Routes Radarr/Sonarr notifications
 
+### Books & Audiobooks
+
+- **Audiobookshelf** (`Media/Books/ebook.yml`) - Audiobook and podcast server
+  - Self-hosted audiobook streaming
+  - Podcast management
+  - Dashboard at `audiobooks.${DOMAIN_NAME}`
+
+- **Kavita** (`Media/Books/ebook.yml`) - eBook and comic reader
+  - Digital library for books, comics, manga
+  - Web-based reader interface
+  - Dashboard at `kavita.${DOMAIN_NAME}`
+
 ### Media Center
 - **Plex** (`Media/Plex/plex.yml`) - Media streaming server
   - Movies, TV shows, music streaming
@@ -249,13 +265,35 @@ Services running on **docker-noncritical** (non-critical host). Can restart with
   - Run local language models
   - OpenAI-compatible API
 
-- **Open WebUI** (`Automation/AI/aiportal.yml`) - LLM interface
+- **Open WebUI** (`Automation/AI/openwebui.yml`) - LLM interface
   - Chat interface for Ollama
+  - Dashboard at `chat.${DOMAIN_NAME}`
 
 - **Price Tracker** (`Automation/pricetracker.yml`) - eCommerce monitoring
   - Price tracking and alerts
 
+### Tools
+- **IT-Tools** (`Tools/IT-Tools/it-tools.yml`) - Developer utilities
+  - Collection of handy developer tools
+  - Dashboard at `it-tools.${DOMAIN_NAME}`
+
+- **SearXNG** (`Tools/SearX/searx.yml`) - Privacy-focused metasearch
+  - Self-hosted search engine
+  - Aggregates results from multiple sources
+  - Dashboard at `search.${DOMAIN_NAME}`
+
+- **Stirling-PDF** (`Tools/Stirling-PDF/stirling-pdf.yml`) - PDF toolkit
+  - PDF manipulation and conversion
+  - Merge, split, compress, OCR
+  - Dashboard at `pdf.${DOMAIN_NAME}`
+
+- **MCP Gateway** (`Tools/MCPGateway/mcpgateway.yml`) - Model Context Protocol hub
+  - Central gateway for MCP servers
+  - Integrations: Home Assistant, OPNsense, NetBox, n8n, Omada, HomeBox
+  - Dashboard at `mcp.${DOMAIN_NAME}`
+
 ### Security
+
 - **Crowdsec** (`Security/Crowdsec/crowdsec.yml`) - Threat detection
   - IDS/crowdsourced security
   - Log analysis and blocking
@@ -328,7 +366,6 @@ Persistent data on primary host (tiered):
 /srv/                      # NVMe #1 (critical + high IO)
 ├── authelia/              # SSO database and config
 ├── traefik/               # Reverse proxy config and ACME certs
-├── git/                   # Forgejo repositories and config
 ├── homeassistant/         # HA config and automations
 ├── avahi/                 # mDNS reflection config
 ├── esphome/               # ESPHome device configs
@@ -338,7 +375,7 @@ Persistent data on primary host (tiered):
 ├── norish/                # Recipe database (app + DB + redis)
 ├── smtp-relay/            # Postfix spool
 ├── omada/                 # Controller data
-└── git/                   # Forgejo data + Postgres
+└── git/                   # Forgejo repositories, data + Postgres
 
 /mnt/nvme-appdata/         # NVMe #2 (appdata/search/AI)
 ├── netbox/                # IPAM app, Postgres, Redis, theme
@@ -506,14 +543,11 @@ sudo chown -R 568:568 /srv/<service>/
 
 ---
 
-
----
-
 ## License & Attribution
-**Maintainer:** Nicholas Underwood
+
 Personal home automation infrastructure. Configuration patterns based on best practices for self-hosted services.
 
 ---
 
-**Last Updated:** January 31, 2026  
+**Last Updated:** February 2, 2026
 **Maintainer:** Nicholas Underwood
