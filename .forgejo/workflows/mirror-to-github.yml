@@ -1,0 +1,27 @@
+name: Mirror to GitHub
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  mirror:
+    runs-on: docker-critical
+    defaults:
+      run:
+        shell: sh
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push to GitHub
+        run: |
+          git remote add github https://x-access-token:${{ secrets.TOKEN_GITHUB }}@github.com/thunder3596a/docker.git || git remote set-url github https://x-access-token:${{ secrets.TOKEN_GITHUB }}@github.com/thunder3596a/docker.git
+          git push github main --force
+          git push github --all --force
+          git push github --tags --force
