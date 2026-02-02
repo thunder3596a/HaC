@@ -134,7 +134,7 @@ Services running on **docker-critical** (critical host).
   - Dashboard at `n8n.${DOMAIN_NAME}`
 
 ### Home Services
-- **Norish** (Tools/Kiwix/kiwix.yml`) - Offline content library
+- **Kiwix** (`Tools/Kiwix/kiwix.yml`) - Offline content library
   - Wikipedia and documentation mirrors
   - Read-only media mount
   - Dashboard at `kiwix.${DOMAIN_NAME}`
@@ -155,7 +155,7 @@ Services running on **docker-critical** (critical host).
 - **Actual Budget** (`Finance/finance.yml`) - Personal finance management
   - Budget tracking and expense management
   - Bank synchronization and reporting
-  - Dashboard at `budgetganization
+  - Dashboard at `budget.${DOMAIN_NAME}`
   - Meilisearch integration for full-text search
   - Dashboard at `kara.${DOMAIN_NAME}`
 
