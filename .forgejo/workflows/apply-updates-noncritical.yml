@@ -106,9 +106,13 @@ jobs:
                 docker pull "$image"
               fi
 
+              # Stop and remove old container to avoid name conflicts
+              docker stop "$container" 2>/dev/null || true
+              docker rm "$container" 2>/dev/null || true
+
               # Recreate container using service name
               cd "$(dirname "$compose_file")"
-              docker compose -f "$(basename "$compose_file")" up -d --force-recreate "$service_name" || true
+              docker compose -f "$(basename "$compose_file")" up -d "$service_name" || true
               cd - > /dev/null
 
               updated="${updated}${container}, "

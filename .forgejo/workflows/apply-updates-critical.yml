@@ -34,12 +34,25 @@ jobs:
           DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
           CERTRESOLVER: ${{ vars.CERTRESOLVER }}
           TZ: ${{ vars.TZ }}
+          DNS_SERVER: ${{ vars.DNS_SERVER }}
+          HA_HOST_IP: ${{ vars.HA_HOST_IP }}
           HOMEASSISTANT_MARIADB_ROOT_PASSWORD: ${{ secrets.HOMEASSISTANT_MARIADB_ROOT_PASSWORD }}
           HOMEASSISTANT_MARIADB_PASSWORD: ${{ secrets.HOMEASSISTANT_MARIADB_PASSWORD }}
           CLOUDFLARE_EMAIL: ${{ vars.CLOUDFLARE_EMAIL }}
           CLOUDFLARE_DNS_API_TOKEN: ${{ secrets.CLOUDFLARE_DNS_API_TOKEN }}
           CLOUDFLARE_ZONE_API_TOKEN: ${{ secrets.CLOUDFLARE_ZONE_API_TOKEN }}
           LETS_ENCRYPT_EMAIL: ${{ vars.LETS_ENCRYPT_EMAIL }}
+          NORISH_DB_PASSWORD: ${{ secrets.NORISH_DB_PASSWORD }}
+          NORISH_OIDC_CLIENT_SECRET: ${{ secrets.NORISH_OIDC_CLIENT_SECRET }}
+          NORISH_MASTER_KEY: ${{ secrets.NORISH_MASTER_KEY }}
+          N8N_BASIC_AUTH_USER: ${{ secrets.N8N_BASIC_AUTH_USER }}
+          N8N_BASIC_AUTH_PASSWORD: ${{ secrets.N8N_BASIC_AUTH_PASSWORD }}
+          N8N_DB_PASSWORD: ${{ secrets.N8N_DB_PASSWORD }}
+          GIT_DB_PASSWORD: ${{ secrets.GIT_DB_PASSWORD }}
+          POSTGRES_USER: ${{ vars.POSTGRES_USER }}
+          POSTGRES_DB: ${{ vars.POSTGRES_DB }}
+          AUTHELIA_DB_PASSWORD: ${{ secrets.AUTHELIA_DB_PASSWORD }}
+          INFLUXDB_ADMIN_PASSWORD: ${{ secrets.INFLUXDB_ADMIN_PASSWORD }}
           CONTAINERS: ${{ github.event.inputs.containers }}
           BOOTSTRAP: ${{ github.event.inputs.bootstrap }}
         run: |
@@ -158,9 +171,13 @@ jobs:
                 docker pull "$image"
               fi
 
+              # Stop and remove old container to avoid name conflicts
+              docker stop "$container" 2>/dev/null || true
+              docker rm "$container" 2>/dev/null || true
+
               # Recreate container using service name
               cd "$(dirname "$compose_file")"
-              docker compose -f "$(basename "$compose_file")" up -d --force-recreate "$service_name" || true
+              docker compose -f "$(basename "$compose_file")" up -d "$service_name" || true
               cd - > /dev/null
 
               updated="${updated}${container}, "
