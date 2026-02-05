@@ -19,7 +19,7 @@ get_remote_digest() {
     if [[ "$image" == ghcr.io/* ]]; then
         # GitHub Container Registry - get token first (works for public images)
         local repo="${image#ghcr.io/}"
-        local token=$(curl -s "https://ghcr.io/token?scope=repository:${repo}:pull" 2>/dev/null | grep -o '"token":"[^"]*"' | cut -d'"' -f4)
+        local token=$(curl -s "https://ghcr.io/token?service=ghcr.io&scope=repository:${repo}:pull" 2>/dev/null | grep -o '"token":"[^"]*"' | cut -d'"' -f4)
         if [ -n "$token" ]; then
             digest=$(curl -sI "https://ghcr.io/v2/${repo}/manifests/${tag}" \
                 -H "$accept_header" \
