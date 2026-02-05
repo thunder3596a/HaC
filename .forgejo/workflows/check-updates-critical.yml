@@ -34,13 +34,15 @@ jobs:
           for container in $CONTAINERS; do
             if docker ps --format '{{.Names}}' | grep -q "^${container}$"; then
               echo "Checking container: $container"
+              # Show debug output, capture only JSON
+              ./scripts/check-docker-updates.sh "$container" 2>&1 | head -5
               result=$(./scripts/check-docker-updates.sh "$container" 2>/dev/null)
               # Script outputs a JSON object if update available, empty if not
               if [ -n "$result" ] && [[ "$result" == "{"* ]]; then
                 updates_arr+=("$result")
-                echo "  -> Update available"
+                echo "  -> Update available: $result"
               else
-                echo "  -> No update (or error)"
+                echo "  -> No update detected (result: '$result')"
               fi
             else
               echo "Container not running: $container"
