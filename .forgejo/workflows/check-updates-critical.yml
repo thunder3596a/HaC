@@ -29,23 +29,29 @@ jobs:
         run: |
           chmod +x ./scripts/check-docker-updates.sh
 
-          updates=""
+          # Collect update objects into an array
+          updates_arr=()
           for container in $CONTAINERS; do
             if docker ps --format '{{.Names}}' | grep -q "^${container}$"; then
-              result=$(./scripts/check-docker-updates.sh "$container")
-              if [ "$result" != "[]" ]; then
-                updates="${updates}${result},"
+              echo "Checking container: $container"
+              result=$(./scripts/check-docker-updates.sh "$container" 2>&1)
+              # Script outputs a JSON object if update available, empty if not
+              if [ -n "$result" ] && [[ "$result" == "{"* ]]; then
+                updates_arr+=("$result")
+                echo "  -> Update available"
+              else
+                echo "  -> No update (or error)"
               fi
+            else
+              echo "Container not running: $container"
             fi
           done
 
-          # Clean up JSON
-          if [ -n "$updates" ]; then
-            updates="[${updates%,}]"
-            # Flatten nested arrays
-            updates=$(echo "$updates" | sed 's/\]\[/,/g' | sed 's/\[\[/[/g' | sed 's/\]\]/]/g')
-          else
+          # Build JSON array from collected objects
+          if [ ${#updates_arr[@]} -eq 0 ]; then
             updates="[]"
+          else
+            updates="[$(IFS=,; echo "${updates_arr[*]}")]"
           fi
 
           echo "updates=$updates" >> $GITHUB_OUTPUT
