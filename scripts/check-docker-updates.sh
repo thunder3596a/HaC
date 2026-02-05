@@ -139,8 +139,11 @@ if [ -z "$CONTAINER" ]; then
     fi
 else
     # Check single container - output just the JSON object or empty string
-    result=$(check_container "$CONTAINER")
+    result=$(check_container "$CONTAINER") || true
     if [ -n "$result" ]; then
         echo "$result"
     fi
 fi
+
+# Always exit 0 - "no update" is not an error
+exit 0
