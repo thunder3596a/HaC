@@ -27,7 +27,10 @@ jobs:
           # Containers to check on docker-noncritical
           CONTAINERS: "plex sonarr radarr lidarr readarr prowlarr overseerr qbittorrent sabnzbd traefik flaresolverr"
         run: |
+          set +e  # Don't exit on errors - we handle them ourselves
           chmod +x ./scripts/check-docker-updates.sh
+
+          echo "=== Using commit: $(git log -1 --oneline) ==="
 
           # Collect update objects into an array
           updates_arr=()
@@ -37,10 +40,10 @@ jobs:
               echo "Checking container: $container"
               echo "========================================"
               # Run once and capture both stderr (debug) and stdout (result)
-              output=$(./scripts/check-docker-updates.sh "$container" 2>&1)
+              output=$(./scripts/check-docker-updates.sh "$container" 2>&1 || true)
               echo "$output"
               # Extract just the JSON line (starts with {) for the result
-              result=$(echo "$output" | grep '^\{' | head -1)
+              result=$(echo "$output" | grep '^\{' | head -1 || true)
               # Script outputs a JSON object if update available, empty if not
               if [ -n "$result" ] && [[ "$result" == "{"* ]]; then
                 updates_arr+=("$result")
