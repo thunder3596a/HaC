@@ -20,6 +20,14 @@ jobs:
         with:
           token: ${{ secrets.FORGEJO_TOKEN }}
           ref: main
+          clean: true
+
+      - name: Show commit info
+        run: |
+          echo "=== Commit being used ==="
+          git log -1 --oneline
+          echo "=== Script tail ==="
+          tail -5 scripts/check-docker-updates.sh
 
       - name: Check for container updates
         id: check
