@@ -119,14 +119,18 @@ jobs:
             CONTAINERS=""
             for container in "${!COMPOSE_MAP[@]}"; do
               if docker ps --format '{{.Names}}' | grep -q "^${container}$"; then
-                result=$(./scripts/check-docker-updates.sh "$container")
-                echo "Checking $container: $result"
-                if [ "$result" != "[]" ] && [ -n "$result" ]; then
+                echo "Checking $container..."
+                result=$(./scripts/check-docker-updates.sh "$container" 2>&1)
+                # Script outputs JSON object starting with { if update available
+                if [ -n "$result" ] && [[ "$result" == "{"* ]]; then
+                  echo "  -> Update available"
                   if [ -z "$CONTAINERS" ]; then
                     CONTAINERS="$container"
                   else
                     CONTAINERS="${CONTAINERS},${container}"
                   fi
+                else
+                  echo "  -> No update"
                 fi
               fi
             done
