@@ -3,7 +3,7 @@
 # Compares local image digest with remote registry digest
 # Outputs JSON with update information
 
-set -e
+# Don't use set -e as we want to continue checking other containers even if one fails
 
 # Function to get remote image digest using Docker-Content-Digest header
 # This is more reliable than parsing manifest JSON
@@ -79,6 +79,7 @@ check_container() {
     local full_image=$(docker inspect --format='{{.Config.Image}}' "$container" 2>/dev/null)
 
     if [ -z "$full_image" ]; then
+        >&2 echo "  Error: Could not get image for container $container"
         return 1
     fi
 
