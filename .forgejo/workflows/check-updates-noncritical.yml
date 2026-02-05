@@ -33,8 +33,14 @@ jobs:
           updates_arr=()
           for container in $CONTAINERS; do
             if docker ps --format '{{.Names}}' | grep -q "^${container}$"; then
+              echo "========================================"
               echo "Checking container: $container"
-              result=$(./scripts/check-docker-updates.sh "$container" 2>/dev/null)
+              echo "========================================"
+              # Run once and capture both stderr (debug) and stdout (result)
+              output=$(./scripts/check-docker-updates.sh "$container" 2>&1)
+              echo "$output"
+              # Extract just the JSON line (starts with {) for the result
+              result=$(echo "$output" | grep '^\{' | head -1)
               # Script outputs a JSON object if update available, empty if not
               if [ -n "$result" ] && [[ "$result" == "{"* ]]; then
                 updates_arr+=("$result")
