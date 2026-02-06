@@ -197,19 +197,25 @@ jobs:
           HA_URL: ${{ vars.HA_URL }}
           HA_TOKEN: ${{ secrets.HA_LONG_LIVED_TOKEN }}
           CONTAINERS: ${{ github.event.inputs.containers }}
+          UPDATED: ${{ env.updated }}
         run: |
+          # Use the actually updated containers if available, otherwise the input
+          containers_list="${UPDATED:-${CONTAINERS}}"
+
+          # Build payload with jq for proper JSON
+          payload=$(jq -n \
+            --arg host "docker-critical" \
+            --arg containers "$containers_list" \
+            '{host: $host, containers: $containers}')
+
+          echo "Sending payload: $payload"
+
           # Retry up to 3 times with 10 second delay
           for i in 1 2 3; do
             if curl -s --fail --max-time 30 -X POST \
               -H "Authorization: Bearer ${HA_TOKEN}" \
               -H "Content-Type: application/json" \
-              -d "{
-                \"event_type\": \"docker_updates_applied\",
-                \"event_data\": {
-                  \"host\": \"docker-critical\",
-                  \"containers\": \"${CONTAINERS}\"
-                }
-              }" \
+              -d "$payload" \
               "${HA_URL}/api/events/docker_updates_applied"; then
               echo "Successfully notified Home Assistant"
               exit 0
