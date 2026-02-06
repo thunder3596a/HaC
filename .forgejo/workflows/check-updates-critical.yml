@@ -72,25 +72,52 @@ jobs:
         env:
           HA_URL: ${{ vars.HA_URL }}
           HA_TOKEN: ${{ secrets.HA_LONG_LIVED_TOKEN }}
-          UPDATES: ${{ steps.check.outputs.updates }}
         run: |
-          # Parse updates and create message
-          count=$(echo "$UPDATES" | grep -o '"container"' | wc -l)
-          containers=$(echo "$UPDATES" | grep -o '"container":"[^"]*"' | cut -d'"' -f4 | tr '\n' ', ' | sed 's/,$//')
+          # Get updates from output (using heredoc to handle special chars)
+          UPDATES='${{ steps.check.outputs.updates }}'
+
+          echo "DEBUG: UPDATES=$UPDATES"
+
+          # Parse updates using jq for reliable JSON handling
+          count=$(echo "$UPDATES" | jq 'length')
+          containers=$(echo "$UPDATES" | jq -r '[.[].container] | join(", ")')
+
+          echo "DEBUG: count=$count containers=$containers"
+
+          # Build JSON payload properly with jq
+          payload=$(jq -n \
+            --arg host "docker-critical" \
+            --argjson count "$count" \
+            --arg containers "$containers" \
+            --argjson updates "$UPDATES" \
+            '{
+              event_type: "docker_updates_available",
+              event_data: {
+                host: $host,
+                count: $count,
+                containers: $containers,
+                updates: $updates
+              }
+            }')
+
+          echo "DEBUG: Sending payload:"
+          echo "$payload" | jq .
 
           # Fire an event to Home Assistant
-          curl -s -X POST \
+          response=$(curl -s -w "\n%{http_code}" -X POST \
             -H "Authorization: Bearer ${HA_TOKEN}" \
             -H "Content-Type: application/json" \
-            -d "{
-              \"event_type\": \"docker_updates_available\",
-              \"event_data\": {
-                \"host\": \"docker-critical\",
-                \"count\": ${count},
-                \"containers\": \"${containers}\",
-                \"updates\": ${UPDATES}
-              }
-            }" \
-            "${HA_URL}/api/events/docker_updates_available"
+            -d "$payload" \
+            "${HA_URL}/api/events/docker_updates_available")
 
-          echo "Notification sent to Home Assistant"
+          http_code=$(echo "$response" | tail -1)
+          body=$(echo "$response" | head -n -1)
+
+          echo "DEBUG: HTTP $http_code - Response: $body"
+
+          if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
+            echo "Notification sent to Home Assistant successfully"
+          else
+            echo "ERROR: Failed to send notification (HTTP $http_code)"
+            exit 1
+          fi
