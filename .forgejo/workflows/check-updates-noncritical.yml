@@ -84,19 +84,17 @@ jobs:
           echo "DEBUG: count=$count containers=$containers"
 
           # Build JSON payload properly with jq
+          # Note: HA /api/events/{event_type} expects event data directly, not wrapped
           payload=$(jq -n \
             --arg host "docker-noncritical" \
             --argjson count "$count" \
             --arg containers "$containers" \
             --argjson updates "$UPDATES" \
             '{
-              event_type: "docker_updates_available",
-              event_data: {
-                host: $host,
-                count: $count,
-                containers: $containers,
-                updates: $updates
-              }
+              host: $host,
+              count: $count,
+              containers: $containers,
+              updates: $updates
             }')
 
           echo "DEBUG: Sending payload:"
