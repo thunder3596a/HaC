@@ -32,29 +32,30 @@ jobs:
           CONTAINERS: ${{ github.event.inputs.containers }}
         run: |
           # Map containers to their compose files and service names
+          # Note: paths are case-sensitive on Linux!
           declare -A COMPOSE_MAP
           declare -A SERVICE_MAP
           COMPOSE_MAP["plex"]="Docker-NonCritical/Media/Plex/plex.yml"
           SERVICE_MAP["plex"]="plex"
           COMPOSE_MAP["sonarr"]="Docker-NonCritical/Media/Sonarr/sonarr.yml"
           SERVICE_MAP["sonarr"]="sonarr"
-          COMPOSE_MAP["radarr"]="Docker-NonCritical/Media/Radarr/radarr.yml"
+          COMPOSE_MAP["radarr"]="Docker-NonCritical/Media/radarr/radarr.yml"
           SERVICE_MAP["radarr"]="radarr"
-          COMPOSE_MAP["lidarr"]="Docker-NonCritical/Media/Lidarr/lidarr.yml"
+          COMPOSE_MAP["lidarr"]="Docker-NonCritical/Media/lidarr/lidarr.yml"
           SERVICE_MAP["lidarr"]="lidarr"
-          COMPOSE_MAP["readarr"]="Docker-NonCritical/Media/Readarr/readarr.yml"
+          COMPOSE_MAP["readarr"]="Docker-NonCritical/Media/readarr/readarr.yml"
           SERVICE_MAP["readarr"]="readarr"
-          COMPOSE_MAP["prowlarr"]="Docker-NonCritical/Media/Prowlarr/prowlarr.yml"
+          COMPOSE_MAP["prowlarr"]="Docker-NonCritical/Media/prowlarr/prowlarr.yml"
           SERVICE_MAP["prowlarr"]="prowlarr"
           COMPOSE_MAP["overseerr"]="Docker-NonCritical/Media/overseerr/overseerr.yml"
           SERVICE_MAP["overseerr"]="overseerr"
-          COMPOSE_MAP["qbittorrent"]="Docker-NonCritical/Media/Torrent/torrent.yml"
+          COMPOSE_MAP["qbittorrent"]="Docker-NonCritical/Networking/Torrent/torrent.yml"
           SERVICE_MAP["qbittorrent"]="qbittorrent"
-          COMPOSE_MAP["sabnzbd"]="Docker-NonCritical/Media/Torrent/torrent.yml"
+          COMPOSE_MAP["sabnzbd"]="Docker-NonCritical/Networking/Torrent/torrent.yml"
           SERVICE_MAP["sabnzbd"]="sabnzbd"
-          COMPOSE_MAP["traefik"]="Docker-NonCritical/Networking/Traefik/traefik.yml"
+          COMPOSE_MAP["traefik"]="Docker-NonCritical/Networking/Proxy/proxy.yml"
           SERVICE_MAP["traefik"]="traefik"
-          COMPOSE_MAP["flaresolverr"]="Docker-NonCritical/Media/Flaresolverr/flaresolverr.yml"
+          COMPOSE_MAP["flaresolverr"]="Docker-NonCritical/Media/flaresolverr/flaresolverr.yml"
           SERVICE_MAP["flaresolverr"]="flaresolverr"
 
           updated=""
