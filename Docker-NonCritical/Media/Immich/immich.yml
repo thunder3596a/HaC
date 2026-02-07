@@ -1,6 +1,6 @@
 services:
   immich:
-    image: ghcr.io/immich-app/immich-server:latest
+    image: ghcr.io/immich-app/immich-server:release
     container_name: immich
     restart: unless-stopped
     networks:
@@ -11,7 +11,7 @@ services:
       - DB_USERNAME=${IMMICH_DB_USERNAME:-immich}
       - DB_PASSWORD=${IMMICH_DB_PASSWORD}
       - DB_DATABASE_NAME=${IMMICH_DB_DATABASE:-immich}
-      - REDIS_HOSTNAME=immich-redis
+      - REDIS_HOSTNAME=immich-valkey
     labels:
       - traefik.enable=true
       - traefik.http.routers.immich.entrypoints=websecure
@@ -30,7 +30,7 @@ services:
       - /mnt/data/family/upload:/usr/src/app/upload
       - /mnt/data/family/external:/usr/src/app/external
     depends_on:
-      immich-redis:
+      immich-valkey:
         condition: service_started
       immich-postgres:
         condition: service_healthy
@@ -42,7 +42,7 @@ services:
       start_period: 60s
 
   immich-machine-learning:
-    image: ghcr.io/immich-app/immich-machine-learning:latest
+    image: ghcr.io/immich-app/immich-machine-learning:release
     container_name: immich-machine-learning
     restart: unless-stopped
     networks:
@@ -58,20 +58,20 @@ services:
       retries: 3
       start_period: 90s
 
-  immich-redis:
-    image: redis:6.2-alpine
-    container_name: immich-redis
+  immich-valkey:
+    image: docker.io/valkey/valkey:8-alpine
+    container_name: immich-valkey
     restart: unless-stopped
     networks:
       - mediaproxy
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "valkey-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   immich-postgres:
-    image: tensorchord/pgvecto-rs:pg14-v0.2.0
+    image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0
     container_name: immich-postgres
     restart: unless-stopped
     networks:
