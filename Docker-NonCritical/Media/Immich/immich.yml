@@ -27,8 +27,8 @@ services:
       - "ha.compose-file=Docker-NonCritical/Media/Immich/immich.yml"
       - "ha.service-name=immich"
     volumes:
-      - /srv/immich/upload:/usr/src/app/upload
-      - /srv/immich/external:/usr/src/app/external
+      - /mnt/data/family/upload:/usr/src/app/upload
+      - /mnt/data/family/external:/usr/src/app/external
     depends_on:
       immich-redis:
         condition: service_started
