@@ -1,34 +1,55 @@
 services:
-  nut:
-    image: ghcr.io/upsnap/nut:latest
-    container_name: nut
+  nut-ups1:
+    image: instantlinux/nut-upsd:latest
+    container_name: nut-ups1
     restart: unless-stopped
     networks:
       - homeproxy
     environment:
-      - PUID=${PUID:-568}
-      - PGID=${PGID:-568}
       - TZ=${TZ:-America/Chicago}
+      - NAME=ups1
+      - DRIVER=usbhid-ups
+      - PORT=auto
+      - SERIAL=${NUT_UPS1_SERIAL}
+      - API_USER=upsmon
+      - API_PASSWORD=${NUT_API_PASSWORD}
+    ports:
+      - "3493:3493"
     labels:
-      - traefik.enable=true
-      - traefik.http.routers.nut.entrypoints=websecure
-      - traefik.http.routers.nut.rule=Host(`nut.${DOMAIN_NAME}`)
-      - traefik.http.routers.nut.service=nut
-      - traefik.http.routers.nut.tls=true
-      - traefik.http.routers.nut.tls.certresolver=${CERTRESOLVER:-cloudflare}
-      - traefik.http.routers.nut.tls.domains[0].main=nut.${DOMAIN_NAME}
-      - traefik.http.services.nut.loadbalancer.server.port=3493
       - com.centurylinklabs.watchtower.enable=true
       - "ha.monitor=true"
       - "ha.category=home"
       - "ha.compose-file=Docker-Critical/Home/NUT/nut.yml"
-      - "ha.service-name=nut"
-    volumes:
-      - /srv/nut:/config
+      - "ha.service-name=nut-ups1"
     devices:
-      - /dev/usb:/dev/usb
-    cap_add:
-      - SYS_RAWIO
+      - /dev/usb/hiddev0:/dev/usb/hiddev0
+    privileged: true
+
+  nut-ups2:
+    image: instantlinux/nut-upsd:latest
+    container_name: nut-ups2
+    restart: unless-stopped
+    networks:
+      - homeproxy
+    environment:
+      - TZ=${TZ:-America/Chicago}
+      - NAME=ups2
+      - DRIVER=usbhid-ups
+      - PORT=auto
+      - SERIAL=${NUT_UPS2_SERIAL}
+      - API_USER=upsmon
+      - API_PASSWORD=${NUT_API_PASSWORD}
+    ports:
+      - "3494:3493"
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+      - "ha.monitor=true"
+      - "ha.category=home"
+      - "ha.compose-file=Docker-Critical/Home/NUT/nut.yml"
+      - "ha.service-name=nut-ups2"
+    devices:
+      - /dev/usb/hiddev2:/dev/usb/hiddev2
+    privileged: true
 
 networks:
   homeproxy:
