@@ -11,7 +11,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: truenas01
+    runs-on: docker-noncritical
     defaults:
       run:
         shell: sh
