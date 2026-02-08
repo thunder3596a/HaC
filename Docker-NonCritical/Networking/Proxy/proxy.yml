@@ -91,6 +91,6 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /mnt/Apps/traefik:/etc/traefik
+      - /srv/traefik:/etc/traefik
 
     restart: unless-stopped
