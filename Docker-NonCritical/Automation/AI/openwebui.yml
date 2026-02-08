@@ -9,7 +9,7 @@ services:
     restart: unless-stopped
 
     environment:
-      - OLLAMA_BASE_URL=http://ollama:11434
+      - OLLAMA_BASE_URL=http://192.168.19.19:11434
       - WEBUI_AUTH=false
       - ENABLE_SIGNUP=false
       - DEFAULT_MODELS=qwen2.5-coder:14b
@@ -22,10 +22,6 @@ services:
 
     networks:
       - aiproxy
-
-    depends_on:
-      ollama:
-        condition: service_healthy
 
     labels:
       - "traefik.enable=true"
