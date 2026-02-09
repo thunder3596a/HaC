@@ -33,6 +33,7 @@ jobs:
         working-directory: ./Docker-Critical/Management/HomeBox
         env:
           CERTRESOLVER: ${{ vars.CERTRESOLVER }}
+          DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
         run: |
           # Check if image or config changed; redeploy if needed
           defined_image=$(grep -m1 'image:' homebox.yml | awk '{print $2}')
@@ -43,7 +44,7 @@ jobs:
           if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
             echo "Redeploying HomeBox..."
             docker compose -p homebox -f homebox.yml down --remove-orphans || true
-            CERTRESOLVER="$CERTRESOLVER" docker compose -p homebox -f homebox.yml up -d --force-recreate
+            CERTRESOLVER="$CERTRESOLVER" DOMAIN_NAME="$DOMAIN_NAME" docker compose -p homebox -f homebox.yml up -d --force-recreate
             echo "$checksum" > .homebox_checksum
             docker logs homebox --tail 20
           else

@@ -3,8 +3,6 @@ services:
     image: ghcr.io/sysadminsmedia/homebox:latest
     container_name: homebox
     environment:
-      - PUID=568
-      - PGID=568
       - TZ=America/Chicago
       - HBOX_LOG_LEVEL=info
       - HBOX_LOG_FORMAT=text
