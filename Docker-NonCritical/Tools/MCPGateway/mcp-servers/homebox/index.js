@@ -8,15 +8,38 @@ import {
 import axios from 'axios';
 
 const HOMEBOX_URL = process.env.HOMEBOX_URL || 'http://localhost:7745';
-const HOMEBOX_TOKEN = process.env.HOMEBOX_TOKEN;
+const HOMEBOX_EMAIL = process.env.HOMEBOX_EMAIL;
+const HOMEBOX_PASSWORD = process.env.HOMEBOX_PASSWORD;
 
-// Create axios instance with auth
+let authToken = null;
+
+async function login() {
+  const response = await axios.post(`${HOMEBOX_URL}/api/v1/users/login`, {
+    username: HOMEBOX_EMAIL,
+    password: HOMEBOX_PASSWORD,
+  });
+  authToken = response.data.token;
+  homeboxApi.defaults.headers.Authorization = authToken;
+}
+
+// Create axios instance
 const homeboxApi = axios.create({
   baseURL: `${HOMEBOX_URL}/api/v1`,
-  headers: {
-    Authorization: `Bearer ${HOMEBOX_TOKEN}`,
-  },
 });
+
+// Interceptor: re-authenticate on 401
+homeboxApi.interceptors.response.use(
+  (res) => res,
+  async (error) => {
+    if (error.response?.status === 401 && !error.config._retried) {
+      error.config._retried = true;
+      await login();
+      error.config.headers.Authorization = authToken;
+      return homeboxApi.request(error.config);
+    }
+    throw error;
+  }
+);
 
 // Create MCP server
 const server = new Server(
@@ -361,6 +384,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
 // Start server
 async function main() {
+  await login();
+  console.error('HomeBox MCP server authenticated');
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error('HomeBox MCP server running on stdio');

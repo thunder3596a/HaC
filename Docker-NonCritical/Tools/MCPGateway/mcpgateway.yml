@@ -182,7 +182,8 @@ services:
       - mcpnet
     environment:
       - HOMEBOX_URL=${HOMEBOX_URL}
-      - HOMEBOX_TOKEN=${HOMEBOX_TOKEN}
+      - HOMEBOX_EMAIL=${HOMEBOX_EMAIL}
+      - HOMEBOX_PASSWORD=${HOMEBOX_PASSWORD}
       - MCP_TRANSPORT=sse
     labels:
       - com.centurylinklabs.watchtower.enable=false
