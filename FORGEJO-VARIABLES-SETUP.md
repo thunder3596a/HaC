@@ -16,6 +16,9 @@ Add the following variables:
 | `CLOUDFLARE_EMAIL` | Cloudflare account email | `user@example.com` |
 | `LETS_ENCRYPT_EMAIL` | Let's Encrypt email | `user@example.com` |
 | `HA_URL` | Home Assistant URL | `https://ha.example.com` |
+| `WAZUH_VERSION` | Wazuh version (optional) | `4.14.3` |
+| `WAZUH_INDEXER_USERNAME` | Wazuh indexer admin username (optional) | `admin` |
+| `WAZUH_API_USERNAME` | Wazuh API username (optional) | `wazuh-wui` |
 
 ## Repository Secrets
 
@@ -35,6 +38,8 @@ Add the following secrets:
 | `forgejo_workflow_url_noncritical` | NonCritical workflow dispatch URL | See below |
 | `forgejo_workflow_url_apply_critical` | Apply updates critical URL | See below |
 | `forgejo_workflow_url_apply_noncritical` | Apply updates noncritical URL | See below |
+| `WAZUH_INDEXER_PASSWORD` | Wazuh indexer admin password | Generate strong password |
+| `WAZUH_API_PASSWORD` | Wazuh API password (used for dashboard login) | Generate strong password |
 
 ## Forgejo Workflow URLs
 
