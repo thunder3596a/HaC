@@ -57,10 +57,10 @@ services:
 
       # Dashboard
       - "traefik.http.routers.dashboard.entrypoints=websecure"
-      - "traefik.http.routers.dashboard.rule=Host(`docker-noncritical-traefik.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.dashboard.rule=Host(`hac-noncritical-traefik.${DOMAIN_NAME}`)"
       - "traefik.http.routers.dashboard.service=api@internal"
       - "traefik.http.routers.dashboard.tls.certresolver=${CERTRESOLVER:-cloudflare}"
-      - "traefik.http.routers.dashboard.tls.domains[0].main=docker-noncritical-traefik.${DOMAIN_NAME}"
+      - "traefik.http.routers.dashboard.tls.domains[0].main=hac-noncritical-traefik.${DOMAIN_NAME}"
 
       #  Authelia ForwardAuth Middleware (GLOBAL)
       - "traefik.http.middlewares.authelia.forwardauth.address=http://authelia:9091/api/verify?rd=https://authelia.${DOMAIN_NAME}"

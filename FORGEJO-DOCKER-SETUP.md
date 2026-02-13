@@ -71,7 +71,7 @@ gpg --verify forgejo-runner.asc /opt/forgejo-runner && echo "✓ Verified" || ec
 
 **Register the runner:**
 ```sh
-/opt/forgejo-runner register --instance https://git.<your-domain> --token <your-token> --labels docker-noncritical:host
+/opt/forgejo-runner register --instance https://git.<your-domain> --token <your-token> --labels hac-noncritical:host
 ```
 
 **Create a systemd service:**
@@ -86,7 +86,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/opt/forgejo-runner run --instance https://git.<your-domain> --token <your-token> --labels docker-noncritical:host
+ExecStart=/opt/forgejo-runner run --instance https://git.<your-domain> --token <your-token> --labels hac-noncritical:host
 Restart=always
 User=root
 WorkingDirectory=/opt

@@ -11,7 +11,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: docker-critical
+    runs-on: hac-critical
 
     defaults:
       run:

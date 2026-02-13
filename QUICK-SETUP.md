@@ -15,7 +15,7 @@
 
 ### 2. Add Forgejo Secrets
 
-Go to: https://git.example.com/your-username/docker/settings/actions/secrets
+Go to: https://git.example.com/your-username/HaC/settings/actions/secrets
 
 Click "Add Secret" for each of these:
 
@@ -35,14 +35,14 @@ Click "Add Secret" for each of these:
 
 | Secret Name | Value (from HA secrets.yaml) |
 |------------|------------------------------|
-| `forgejo_workflow_url_critical` | `https://git.example.com/api/v1/repos/your-username/docker/actions/workflows/check-updates-critical.yml/dispatches` |
-| `forgejo_workflow_url_noncritical` | `https://git.example.com/api/v1/repos/your-username/docker/actions/workflows/check-updates-noncritical.yml/dispatches` |
-| `forgejo_workflow_url_apply_critical` | `https://git.example.com/api/v1/repos/your-username/docker/actions/workflows/apply-updates-critical.yml/dispatches` |
-| `forgejo_workflow_url_apply_noncritical` | `https://git.example.com/api/v1/repos/your-username/docker/actions/workflows/apply-updates-noncritical.yml/dispatches` |
+| `forgejo_workflow_url_critical` | `https://git.example.com/api/v1/repos/your-username/HaC/actions/workflows/check-updates-critical.yml/dispatches` |
+| `forgejo_workflow_url_noncritical` | `https://git.example.com/api/v1/repos/your-username/HaC/actions/workflows/check-updates-noncritical.yml/dispatches` |
+| `forgejo_workflow_url_apply_critical` | `https://git.example.com/api/v1/repos/your-username/HaC/actions/workflows/apply-updates-critical.yml/dispatches` |
+| `forgejo_workflow_url_apply_noncritical` | `https://git.example.com/api/v1/repos/your-username/HaC/actions/workflows/apply-updates-noncritical.yml/dispatches` |
 
 ### 3. Add Forgejo Variables
 
-Go to: https://git.example.com/your-username/docker/settings/actions/variables
+Go to: https://git.example.com/your-username/HaC/settings/actions/variables
 
 Click "Add Variable" for each of these:
 
@@ -73,7 +73,7 @@ Developer Tools → YAML → Restart
 
 ### 6. Test the Workflow
 
-1. Go to: https://git.example.com/your-username/docker/actions
+1. Go to: https://git.example.com/your-username/HaC/actions
 2. Find "Apply Updates - Docker Critical"
 3. Click "Run workflow"
 4. Watch the output - should see "Registered: container-name → compose-file"

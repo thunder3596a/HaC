@@ -1,6 +1,6 @@
-# Home-Lab Docker Configuration
+# Homelab-as-Code (HaC)
 
-Complete Docker infrastructure for a self-hosted home automation and media center, organized into critical and non-critical services with automated deployment via Forgejo CI/CD.
+Complete infrastructure-as-code for a self-hosted home automation and media center, organized into critical and non-critical services with automated deployment via Forgejo CI/CD. HaC stands for "Homelab-as-Code."
 
 ## Architecture Overview
 
@@ -31,7 +31,7 @@ Complete Docker infrastructure for a self-hosted home automation and media cente
 ## Repository Structure
 
 ```
-docker/
+HaC/
 ├── .forgejo/workflows/          # Deployment automation (Forgejo Actions)
 ├── Docker-Critical/             # Mission-critical services
 ├── Docker-NonCritical/          # Non-essential services
@@ -42,11 +42,11 @@ docker/
 
 ---
 
-## Docker-Critical Services
+## HaC-Critical Services
 
-Services running on **docker-critical** (critical host).
+Services running on **hac-critical** (critical host).
 
-**Storage layout on docker-critical:**
+**Storage layout on hac-critical:**
 - `/srv` (NVMe #1) for critical configs and high-IO databases
 - `/mnt/nvme-appdata` (NVMe #2) for appdata/search/AI tiers (NetBox, HomeBox, KaraKeep Meili, etc.)
 - `/mnt/hdd` for backups/logs/archives (e.g., ZIM files, service logs)
@@ -60,7 +60,7 @@ Services running on **docker-critical** (critical host).
 ### Networking & Proxy
 - **Traefik** (`proxy.yml`) - Reverse proxy and load balancer
   - HTTP/HTTPS with individual SSL certificates per domain
-  - Dashboard at `docker-critical-traefik.${DOMAIN_NAME}`
+  - Dashboard at `hac-critical-traefik.${DOMAIN_NAME}`
   - Service discovery and routing
   
 - **Omada Controller** (`omada.yml`) - TP-Link network management
@@ -172,16 +172,16 @@ Services running on **docker-critical** (critical host).
 
 ---
 
-## Docker-NonCritical Services
+## HaC-NonCritical Services
 
-Services running on **docker-noncritical** (non-critical host). Can restart without affecting home automation.
+Services running on **hac-noncritical** (non-critical host). Can restart without affecting home automation.
 
-**Storage layout on docker-noncritical:**
+**Storage layout on hac-noncritical:**
 - Per-service persistent data directories (local to host)
 
 ### Networking & Proxy
 - **Traefik** (`Networking/Proxy/proxy.yml`) - Non-critical reverse proxy
-  - Dashboard at `docker-noncritical-traefik.${DOMAIN_NAME}`
+  - Dashboard at `hac-noncritical-traefik.${DOMAIN_NAME}`
 
 - **Gluetun** (via `torrent.yml`) - VPN/proxy container
   - Network namespace for torrent services
@@ -306,27 +306,27 @@ Services running on **docker-noncritical** (non-critical host). Can restart with
 
 All services deploy via Forgejo CI/CD workflows in `.forgejo/workflows/`. Workflows select the appropriate runner based on service location:
 
-**Critical services** → `runs-on: docker-critical`
-**Non-critical services** → `runs-on: docker-noncritical`
+**Critical services** → `runs-on: hac-critical`
+**Non-critical services** → `runs-on: hac-noncritical`
 
 | Service | Workflow | Host | Trigger |
 |---------|----------|------|---------|
-| Authelia | `deploy-authelia.yml` | docker-critical | Push to `Docker-Critical/Auth/**` |
-| Traefik (Critical) | `deploy-traefik-critical.yml` | docker-critical | Push to `Docker-Critical/Networking/Proxy/**` |
-| Traefik (NonCritical) | `deploy-traefik-noncritical.yml` | docker-noncritical | Push to `Docker-NonCritical/Networking/Proxy/**` |
-| Home Assistant | `deploy-homeassistant.yml` | docker-critical | Push to `Docker-Critical/Home/HomeAssistant/**` |
-| ESPHome | (included in HA) | docker-critical | Push to `Docker-Critical/Home/HomeAssistant/**` |
-| RTL-SDR | `deploy-rtl-sdr.yml` | docker-critical | Push to `Docker-Critical/Home/RTL-SDR/**` |
-| Music Assistant | `deploy-musicassistant.yml` | docker-critical | Push to `Docker-Critical/Home/MusicAssistant/**` |
-| InfluxDB | `deploy-influxdb.yml` | docker-critical | Push to `Docker-Critical/Tools/InfluxDB/**` |
-| NetBox | `deploy-netbox.yml` | docker-critical | Push to `Docker-Critical/Home/NetBox/**` |
-| Norish | `deploy-norish.yml` | docker-critical | Push to `Docker-Critical/Home/Cooking/**` |
-| Forgejo | `deploy-forgejo.yml` | docker-critical | Push to `Docker-Critical/Management/Git*/**` |
-| Omada | `deploy-omada.yml` | docker-critical | Push to `Docker-Critical/Networking/Omada/**` |
-| SMTP Relay | `deploy-smtprelay.yml` | docker-critical | Push to `Docker-Critical/Networking/Mail/**` |
-| Plex | `deploy-plex.yml` | docker-noncritical | Push to `Docker-NonCritical/Media/Plex/**` |
-| Radarr/Sonarr/etc | `deploy-*.yml` | docker-noncritical | Push to `Docker-NonCritical/Media/**` |
-| Profilarr | `deploy-profilarr.yml` | docker-noncritical | Push to `Docker-NonCritical/Media/profilarr/**` |
+| Authelia | `deploy-authelia.yml` | hac-critical | Push to `Docker-Critical/Auth/**` |
+| Traefik (Critical) | `deploy-traefik-critical.yml` | hac-critical | Push to `Docker-Critical/Networking/Proxy/**` |
+| Traefik (NonCritical) | `deploy-traefik-noncritical.yml` | hac-noncritical | Push to `Docker-NonCritical/Networking/Proxy/**` |
+| Home Assistant | `deploy-homeassistant.yml` | hac-critical | Push to `Docker-Critical/Home/HomeAssistant/**` |
+| ESPHome | (included in HA) | hac-critical | Push to `Docker-Critical/Home/HomeAssistant/**` |
+| RTL-SDR | `deploy-rtl-sdr.yml` | hac-critical | Push to `Docker-Critical/Home/RTL-SDR/**` |
+| Music Assistant | `deploy-musicassistant.yml` | hac-critical | Push to `Docker-Critical/Home/MusicAssistant/**` |
+| InfluxDB | `deploy-influxdb.yml` | hac-critical | Push to `Docker-Critical/Tools/InfluxDB/**` |
+| NetBox | `deploy-netbox.yml` | hac-critical | Push to `Docker-Critical/Home/NetBox/**` |
+| Norish | `deploy-norish.yml` | hac-critical | Push to `Docker-Critical/Home/Cooking/**` |
+| Forgejo | `deploy-forgejo.yml` | hac-critical | Push to `Docker-Critical/Management/Git*/**` |
+| Omada | `deploy-omada.yml` | hac-critical | Push to `Docker-Critical/Networking/Omada/**` |
+| SMTP Relay | `deploy-smtprelay.yml` | hac-critical | Push to `Docker-Critical/Networking/Mail/**` |
+| Plex | `deploy-plex.yml` | hac-noncritical | Push to `Docker-NonCritical/Media/Plex/**` |
+| Radarr/Sonarr/etc | `deploy-*.yml` | hac-noncritical | Push to `Docker-NonCritical/Media/**` |
+| Profilarr | `deploy-profilarr.yml` | hac-noncritical | Push to `Docker-NonCritical/Media/profilarr/**` |
 
 ### Required Forgejo Variables
 Global variables (set in repository settings):

@@ -10,7 +10,7 @@ on:
 
 jobs:
   apply-updates:
-    runs-on: docker-noncritical
+    runs-on: hac-noncritical
 
     defaults:
       run:
@@ -140,7 +140,7 @@ jobs:
 
           # Build payload with jq for proper JSON
           payload=$(jq -n \
-            --arg host "docker-noncritical" \
+            --arg host "hac-noncritical" \
             --arg containers "$containers_list" \
             '{host: $host, containers: $containers}')
 

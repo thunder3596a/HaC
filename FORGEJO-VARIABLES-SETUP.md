@@ -48,10 +48,10 @@ Format: `https://YOUR_FORGEJO_URL/api/v1/repos/OWNER/REPO/actions/workflows/WORK
 Examples:
 ```
 forgejo_workflow_url_critical:
-https://git.example.com/api/v1/repos/username/docker/actions/workflows/check-updates-critical.yml/dispatches
+https://git.example.com/api/v1/repos/username/HaC/actions/workflows/check-updates-critical.yml/dispatches
 
 forgejo_workflow_url_apply_critical:
-https://git.example.com/api/v1/repos/username/docker/actions/workflows/apply-updates-critical.yml/dispatches
+https://git.example.com/api/v1/repos/username/HaC/actions/workflows/apply-updates-critical.yml/dispatches
 ```
 
 ## Forgejo Token Format

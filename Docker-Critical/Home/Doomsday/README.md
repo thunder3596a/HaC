@@ -1,7 +1,7 @@
 **Kiwix Local Library (Doomsday Library)**
 
 - **Purpose**: Serve a fully local, offline Kiwix library (ZIM files) from your TrueNAS / local host.
-- **Location**: `docker/Home/Doomsday` (this compose file and helpers)
+- **Location**: `HaC/Docker-Critical/Home/Doomsday` (this compose file and helpers)
 
 **Overview**
 - Put your `.zim` files on the host at `/mnt/Apps/kiwix/zim` (create this dataset on TrueNAS and upload ZIMs there).
