@@ -1,12 +1,14 @@
 services:
   whisper:
-    image: openai/whisper:latest
+    image: onerahmet/openai-whisper-asr-webservice:latest
     container_name: whisper
     restart: unless-stopped
     networks:
       - homeproxy
     environment:
       - TZ=${TZ:-America/Chicago}
+      - ASR_MODEL=base
+      - ASR_ENGINE=openai_whisper
     labels:
       - traefik.enable=true
       - traefik.http.routers.whisper.entrypoints=websecure
@@ -15,7 +17,7 @@ services:
       - traefik.http.routers.whisper.tls=true
       - traefik.http.routers.whisper.tls.certresolver=${CERTRESOLVER:-cloudflare}
       - traefik.http.routers.whisper.tls.domains[0].main=whisper.${DOMAIN_NAME}
-      - traefik.http.services.whisper.loadbalancer.server.port=7860
+      - traefik.http.services.whisper.loadbalancer.server.port=9000
       - com.centurylinklabs.watchtower.enable=true
       - "ha.monitor=true"
       - "ha.category=tools"
