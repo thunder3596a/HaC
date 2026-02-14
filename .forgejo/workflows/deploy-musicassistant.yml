@@ -38,6 +38,10 @@ jobs:
 
           if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
             echo "Redeploying Music Assistant..."
+            # Stop and remove the container if it exists
+            docker stop music-assistant 2>/dev/null || true
+            docker rm music-assistant 2>/dev/null || true
+            # Clean up with docker compose
             docker compose -p music-assistant -f musicassistant.yml down --remove-orphans || true
             DOMAIN_NAME="$DOMAIN_NAME" CERTRESOLVER="$CERTRESOLVER" TZ="$TZ" docker compose -p music-assistant -f musicassistant.yml up -d --force-recreate
             echo "$checksum" > .musicassistant_checksum
