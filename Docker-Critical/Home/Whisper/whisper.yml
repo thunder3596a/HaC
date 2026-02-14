@@ -1,14 +1,13 @@
 services:
   whisper:
-    image: onerahmet/openai-whisper-asr-webservice:latest
+    image: fedirz/faster-whisper-server:latest-cpu
     container_name: whisper
     restart: unless-stopped
     networks:
       - homeproxy
     environment:
       - TZ=${TZ:-America/Chicago}
-      - ASR_MODEL=base
-      - ASR_ENGINE=openai_whisper
+      - WHISPER__MODEL=base
     labels:
       - traefik.enable=true
       - traefik.http.routers.whisper.entrypoints=websecure
@@ -17,18 +16,14 @@ services:
       - traefik.http.routers.whisper.tls=true
       - traefik.http.routers.whisper.tls.certresolver=${CERTRESOLVER:-cloudflare}
       - traefik.http.routers.whisper.tls.domains[0].main=whisper.${DOMAIN_NAME}
-      - traefik.http.services.whisper.loadbalancer.server.port=9000
+      - traefik.http.services.whisper.loadbalancer.server.port=8000
       - com.centurylinklabs.watchtower.enable=true
       - "ha.monitor=true"
       - "ha.category=tools"
       - "ha.compose-file=Docker-Critical/Home/Whisper/whisper.yml"
       - "ha.service-name=whisper"
     volumes:
-      - /srv/whisper:/root/.cache/whisper
-    devices:
-      - /dev/null:/dev/null
-    cap_add:
-      - SYS_NICE
+      - /srv/whisper/models:/root/.cache/huggingface
 
 networks:
   homeproxy:
