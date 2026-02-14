@@ -62,8 +62,6 @@ jobs:
           OMADA_USERNAME: ${{ secrets.OMADA_USERNAME }}
           OMADA_PASSWORD: ${{ secrets.OMADA_PASSWORD }}
           OMADA_SITE_NAME: ${{ vars.OMADA_SITE_NAME }}
-          DOCKER_HOST: ${{ vars.DOCKER_HOST }}
-          DOCKER_SITE: ${{ vars.DOCKER_SITE }}
           NETBOX_API_TOKEN: ${{ secrets.NETBOX_API_TOKEN }}
           VERIFY_SSL: ${{ vars.VERIFY_SSL }}
         run: |
@@ -83,7 +81,16 @@ jobs:
 
           if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
             echo "Redeploying NetBox..."
+            # Stop and remove existing containers
+            docker stop netbox 2>/dev/null || true
+            docker rm netbox 2>/dev/null || true
+            docker stop netbox-postgres 2>/dev/null || true
+            docker rm netbox-postgres 2>/dev/null || true
+            docker stop netbox-redis 2>/dev/null || true
+            docker rm netbox-redis 2>/dev/null || true
+            
             cd /srv/netbox
+            # Clean up with docker compose
             docker compose -p netbox down --remove-orphans || true
             docker compose -p netbox build --no-cache || true
             docker compose -p netbox -f netbox.yml up -d --force-recreate
