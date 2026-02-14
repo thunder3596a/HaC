@@ -11,7 +11,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: hac-noncritical
+    runs-on: docker-noncritical
     defaults:
       run:
         shell: sh
@@ -40,15 +40,15 @@ jobs:
           defined_image=$(grep -m1 'image:' stirling-pdf.yml | awk '{print $2}')
           running_image=$(docker inspect -f '{{.Config.Image}}' stirling-pdf 2>/dev/null || echo "none")
           checksum=$(sha256sum stirling-pdf.yml | awk '{print $1}')
-          old=$(cat ~/.docker-noncritical/.stirling-pdf_checksum 2>/dev/null || echo "")
+          old=$(cat ~/.hac-noncritical/.stirling-pdf_checksum 2>/dev/null || echo "")
 
           if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
             echo "Redeploying Stirling-PDF..."
-            mkdir -p ~/.docker-noncritical
+            mkdir -p ~/.hac-noncritical
 
             docker compose -p stirling-pdf down --remove-orphans || true
             docker compose -p stirling-pdf -f stirling-pdf.yml up -d --force-recreate
-            echo "$checksum" > ~/.docker-noncritical/.stirling-pdf_checksum
+            echo "$checksum" > ~/.hac-noncritical/.stirling-pdf_checksum
           else
             echo "No changes detected; skipping redeploy"
           fi

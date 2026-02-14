@@ -11,7 +11,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: hac-noncritical
+    runs-on: docker-noncritical
 
     defaults:
       run:

@@ -11,7 +11,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: hac-critical
+    runs-on: docker-critical
     defaults:
       run:
         shell: sh
@@ -49,12 +49,12 @@ jobs:
 
           # Compute checksum of compose file
           checksum=$(sha256sum git.yml | awk '{print $1}')
-          old=$(cat ~/.docker-critical/.git_checksum 2>/dev/null || echo "")
+          old=$(cat ~/.hac-critical/.git_checksum 2>/dev/null || echo "")
 
           # Decide whether to redeploy
           if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
             echo "Redeploying Forgejo on docker-critical..."
-            mkdir -p ~/.docker-critical
+            mkdir -p ~/.hac-critical
 
             # Stop and remove stack cleanly
             docker compose -p git down --remove-orphans || true
@@ -63,7 +63,7 @@ jobs:
             docker compose -p git -f git.yml up -d --force-recreate
 
             # Save checksum for next comparison
-            echo "$checksum" > ~/.docker-critical/.git_checksum
+            echo "$checksum" > ~/.hac-critical/.git_checksum
           else
             echo "No changes detected; skipping redeploy"
           fi

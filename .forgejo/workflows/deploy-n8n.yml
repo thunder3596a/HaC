@@ -11,7 +11,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: hac-critical
+    runs-on: docker-critical
     defaults:
       run:
         shell: sh
@@ -43,15 +43,15 @@ jobs:
           defined_image=$(grep -m1 'image:.*n8n' n8n.yml | awk '{print $2}')
           running_image=$(docker inspect -f '{{.Config.Image}}' n8n 2>/dev/null || echo "none")
           checksum=$(sha256sum n8n.yml | awk '{print $1}')
-          old=$(cat ~/.docker-critical/.n8n_checksum 2>/dev/null || echo "")
+          old=$(cat ~/.hac-critical/.n8n_checksum 2>/dev/null || echo "")
 
           if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
             echo "Redeploying N8N..."
-            mkdir -p ~/.docker-critical
+            mkdir -p ~/.hac-critical
 
             docker compose -p n8n down --remove-orphans || true
             docker compose -p n8n -f n8n.yml up -d --force-recreate
-            echo "$checksum" > ~/.docker-critical/.n8n_checksum
+            echo "$checksum" > ~/.hac-critical/.n8n_checksum
           else
             echo "No changes detected; skipping redeploy"
           fi

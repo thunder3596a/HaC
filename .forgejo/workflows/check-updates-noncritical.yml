@@ -8,7 +8,7 @@ on:
 
 jobs:
   check-updates:
-    runs-on: hac-noncritical
+    runs-on: docker-noncritical
 
     defaults:
       run:
@@ -86,7 +86,7 @@ jobs:
           # Build JSON payload properly with jq
           # Note: HA /api/events/{event_type} expects event data directly, not wrapped
           payload=$(jq -n \
-            --arg host "hac-noncritical" \
+            --arg host "docker-noncritical" \
             --argjson count "$count" \
             --arg containers "$containers" \
             --argjson updates "$UPDATES" \

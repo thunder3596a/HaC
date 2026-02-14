@@ -8,7 +8,7 @@ on:
 
 jobs:
   mirror:
-    runs-on: hac-critical
+    runs-on: docker-critical
     defaults:
       run:
         shell: sh

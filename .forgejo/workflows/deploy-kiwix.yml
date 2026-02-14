@@ -10,7 +10,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: hac-critical
+    runs-on: docker-critical
 
     steps:
       - name: Checkout repository

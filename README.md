@@ -306,8 +306,8 @@ Services running on **hac-noncritical** (non-critical host). Can restart without
 
 All services deploy via Forgejo CI/CD workflows in `.forgejo/workflows/`. Workflows select the appropriate runner based on service location:
 
-**Critical services** → `runs-on: hac-critical`
-**Non-critical services** → `runs-on: hac-noncritical`
+**Critical services** → `runs-on: docker-critical`
+**Non-critical services** → `runs-on: docker-noncritical`
 
 | Service | Workflow | Host | Trigger |
 |---------|----------|------|---------|

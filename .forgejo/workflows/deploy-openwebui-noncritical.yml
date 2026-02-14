@@ -11,7 +11,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: hac-noncritical
+    runs-on: docker-noncritical
     defaults:
       run:
         shell: sh
@@ -40,15 +40,15 @@ jobs:
           defined_image=$(grep -m1 'image:' openwebui.yml | awk '{print $2}')
           running_image=$(docker inspect -f '{{.Config.Image}}' open-webui 2>/dev/null || echo "none")
           checksum=$(sha256sum openwebui.yml | awk '{print $1}')
-          old=$(cat ~/.docker-noncritical/.openwebui_checksum 2>/dev/null || echo "")
+          old=$(cat ~/.hac-noncritical/.openwebui_checksum 2>/dev/null || echo "")
 
           if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
             echo "Redeploying Open WebUI (NonCritical)..."
-            mkdir -p ~/.docker-noncritical
+            mkdir -p ~/.hac-noncritical
 
             docker compose -p openwebui down --remove-orphans || true
             docker compose -p openwebui -f openwebui.yml up -d --force-recreate
-            echo "$checksum" > ~/.docker-noncritical/.openwebui_checksum
+            echo "$checksum" > ~/.hac-noncritical/.openwebui_checksum
           else
             echo "No changes detected; skipping redeploy"
           fi
