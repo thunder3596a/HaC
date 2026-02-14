@@ -26,6 +26,7 @@ services:
 
       # Security
       SECRET_KEY: ${NETBOX_SECRET_KEY}
+      API_TOKEN_PEPPERS: ${NETBOX_API_TOKEN_PEPPERS}
 
       # Email (optional)
       EMAIL_FROM: ${NETBOX_EMAIL_FROM}
@@ -71,7 +72,8 @@ services:
       - traefik.http.routers.netbox.service=netbox
       - traefik.http.services.netbox.loadbalancer.server.port=8080
       - traefik.docker.network=toolsproxy
-      - traefik.http.routers.netbox.middlewares=authelia@docker
+      # TODO: Enable Authelia middleware after Authelia is deployed
+      # - traefik.http.routers.netbox.middlewares=authelia@docker
       - traefik.http.routers.netbox.tls.certresolver=${CERTRESOLVER:-cloudflare}
       - traefik.http.routers.netbox.tls.domains[0].main=netbox.${DOMAIN_NAME}
       - com.centurylinklabs.watchtower.enable=true
@@ -96,6 +98,7 @@ services:
       DB_HOST: ${NETBOX_DB_HOST}
       REDIS_HOST: ${NETBOX_REDIS_HOST}
       SECRET_KEY: ${NETBOX_SECRET_KEY}
+      API_TOKEN_PEPPERS: ${NETBOX_API_TOKEN_PEPPERS}
     command: /opt/netbox/venv/bin/python /opt/netbox/netbox/manage.py rqworker
     labels:
       - "ha.monitor=true"
@@ -119,6 +122,7 @@ services:
       DB_HOST: ${NETBOX_DB_HOST}
       REDIS_HOST: ${NETBOX_REDIS_HOST}
       SECRET_KEY: ${NETBOX_SECRET_KEY}
+      API_TOKEN_PEPPERS: ${NETBOX_API_TOKEN_PEPPERS}
     command: /opt/netbox/housekeeping.sh
     labels:
       - "ha.monitor=true"
