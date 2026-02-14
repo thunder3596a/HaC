@@ -96,6 +96,17 @@ jobs:
           if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
             echo "Redeploying MCP Gateway"
 
+            # Stop and remove existing containers
+            docker stop mcp-gateway 2>/dev/null || true
+            docker rm mcp-gateway 2>/dev/null || true
+            docker stop mcp-mariadb 2>/dev/null || true
+            docker rm mcp-mariadb 2>/dev/null || true
+            docker stop mcp-redis 2>/dev/null || true
+            docker rm mcp-redis 2>/dev/null || true
+
+            # Clean up with docker compose
+            docker compose -p mcpgateway -f mcpgateway.yml down --remove-orphans || true
+
             # Deploy
             docker compose -p mcpgateway -f mcpgateway.yml up -d --force-recreate
 
