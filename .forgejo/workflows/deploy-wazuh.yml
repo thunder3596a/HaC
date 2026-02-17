@@ -49,97 +49,115 @@ jobs:
 
           # Compute checksum of compose file + config files
           checksum=$(cat security.yaml indexer-config/opensearch.yml indexer-config/ism-policy.json indexer-config/apply-ism-policy.sh dashboard-config/opensearch_dashboards.yml | sha256sum | awk '{print $1}')
-          old=$(cat .wazuh_checksum 2>/dev/null || echo "")
+
+          # Store checksum on persistent host path (git checkout is ephemeral)
+          CHECKSUM_FILE="/srv/wazuh/.deploy_checksum"
+          old=$(cat "$CHECKSUM_FILE" 2>/dev/null || echo "")
 
           echo "Indexer - Defined: $defined_indexer | Running: $running_indexer"
           echo "Manager - Defined: $defined_manager | Running: $running_manager"
           echo "Dashboard - Defined: $defined_dashboard | Running: $running_dashboard"
           echo "Checksum: $checksum vs $old"
 
+          # Detect whether images changed (version upgrade) vs config-only change
+          IMAGE_CHANGED=false
           if [ "$defined_indexer" != "$running_indexer" ] || \
              [ "$defined_manager" != "$running_manager" ] || \
-             [ "$defined_dashboard" != "$running_dashboard" ] || \
-             [ "$checksum" != "$old" ]; then
-            echo "Redeploying Wazuh stack"
+             [ "$defined_dashboard" != "$running_dashboard" ]; then
+            IMAGE_CHANGED=true
+          fi
 
-            # Deploy
+          CONFIG_CHANGED=false
+          if [ "$checksum" != "$old" ]; then
+            CONFIG_CHANGED=true
+          fi
+
+          if [ "$IMAGE_CHANGED" = "false" ] && [ "$CONFIG_CHANGED" = "false" ]; then
+            echo "No redeploy needed"
+            exit 0
+          fi
+
+          echo "Redeploying Wazuh stack (image_changed=$IMAGE_CHANGED, config_changed=$CONFIG_CHANGED)"
+
+          # Compose env helper
+          compose_env() {
             TZ=$TZ DOMAIN_NAME=$DOMAIN_NAME CERTRESOLVER=$CERTRESOLVER \
               WAZUH_VERSION=$WAZUH_VERSION \
               WAZUH_INDEXER_USERNAME=$WAZUH_INDEXER_USERNAME \
               WAZUH_API_USERNAME=$WAZUH_API_USERNAME \
               WAZUH_INDEXER_PASSWORD=$WAZUH_INDEXER_PASSWORD \
               WAZUH_API_PASSWORD=$WAZUH_API_PASSWORD \
-              docker compose -p wazuh -f security.yaml down --remove-orphans --volumes || true
+              "$@"
+          }
 
-            # Also remove any leftover Docker-managed volumes from previous config
-            docker volume rm wazuh_wazuh-dashboard-config wazuh_wazuh-dashboard-custom 2>/dev/null || true
+          compose_env docker compose -p wazuh -f security.yaml down --remove-orphans || true
 
-            # Wait a moment for cleanup
-            sleep 5
+          # Also remove any leftover Docker-managed volumes from previous config
+          docker volume rm wazuh_wazuh-dashboard-config wazuh_wazuh-dashboard-custom 2>/dev/null || true
 
-            # Clear stale manager state so the entrypoint re-initializes cleanly.
-            # Preserves queue (agent keys) but wipes config/state dirs that may
-            # be corrupt from previous failed deployments.
-            rm -rf /srv/wazuh/manager/etc/*
+          # Wait a moment for cleanup
+          sleep 5
+
+          YEAR=$(date +%Y)
+
+          if [ "$IMAGE_CHANGED" = "true" ]; then
+            echo "Version change detected — full state reset"
+
+            # Wipe transient state that must match the new version.
+            # NEVER wipe /srv/wazuh/manager/etc — the image's init script only
+            # regenerates ossec.conf; other critical files (internal_options.conf,
+            # rules/, decoders/, lists/) are copied from the image on true first
+            # boot and are NOT regenerated on subsequent starts.
             rm -rf /srv/wazuh/manager/logs/*
             rm -rf /srv/wazuh/filebeat/etc/*
             rm -rf /srv/wazuh/filebeat/var/*
             rm -rf /srv/wazuh/indexer-data/*
-
-            # Create all bind-mounted directories with correct ownership
-            YEAR=$(date +%Y)
-
-            # Indexer data
-            mkdir -p /srv/wazuh/indexer-data
-            chown -R 1000:1000 /srv/wazuh/indexer-data
-
-            # Manager directories (all bind mounts from compose)
-            mkdir -p /srv/wazuh/manager/api-configuration
-            mkdir -p /srv/wazuh/manager/etc
-            mkdir -p /srv/wazuh/manager/queue
-            mkdir -p /srv/wazuh/manager/var-multigroups
-            mkdir -p /srv/wazuh/manager/integrations
-            mkdir -p /srv/wazuh/manager/active-response
-            mkdir -p /srv/wazuh/manager/agentless
-            mkdir -p /srv/wazuh/manager/wodles
-            mkdir -p /srv/wazuh/filebeat/etc
-            mkdir -p /srv/wazuh/filebeat/var
-
-            # Manager logs — analysisd needs these year-based subdirectories
-            mkdir -p /srv/wazuh/manager/logs/alerts/$YEAR
-            mkdir -p /srv/wazuh/manager/logs/archives/$YEAR
-            mkdir -p /srv/wazuh/manager/logs/firewall/$YEAR
-            mkdir -p /srv/wazuh/manager/logs/cluster
-            chown -R 1000:1000 /srv/wazuh/manager
-
-            # NFS archive target (this is what actually mounts at /var/ossec/logs/archives)
-            mkdir -p /mnt/data/wazuh/archives/$YEAR
-
-            # Dashboard directories
-            mkdir -p /srv/wazuh/dashboard/config
-            mkdir -p /srv/wazuh/dashboard/custom
-
-            # Pre-create wazuh.yml so dashboard connects to API with run_as: false
-            printf 'hosts:\n  - default:\n      url: https://wazuh.manager\n      port: 55000\n      username: %s\n      password: %s\n      run_as: false\n' \
-              "$WAZUH_API_USERNAME" "$WAZUH_API_PASSWORD" \
-              > /srv/wazuh/dashboard/config/wazuh.yml
-
-            TZ=$TZ DOMAIN_NAME=$DOMAIN_NAME CERTRESOLVER=$CERTRESOLVER \
-              WAZUH_VERSION=$WAZUH_VERSION \
-              WAZUH_INDEXER_USERNAME=$WAZUH_INDEXER_USERNAME \
-              WAZUH_API_USERNAME=$WAZUH_API_USERNAME \
-              WAZUH_INDEXER_PASSWORD=$WAZUH_INDEXER_PASSWORD \
-              WAZUH_API_PASSWORD=$WAZUH_API_PASSWORD \
-              docker compose -p wazuh -f security.yaml up -d --force-recreate
-
-            # Save checksum
-            echo "$checksum" > .wazuh_checksum
-
-            echo "✅ Wazuh stack deployed successfully"
-            echo "🌐 Access at: https://wazuh.$DOMAIN_NAME"
           else
-            echo "No redeploy needed"
+            echo "Config-only change — preserving existing state"
           fi
+
+          # Ensure all bind-mounted directories exist with correct ownership
+          mkdir -p /srv/wazuh/indexer-data
+          chown -R 1000:1000 /srv/wazuh/indexer-data
+
+          # Manager directories (all bind mounts from compose)
+          mkdir -p /srv/wazuh/manager/api-configuration
+          mkdir -p /srv/wazuh/manager/etc
+          mkdir -p /srv/wazuh/manager/queue
+          mkdir -p /srv/wazuh/manager/var-multigroups
+          mkdir -p /srv/wazuh/manager/integrations
+          mkdir -p /srv/wazuh/manager/active-response
+          mkdir -p /srv/wazuh/manager/agentless
+          mkdir -p /srv/wazuh/manager/wodles
+          mkdir -p /srv/wazuh/filebeat/etc
+          mkdir -p /srv/wazuh/filebeat/var
+
+          # Manager logs — analysisd needs these year-based subdirectories
+          mkdir -p /srv/wazuh/manager/logs/alerts/$YEAR
+          mkdir -p /srv/wazuh/manager/logs/archives/$YEAR
+          mkdir -p /srv/wazuh/manager/logs/firewall/$YEAR
+          mkdir -p /srv/wazuh/manager/logs/cluster
+          chown -R 1000:1000 /srv/wazuh/manager
+
+          # NFS archive target (this is what actually mounts at /var/ossec/logs/archives)
+          mkdir -p /mnt/data/wazuh/archives/$YEAR
+
+          # Dashboard directories
+          mkdir -p /srv/wazuh/dashboard/config
+          mkdir -p /srv/wazuh/dashboard/custom
+
+          # Pre-create wazuh.yml so dashboard connects to API with run_as: false
+          printf 'hosts:\n  - default:\n      url: https://wazuh.manager\n      port: 55000\n      username: %s\n      password: %s\n      run_as: false\n' \
+            "$WAZUH_API_USERNAME" "$WAZUH_API_PASSWORD" \
+            > /srv/wazuh/dashboard/config/wazuh.yml
+
+          compose_env docker compose -p wazuh -f security.yaml up -d --force-recreate
+
+          # Save checksum to persistent host path
+          echo "$checksum" > "$CHECKSUM_FILE"
+
+          echo "✅ Wazuh stack deployed successfully"
+          echo "🌐 Access at: https://wazuh.$DOMAIN_NAME"
 
       - name: Verify deployment
         run: |
@@ -179,8 +197,11 @@ jobs:
               echo "=== Manager logs (last 80 lines) ==="
               docker exec wazuh-manager tail -80 /var/ossec/logs/ossec.log 2>/dev/null || true
               echo ""
-              echo "=== Container logs (last 40 lines) ==="
-              docker logs --tail 40 wazuh-manager 2>&1 || true
+              echo "=== /var/ossec/etc/ contents ==="
+              docker exec wazuh-manager ls -la /var/ossec/etc/ 2>/dev/null || true
+              echo ""
+              echo "=== Container logs (last 60 lines) ==="
+              docker logs --tail 60 wazuh-manager 2>&1 || true
               exit 1
             fi
             echo "  Attempt $i/12 — analysisd not ready yet, waiting 15s..."
