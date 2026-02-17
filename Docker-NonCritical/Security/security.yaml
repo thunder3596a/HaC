@@ -32,8 +32,8 @@ services:
       - OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g
       - discovery.type=single-node
       - bootstrap.memory_lock=true
-      # Disable SSL for internal communication (using Docker network)
-      - plugins.security.disabled=true
+      # Disable security plugin (SSL + auth) for internal Docker network communication
+      - DISABLE_SECURITY_PLUGIN=true
 
     ulimits:
       memlock:
