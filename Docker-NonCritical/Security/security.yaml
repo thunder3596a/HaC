@@ -158,7 +158,7 @@ services:
 
     environment:
       - OPENSEARCH_HOSTS=http://wazuh.indexer:9200
-      - WAZUH_API_URL=http://wazuh.manager:55000
+      - WAZUH_API_URL=https://wazuh.manager:55000
       - API_USERNAME=${WAZUH_API_USERNAME:-wazuh-wui}
       - API_PASSWORD=${WAZUH_API_PASSWORD}
       # Disable SSL for internal communication
