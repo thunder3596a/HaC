@@ -40,7 +40,7 @@ services:
         hard: 65536
 
     volumes:
-      - ./indexer-config/opensearch.yml:/usr/share/wazuh-indexer/opensearch.yml:ro
+      - ./indexer-config/opensearch.yml:/usr/share/wazuh-indexer/config/opensearch.yml:ro
       - /srv/wazuh/indexer-data:/var/lib/wazuh-indexer
 
     networks:
