@@ -47,8 +47,11 @@ jobs:
           running_manager=$(docker inspect -f '{{.Config.Image}}' wazuh-manager 2>/dev/null || echo "none")
           running_dashboard=$(docker inspect -f '{{.Config.Image}}' wazuh-dashboard 2>/dev/null || echo "none")
 
-          # Compute checksum of compose file
-          checksum=$(sha256sum security.yaml | awk '{print $1}')
+          # Ensure NFS archive directory exists
+          mkdir -p /mnt/data/wazuh/archives
+
+          # Compute checksum of compose file + config files
+          checksum=$(cat security.yaml indexer-config/ism-policy.json indexer-config/apply-ism-policy.sh | sha256sum | awk '{print $1}')
           old=$(cat .wazuh_checksum 2>/dev/null || echo "")
 
           echo "Indexer - Defined: $defined_indexer | Running: $running_indexer"

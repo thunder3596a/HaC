@@ -44,7 +44,7 @@ services:
         hard: 65536
 
     volumes:
-      - wazuh-indexer-data:/var/lib/wazuh-indexer
+      - /srv/wazuh/indexer-data:/var/lib/wazuh-indexer
 
     networks:
       - secproxy
@@ -90,17 +90,21 @@ services:
       - API_PASSWORD=${WAZUH_API_PASSWORD}
 
     volumes:
-      - wazuh_api_configuration:/var/ossec/api/configuration
-      - wazuh_etc:/var/ossec/etc
-      - wazuh_logs:/var/ossec/logs
-      - wazuh_queue:/var/ossec/queue
-      - wazuh_var_multigroups:/var/ossec/var/multigroups
-      - wazuh_integrations:/var/ossec/integrations
-      - wazuh_active_response:/var/ossec/active-response/bin
-      - wazuh_agentless:/var/ossec/agentless
-      - wazuh_wodles:/var/ossec/wodles
-      - filebeat_etc:/etc/filebeat
-      - filebeat_var:/var/lib/filebeat
+      # Config and state — local NVMe (fast IO)
+      - /srv/wazuh/manager/api-configuration:/var/ossec/api/configuration
+      - /srv/wazuh/manager/etc:/var/ossec/etc
+      - /srv/wazuh/manager/queue:/var/ossec/queue
+      - /srv/wazuh/manager/var-multigroups:/var/ossec/var/multigroups
+      - /srv/wazuh/manager/integrations:/var/ossec/integrations
+      - /srv/wazuh/manager/active-response:/var/ossec/active-response/bin
+      - /srv/wazuh/manager/agentless:/var/ossec/agentless
+      - /srv/wazuh/manager/wodles:/var/ossec/wodles
+      - /srv/wazuh/filebeat/etc:/etc/filebeat
+      - /srv/wazuh/filebeat/var:/var/lib/filebeat
+      # Active logs — local NVMe (written continuously)
+      - /srv/wazuh/manager/logs:/var/ossec/logs
+      # Archived logs — NFS (long-term retention, sequential reads only)
+      - /mnt/data/wazuh/archives:/var/ossec/logs/archives
 
     networks:
       - secproxy
@@ -136,7 +140,8 @@ services:
       - traefik.http.routers.wazuh.rule=Host(`wazuh.${DOMAIN_NAME}`)
       - traefik.http.routers.wazuh.service=wazuh
       - traefik.http.services.wazuh.loadbalancer.server.port=5601
-      - traefik.http.routers.wazuh.tls.certresolver=${CERTRESOLVER}
+      - traefik.http.routers.wazuh.tls.certresolver=${CERTRESOLVER:-cloudflare}
+      - traefik.http.routers.wazuh.tls.domains[0].main=wazuh.${DOMAIN_NAME}
       # Watchtower updates
       - com.centurylinklabs.watchtower.enable=true
 
@@ -149,8 +154,8 @@ services:
       - SERVER_SSL_ENABLED=false
 
     volumes:
-      - wazuh-dashboard-config:/usr/share/wazuh-dashboard/data/wazuh/config
-      - wazuh-dashboard-custom:/usr/share/wazuh-dashboard/plugins/wazuh/public/assets/custom
+      - /srv/wazuh/dashboard/config:/usr/share/wazuh-dashboard/data/wazuh/config
+      - /srv/wazuh/dashboard/custom:/usr/share/wazuh-dashboard/plugins/wazuh/public/assets/custom
 
     networks:
       - secproxy
@@ -159,18 +164,22 @@ services:
       - wazuh.indexer
       - wazuh.manager
 
-volumes:
-  wazuh_api_configuration:
-  wazuh_etc:
-  wazuh_logs:
-  wazuh_queue:
-  wazuh_var_multigroups:
-  wazuh_integrations:
-  wazuh_active_response:
-  wazuh_agentless:
-  wazuh_wodles:
-  filebeat_etc:
-  filebeat_var:
-  wazuh-indexer-data:
-  wazuh-dashboard-config:
-  wazuh-dashboard-custom:
+  # One-shot init container: applies 30-day index retention policy to the indexer
+  wazuh.ism-init:
+    image: curlimages/curl:latest
+    container_name: wazuh-ism-init
+    restart: "no"
+    networks:
+      - secproxy
+    volumes:
+      - ./indexer-config/ism-policy.json:/ism-policy.json:ro
+      - ./indexer-config/apply-ism-policy.sh:/apply-ism-policy.sh:ro
+    entrypoint: ["sh", "/apply-ism-policy.sh"]
+    depends_on:
+      - wazuh.indexer
+    labels:
+      - ha.monitor=true
+      - ha.category=security
+      - ha.compose-file=Docker-NonCritical/Security/security.yaml
+      - ha.service-name=wazuh.ism-init
+

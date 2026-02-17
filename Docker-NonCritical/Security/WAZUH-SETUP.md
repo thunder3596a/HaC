@@ -71,7 +71,7 @@ To manually trigger deployment:
 
 ```bash
 cd Docker-NonCritical/Security
-docker-compose -f security.yaml up -d
+docker compose -p wazuh -f security.yaml up -d
 ```
 
 **Note:** You'll need to export the required environment variables first if deploying manually.
@@ -89,6 +89,34 @@ The following ports are exposed for Wazuh agent communication:
 - **1515** - Wazuh agent enrollment
 - **514/udp** - Syslog
 - **55000** - Wazuh API (also used by dashboard)
+
+## Storage Strategy
+
+Wazuh uses a tiered storage model to balance performance and retention:
+
+| Component | Location | Type | Purpose |
+| --- | --- | --- | --- |
+| Indexer data (OpenSearch) | `/srv/wazuh/indexer-data` | Local NVMe | Fast random IO for search queries |
+| Manager config/state | `/srv/wazuh/manager/` | Local NVMe | Active state, queues, integrations |
+| Active logs | `/srv/wazuh/manager/logs` | Local NVMe | Logs currently being written |
+| Archived logs | `/mnt/data/wazuh/archives` | NFS (TrueNAS) | Long-term compressed log retention |
+| Filebeat state | `/srv/wazuh/filebeat/` | Local NVMe | Log shipper state |
+| Dashboard config | `/srv/wazuh/dashboard/` | Local NVMe | UI preferences |
+
+### Index Retention Policy
+
+An ISM (Index State Management) policy is automatically applied on deployment via the `wazuh.ism-init` container:
+
+- **Searchable in dashboard:** 30 days
+- **After 30 days:** Indices are deleted from OpenSearch to free local disk
+- **Compressed archives on NFS:** Retained indefinitely at `/mnt/data/wazuh/archives`
+
+The policy is defined in `indexer-config/ism-policy.json`. To change the retention period, edit the `min_index_age` value and redeploy.
+
+### Estimated Disk Usage
+
+- **Local (`/srv/wazuh/`):** ~5-15G depending on agent count and event volume
+- **NFS (`/mnt/data/wazuh/archives`):** Grows over time; compressed logs are small (~50-200MB/month for a homelab)
 
 ## Resource Requirements
 

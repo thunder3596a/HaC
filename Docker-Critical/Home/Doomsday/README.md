@@ -5,7 +5,7 @@
 
 **Overview**
 - Put your `.zim` files on the host at `/mnt/Apps/kiwix/zim` (create this dataset on TrueNAS and upload ZIMs there).
-- Use the provided `library.yml` (docker-compose) to run `kiwix-serve` and expose the UI on `http://<host>:8080`.
+- Use the provided `library.yml` (Docker Compose) to run `kiwix-serve`, accessible via Traefik at `https://library.${DOMAIN_NAME}`.
 - Run the included `generate-library.sh` helper to create or update `library.xml` using the official `ghcr.io/kiwix/kiwix-tools` image.
 
 Prerequisites
@@ -38,13 +38,13 @@ If that syntax fails, run the help to find the right subcommand:
 docker run --rm -v /mnt/Apps/kiwix/zim:/data ghcr.io/kiwix/kiwix-tools kiwix-manage --help
 ```
 
-4) Start Kiwix server (docker-compose):
+4) Start Kiwix server (Docker Compose):
 ```bash
-docker-compose -f library.yml pull
-docker-compose -f library.yml up -d
+docker compose -f library.yml pull
+docker compose -p kiwix -f library.yml up -d
 ```
 
-5) Open the web UI: http://<truenas-host>:8080
+5) Open the web UI: `https://library.${DOMAIN_NAME}`
 
 Notes & Tips
 - The `kiwix-serve` container reads `/data/library.xml` and serves all mounted `.zim` files. If you add/remove ZIMs, re-run the library generation step and restart `kiwix-serve`.

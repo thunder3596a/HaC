@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   kiwix-serve:
     image: ghcr.io/kiwix/kiwix-serve:latest
@@ -35,5 +33,4 @@ services:
       - "ha.service-name=kiwix-serve"
 networks:
   homeproxy:
-    external: True
-    name: homeproxy
+    external: true
