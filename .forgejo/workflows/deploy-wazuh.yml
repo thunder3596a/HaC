@@ -112,8 +112,8 @@ jobs:
             mkdir -p /srv/wazuh/manager/logs/cluster
             chown -R 1000:1000 /srv/wazuh/manager
 
-            # NFS archive target
-            mkdir -p /mnt/data/wazuh/archives
+            # NFS archive target (this is what actually mounts at /var/ossec/logs/archives)
+            mkdir -p /mnt/data/wazuh/archives/$YEAR
 
             # Dashboard directories
             mkdir -p /srv/wazuh/dashboard/config
@@ -161,21 +161,30 @@ jobs:
           docker exec wazuh-manager ls -la /var/ossec/etc/ossec.conf 2>/dev/null || echo "❌ ossec.conf missing!"
 
           # Verify analysisd is running inside the manager (critical service)
+          # Fresh deployments need 2-3+ minutes for /init to generate certs,
+          # configure filebeat, wait for indexer, and start all services.
           echo ""
           echo "Checking wazuh-analysisd..."
-          for i in 1 2 3 4 5 6; do
+          for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
             if docker exec wazuh-manager /var/ossec/bin/wazuh-control status 2>/dev/null | grep -q "wazuh-analysisd is running"; then
               echo "✅ wazuh-analysisd is running"
               break
             fi
-            if [ "$i" -eq 6 ]; then
-              echo "❌ wazuh-analysisd failed to start after 60s"
-              echo "Manager logs (last 30 lines):"
-              docker exec wazuh-manager tail -30 /var/ossec/logs/ossec.log 2>/dev/null || true
+            if [ "$i" -eq 12 ]; then
+              echo "❌ wazuh-analysisd failed to start after 180s"
+              echo ""
+              echo "=== wazuh-control status ==="
+              docker exec wazuh-manager /var/ossec/bin/wazuh-control status 2>/dev/null || true
+              echo ""
+              echo "=== Manager logs (last 80 lines) ==="
+              docker exec wazuh-manager tail -80 /var/ossec/logs/ossec.log 2>/dev/null || true
+              echo ""
+              echo "=== Container logs (last 40 lines) ==="
+              docker logs --tail 40 wazuh-manager 2>&1 || true
               exit 1
             fi
-            echo "  Attempt $i/6 — analysisd not ready yet, waiting 10s..."
-            sleep 10
+            echo "  Attempt $i/12 — analysisd not ready yet, waiting 15s..."
+            sleep 15
           done
 
       - name: Notify Home Assistant
