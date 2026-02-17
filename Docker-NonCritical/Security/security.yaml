@@ -30,10 +30,6 @@ services:
 
     environment:
       - OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g
-      - discovery.type=single-node
-      - bootstrap.memory_lock=true
-      # Disable security plugin (SSL + auth) for internal Docker network communication
-      - DISABLE_SECURITY_PLUGIN=true
 
     ulimits:
       memlock:
@@ -44,6 +40,7 @@ services:
         hard: 65536
 
     volumes:
+      - ./indexer-config/opensearch.yml:/usr/share/wazuh-indexer/opensearch.yml:ro
       - /srv/wazuh/indexer-data:/var/lib/wazuh-indexer
 
     networks:

@@ -51,7 +51,7 @@ jobs:
           mkdir -p /mnt/data/wazuh/archives
 
           # Compute checksum of compose file + config files
-          checksum=$(cat security.yaml indexer-config/ism-policy.json indexer-config/apply-ism-policy.sh | sha256sum | awk '{print $1}')
+          checksum=$(cat security.yaml indexer-config/opensearch.yml indexer-config/ism-policy.json indexer-config/apply-ism-policy.sh dashboard-config/opensearch_dashboards.yml | sha256sum | awk '{print $1}')
           old=$(cat .wazuh_checksum 2>/dev/null || echo "")
 
           echo "Indexer - Defined: $defined_indexer | Running: $running_indexer"
@@ -72,7 +72,10 @@ jobs:
               WAZUH_API_USERNAME=$WAZUH_API_USERNAME \
               WAZUH_INDEXER_PASSWORD=$WAZUH_INDEXER_PASSWORD \
               WAZUH_API_PASSWORD=$WAZUH_API_PASSWORD \
-              docker compose -p wazuh -f security.yaml down --remove-orphans || true
+              docker compose -p wazuh -f security.yaml down --remove-orphans --volumes || true
+
+            # Also remove any leftover Docker-managed volumes from previous config
+            docker volume rm wazuh_wazuh-dashboard-config wazuh_wazuh-dashboard-custom 2>/dev/null || true
 
             # Wait a moment for cleanup
             sleep 5
