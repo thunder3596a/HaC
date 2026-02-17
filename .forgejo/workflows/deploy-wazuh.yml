@@ -77,6 +77,15 @@ jobs:
             # Wait a moment for cleanup
             sleep 5
 
+            # Clear stale manager state so the entrypoint re-initializes cleanly.
+            # Preserves queue (agent keys) but wipes config/state dirs that may
+            # be corrupt from previous failed deployments.
+            rm -rf /srv/wazuh/manager/etc/*
+            rm -rf /srv/wazuh/manager/logs/*
+            rm -rf /srv/wazuh/filebeat/etc/*
+            rm -rf /srv/wazuh/filebeat/var/*
+            rm -rf /srv/wazuh/indexer-data/*
+
             # Create all bind-mounted directories with correct ownership
             YEAR=$(date +%Y)
 
@@ -141,6 +150,15 @@ jobs:
           docker ps | grep wazuh-indexer && echo "✅ Indexer running" || echo "❌ Indexer not running"
           docker ps | grep wazuh-manager && echo "✅ Manager running" || echo "❌ Manager not running"
           docker ps | grep wazuh-dashboard && echo "✅ Dashboard running" || echo "❌ Dashboard not running"
+
+          # Dump full manager service status for diagnostics
+          echo ""
+          echo "Full wazuh-control status:"
+          docker exec wazuh-manager /var/ossec/bin/wazuh-control status 2>/dev/null || echo "(wazuh-control not available yet)"
+
+          echo ""
+          echo "Checking ossec.conf exists:"
+          docker exec wazuh-manager ls -la /var/ossec/etc/ossec.conf 2>/dev/null || echo "❌ ossec.conf missing!"
 
           # Verify analysisd is running inside the manager (critical service)
           echo ""
