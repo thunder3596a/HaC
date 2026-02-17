@@ -139,8 +139,22 @@ services:
       - traefik.http.services.wazuh.loadbalancer.server.port=5601
       - traefik.http.routers.wazuh.tls.certresolver=${CERTRESOLVER:-cloudflare}
       - traefik.http.routers.wazuh.tls.domains[0].main=wazuh.${DOMAIN_NAME}
+      # TODO: Add authelia@docker middleware once Authelia is deployed
+      # - traefik.http.routers.wazuh.middlewares=authelia@docker
       # Watchtower updates
       - com.centurylinklabs.watchtower.enable=true
+
+    # Remove the OpenSearch Security Dashboards plugin on startup.
+    # Security plugin is disabled on the indexer (no SSL/auth needed internally).
+    # Traefik + Authelia handle external access control.
+    entrypoint:
+      - bash
+      - -c
+      - |
+        if [ -d /usr/share/wazuh-dashboard/plugins/securityDashboards ]; then
+          /usr/share/wazuh-dashboard/bin/opensearch-dashboards-plugin remove securityDashboards --allow-root 2>/dev/null || true
+        fi
+        /entrypoint.sh
 
     environment:
       - OPENSEARCH_HOSTS=http://wazuh.indexer:9200

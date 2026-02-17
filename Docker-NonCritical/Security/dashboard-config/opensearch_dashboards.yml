@@ -1,8 +1,4 @@
 server.host: "0.0.0.0"
 server.port: 5601
 opensearch.hosts: ["http://wazuh.indexer:9200"]
-opensearch.requestHeadersAllowlist: ["securitytenant", "Authorization"]
-opensearch_security.multitenancy.enabled: false
-opensearch_security.readonly_mode.roles: ["kibana_read_only"]
 server.ssl.enabled: false
-opensearch.ssl.verificationMode: none
