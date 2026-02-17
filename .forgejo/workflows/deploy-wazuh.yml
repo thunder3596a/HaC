@@ -47,12 +47,6 @@ jobs:
           running_manager=$(docker inspect -f '{{.Config.Image}}' wazuh-manager 2>/dev/null || echo "none")
           running_dashboard=$(docker inspect -f '{{.Config.Image}}' wazuh-dashboard 2>/dev/null || echo "none")
 
-          # Ensure required directories exist with correct ownership
-          mkdir -p /mnt/data/wazuh/archives
-          mkdir -p /srv/wazuh/manager/logs/{alerts,archives,firewall}/$(date +%Y)
-          chown -R 1000:1000 /srv/wazuh/manager/logs
-          chown -R 1000:1000 /srv/wazuh/indexer-data 2>/dev/null || true
-
           # Compute checksum of compose file + config files
           checksum=$(cat security.yaml indexer-config/opensearch.yml indexer-config/ism-policy.json indexer-config/apply-ism-policy.sh dashboard-config/opensearch_dashboards.yml | sha256sum | awk '{print $1}')
           old=$(cat .wazuh_checksum 2>/dev/null || echo "")
@@ -83,6 +77,44 @@ jobs:
             # Wait a moment for cleanup
             sleep 5
 
+            # Create all bind-mounted directories with correct ownership
+            YEAR=$(date +%Y)
+
+            # Indexer data
+            mkdir -p /srv/wazuh/indexer-data
+            chown -R 1000:1000 /srv/wazuh/indexer-data
+
+            # Manager directories (all bind mounts from compose)
+            mkdir -p /srv/wazuh/manager/api-configuration
+            mkdir -p /srv/wazuh/manager/etc
+            mkdir -p /srv/wazuh/manager/queue
+            mkdir -p /srv/wazuh/manager/var-multigroups
+            mkdir -p /srv/wazuh/manager/integrations
+            mkdir -p /srv/wazuh/manager/active-response
+            mkdir -p /srv/wazuh/manager/agentless
+            mkdir -p /srv/wazuh/manager/wodles
+            mkdir -p /srv/wazuh/filebeat/etc
+            mkdir -p /srv/wazuh/filebeat/var
+
+            # Manager logs — analysisd needs these year-based subdirectories
+            mkdir -p /srv/wazuh/manager/logs/alerts/$YEAR
+            mkdir -p /srv/wazuh/manager/logs/archives/$YEAR
+            mkdir -p /srv/wazuh/manager/logs/firewall/$YEAR
+            mkdir -p /srv/wazuh/manager/logs/cluster
+            chown -R 1000:1000 /srv/wazuh/manager
+
+            # NFS archive target
+            mkdir -p /mnt/data/wazuh/archives
+
+            # Dashboard directories
+            mkdir -p /srv/wazuh/dashboard/config
+            mkdir -p /srv/wazuh/dashboard/custom
+
+            # Pre-create wazuh.yml so dashboard connects to API with run_as: false
+            printf 'hosts:\n  - default:\n      url: https://wazuh.manager\n      port: 55000\n      username: %s\n      password: %s\n      run_as: false\n' \
+              "$WAZUH_API_USERNAME" "$WAZUH_API_PASSWORD" \
+              > /srv/wazuh/dashboard/config/wazuh.yml
+
             TZ=$TZ DOMAIN_NAME=$DOMAIN_NAME CERTRESOLVER=$CERTRESOLVER \
               WAZUH_VERSION=$WAZUH_VERSION \
               WAZUH_INDEXER_USERNAME=$WAZUH_INDEXER_USERNAME \
@@ -102,13 +134,31 @@ jobs:
 
       - name: Verify deployment
         run: |
-          echo "Waiting for services to be healthy..."
-          sleep 10
+          echo "Waiting for services to initialize..."
+          sleep 30
 
           # Check if containers are running
           docker ps | grep wazuh-indexer && echo "✅ Indexer running" || echo "❌ Indexer not running"
           docker ps | grep wazuh-manager && echo "✅ Manager running" || echo "❌ Manager not running"
           docker ps | grep wazuh-dashboard && echo "✅ Dashboard running" || echo "❌ Dashboard not running"
+
+          # Verify analysisd is running inside the manager (critical service)
+          echo ""
+          echo "Checking wazuh-analysisd..."
+          for i in 1 2 3 4 5 6; do
+            if docker exec wazuh-manager /var/ossec/bin/wazuh-control status 2>/dev/null | grep -q "wazuh-analysisd is running"; then
+              echo "✅ wazuh-analysisd is running"
+              break
+            fi
+            if [ "$i" -eq 6 ]; then
+              echo "❌ wazuh-analysisd failed to start after 60s"
+              echo "Manager logs (last 30 lines):"
+              docker exec wazuh-manager tail -30 /var/ossec/logs/ossec.log 2>/dev/null || true
+              exit 1
+            fi
+            echo "  Attempt $i/6 — analysisd not ready yet, waiting 10s..."
+            sleep 10
+          done
 
       - name: Notify Home Assistant
         if: always()
