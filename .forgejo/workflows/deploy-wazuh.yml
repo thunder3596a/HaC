@@ -47,8 +47,11 @@ jobs:
           running_manager=$(docker inspect -f '{{.Config.Image}}' wazuh-manager 2>/dev/null || echo "none")
           running_dashboard=$(docker inspect -f '{{.Config.Image}}' wazuh-dashboard 2>/dev/null || echo "none")
 
-          # Ensure NFS archive directory exists
+          # Ensure required directories exist with correct ownership
           mkdir -p /mnt/data/wazuh/archives
+          mkdir -p /srv/wazuh/manager/logs/{alerts,archives,firewall}/$(date +%Y)
+          chown -R 1000:1000 /srv/wazuh/manager/logs
+          chown -R 1000:1000 /srv/wazuh/indexer-data 2>/dev/null || true
 
           # Compute checksum of compose file + config files
           checksum=$(cat security.yaml indexer-config/opensearch.yml indexer-config/ism-policy.json indexer-config/apply-ism-policy.sh dashboard-config/opensearch_dashboards.yml | sha256sum | awk '{print $1}')
