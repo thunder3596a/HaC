@@ -137,6 +137,7 @@ jobs:
           printf 'hosts:\n  - default:\n      url: https://wazuh.manager\n      port: 55000\n      username: %s\n      password: "%s"\n      run_as: false\n' \
             "${WAZUH_API_USERNAME:-wazuh-wui}" "$WAZUH_API_PASSWORD" \
             > /srv/wazuh/dashboard/wazuh.yml
+          chmod 666 /srv/wazuh/dashboard/wazuh.yml
 
           compose_env docker compose -p wazuh -f security.yaml up -d --force-recreate
 
