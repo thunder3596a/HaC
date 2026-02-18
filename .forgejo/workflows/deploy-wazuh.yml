@@ -114,7 +114,7 @@ jobs:
               wazuh_wazuh_queue wazuh_wazuh_var_multigroups wazuh_wazuh_integrations \
               wazuh_wazuh_active_response wazuh_wazuh_agentless wazuh_wazuh_wodles \
               wazuh_filebeat_etc wazuh_filebeat_var \
-              wazuh_wazuh-dashboard-config wazuh_wazuh-dashboard-custom \
+              wazuh_wazuh-dashboard-custom \
               2>/dev/null || true
 
             # Also clean indexer data for version upgrades
