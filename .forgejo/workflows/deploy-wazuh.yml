@@ -47,8 +47,8 @@ jobs:
           running_manager=$(docker inspect -f '{{.Config.Image}}' wazuh-manager 2>/dev/null || echo "none")
           running_dashboard=$(docker inspect -f '{{.Config.Image}}' wazuh-dashboard 2>/dev/null || echo "none")
 
-          # Compute checksum of compose file + config files
-          checksum=$(cat security.yaml indexer-config/opensearch.yml indexer-config/ism-policy.json indexer-config/apply-ism-policy.sh dashboard-config/opensearch_dashboards.yml | sha256sum | awk '{print $1}')
+          # Compute checksum of compose + all config files
+          checksum=$(cat security.yaml manager-config/wazuh_manager.conf indexer-config/opensearch.yml indexer-config/ism-policy.json indexer-config/apply-ism-policy.sh dashboard-config/opensearch_dashboards.yml | sha256sum | awk '{print $1}')
 
           # Store checksum on persistent host path (git checkout is ephemeral)
           CHECKSUM_FILE="/srv/wazuh/.deploy_checksum"
@@ -102,73 +102,34 @@ jobs:
           }
 
           compose_env docker compose -p wazuh -f security.yaml down --remove-orphans || true
-
-          # Also remove any leftover Docker-managed volumes from previous config
-          docker volume rm wazuh_wazuh-dashboard-config wazuh_wazuh-dashboard-custom 2>/dev/null || true
-
-          # Wait a moment for cleanup
           sleep 5
 
-          YEAR=$(date +%Y)
-
           if [ "$IMAGE_CHANGED" = "true" ]; then
-            echo "Version change detected — full state reset"
+            echo "Version change detected — removing named volumes for clean re-init"
 
-            # Wipe transient state that must match the new version.
-            # NEVER wipe /srv/wazuh/manager/etc — the image's init script only
-            # regenerates ossec.conf; other critical files (internal_options.conf,
-            # rules/, decoders/, lists/) are copied from the image on true first
-            # boot and are NOT regenerated on subsequent starts.
-            rm -rf /srv/wazuh/manager/logs/*
-            rm -rf /srv/wazuh/filebeat/etc/*
-            rm -rf /srv/wazuh/filebeat/var/*
+            # Remove Docker named volumes so they get re-populated from the new image.
+            # Named volumes auto-populate from the image on first creation.
+            docker volume rm \
+              wazuh_wazuh_api_configuration wazuh_wazuh_etc wazuh_wazuh_logs \
+              wazuh_wazuh_queue wazuh_wazuh_var_multigroups wazuh_wazuh_integrations \
+              wazuh_wazuh_active_response wazuh_wazuh_agentless wazuh_wazuh_wodles \
+              wazuh_filebeat_etc wazuh_filebeat_var \
+              wazuh_wazuh-dashboard-config wazuh_wazuh-dashboard-custom \
+              2>/dev/null || true
+
+            # Also clean indexer data for version upgrades
             rm -rf /srv/wazuh/indexer-data/*
           else
-            echo "Config-only change — preserving existing state"
+            echo "Config-only change — preserving existing volumes"
           fi
 
-          # Ensure all bind-mounted directories exist
-          # Indexer data — OpenSearch runs as UID 1000 from startup
+          # Ensure indexer bind-mount dir exists with correct ownership
           mkdir -p /srv/wazuh/indexer-data
           chown -R 1000:1000 /srv/wazuh/indexer-data
 
-          # Manager directories (all bind mounts from compose)
-          # Do NOT chown these to 1000:1000 — analysisd requires root-owned config
-          # files (ossec.conf, internal_options.conf). The container's init script
-          # runs as root and sets correct ownership per file.
-          mkdir -p /srv/wazuh/manager/api-configuration
-          mkdir -p /srv/wazuh/manager/etc
-
-          # Fix config file ownership: analysisd rejects ossec.conf unless
-          # owned by root. Reset etc/ to root ownership — the container init
-          # will set correct group (wazuh) as needed.
-          chown -R root:root /srv/wazuh/manager/etc
-          mkdir -p /srv/wazuh/manager/queue
-          mkdir -p /srv/wazuh/manager/var-multigroups
-          mkdir -p /srv/wazuh/manager/integrations
-          mkdir -p /srv/wazuh/manager/active-response
-          mkdir -p /srv/wazuh/manager/agentless
-          mkdir -p /srv/wazuh/manager/wodles
-          mkdir -p /srv/wazuh/filebeat/etc
-          mkdir -p /srv/wazuh/filebeat/var
-
-          # Manager logs — analysisd needs these year-based subdirectories
-          mkdir -p /srv/wazuh/manager/logs/alerts/$YEAR
-          mkdir -p /srv/wazuh/manager/logs/archives/$YEAR
-          mkdir -p /srv/wazuh/manager/logs/firewall/$YEAR
-          mkdir -p /srv/wazuh/manager/logs/cluster
-
-          # NFS archive target (this is what actually mounts at /var/ossec/logs/archives)
+          # Ensure NFS archive target exists
+          YEAR=$(date +%Y)
           mkdir -p /mnt/data/wazuh/archives/$YEAR
-
-          # Dashboard directories
-          mkdir -p /srv/wazuh/dashboard/config
-          mkdir -p /srv/wazuh/dashboard/custom
-
-          # Pre-create wazuh.yml so dashboard connects to API with run_as: false
-          printf 'hosts:\n  - default:\n      url: https://wazuh.manager\n      port: 55000\n      username: %s\n      password: %s\n      run_as: false\n' \
-            "$WAZUH_API_USERNAME" "$WAZUH_API_PASSWORD" \
-            > /srv/wazuh/dashboard/config/wazuh.yml
 
           compose_env docker compose -p wazuh -f security.yaml up -d --force-recreate
 
@@ -224,6 +185,9 @@ jobs:
               echo ""
               echo "=== /var/ossec/etc/ contents ==="
               docker exec wazuh-manager ls -la /var/ossec/etc/ 2>/dev/null || true
+              echo ""
+              echo "=== ossec.conf first 20 lines ==="
+              docker exec wazuh-manager head -20 /var/ossec/etc/ossec.conf 2>/dev/null || true
               echo ""
               echo "=== Container logs (last 60 lines) ==="
               docker logs --tail 60 wazuh-manager 2>&1 || true

@@ -2,6 +2,24 @@ networks:
   secproxy:
     external: true
 
+volumes:
+  # Docker named volumes auto-populate from image defaults on first creation.
+  # This matches the official wazuh-docker setup and avoids the bind mount
+  # issue where empty host dirs hide the image's built-in config files.
+  wazuh_api_configuration:
+  wazuh_etc:
+  wazuh_logs:
+  wazuh_queue:
+  wazuh_var_multigroups:
+  wazuh_integrations:
+  wazuh_active_response:
+  wazuh_agentless:
+  wazuh_wodles:
+  filebeat_etc:
+  filebeat_var:
+  wazuh-dashboard-config:
+  wazuh-dashboard-custom:
+
 services:
   wazuh.indexer:
     image: wazuh/wazuh-indexer:${WAZUH_VERSION:-4.14.3}
@@ -81,25 +99,27 @@ services:
       - INDEXER_URL=http://wazuh.indexer:9200
       - INDEXER_USERNAME=${WAZUH_INDEXER_USERNAME:-admin}
       - INDEXER_PASSWORD=${WAZUH_INDEXER_PASSWORD}
-      # Disable SSL for internal communication
+      # Disable SSL for internal communication (Traefik handles external TLS)
       - FILEBEAT_SSL_VERIFICATION_MODE=none
       - API_USERNAME=${WAZUH_API_USERNAME:-wazuh-wui}
       - API_PASSWORD=${WAZUH_API_PASSWORD}
 
     volumes:
-      # Config and state — local NVMe (fast IO)
-      - /srv/wazuh/manager/api-configuration:/var/ossec/api/configuration
-      - /srv/wazuh/manager/etc:/var/ossec/etc
-      - /srv/wazuh/manager/queue:/var/ossec/queue
-      - /srv/wazuh/manager/var-multigroups:/var/ossec/var/multigroups
-      - /srv/wazuh/manager/integrations:/var/ossec/integrations
-      - /srv/wazuh/manager/active-response:/var/ossec/active-response/bin
-      - /srv/wazuh/manager/agentless:/var/ossec/agentless
-      - /srv/wazuh/manager/wodles:/var/ossec/wodles
-      - /srv/wazuh/filebeat/etc:/etc/filebeat
-      - /srv/wazuh/filebeat/var:/var/lib/filebeat
-      # Active logs — local NVMe (written continuously)
-      - /srv/wazuh/manager/logs:/var/ossec/logs
+      # Docker named volumes — auto-populated from image on first creation
+      - wazuh_api_configuration:/var/ossec/api/configuration
+      - wazuh_etc:/var/ossec/etc
+      - wazuh_logs:/var/ossec/logs
+      - wazuh_queue:/var/ossec/queue
+      - wazuh_var_multigroups:/var/ossec/var/multigroups
+      - wazuh_integrations:/var/ossec/integrations
+      - wazuh_active_response:/var/ossec/active-response/bin
+      - wazuh_agentless:/var/ossec/agentless
+      - wazuh_wodles:/var/ossec/wodles
+      - filebeat_etc:/etc/filebeat
+      - filebeat_var:/var/lib/filebeat
+      # Custom manager config (no SSL, http indexer) — mounted at the
+      # path the Docker image's init script expects for config injection
+      - ./manager-config/wazuh_manager.conf:/wazuh-config-mount/etc/ossec.conf
       # Archived logs — NFS (long-term retention, sequential reads only)
       - /mnt/data/wazuh/archives:/var/ossec/logs/archives
 
@@ -166,8 +186,8 @@ services:
 
     volumes:
       - ./dashboard-config/opensearch_dashboards.yml:/usr/share/wazuh-dashboard/config/opensearch_dashboards.yml:ro
-      - /srv/wazuh/dashboard/config:/usr/share/wazuh-dashboard/data/wazuh/config
-      - /srv/wazuh/dashboard/custom:/usr/share/wazuh-dashboard/plugins/wazuh/public/assets/custom
+      - wazuh-dashboard-config:/usr/share/wazuh-dashboard/data/wazuh/config
+      - wazuh-dashboard-custom:/usr/share/wazuh-dashboard/plugins/wazuh/public/assets/custom
 
     networks:
       - secproxy
@@ -194,4 +214,3 @@ services:
       - ha.category=security
       - ha.compose-file=Docker-NonCritical/Security/security.yaml
       - ha.service-name=wazuh.ism-init
-
