@@ -1,5 +1,7 @@
 # Homelab-as-Code (HaC)
 
+> **GitHub Mirror:** [github.com/thunder3596a/HaC](https://github.com/thunder3596a/HaC) — automatically synced from Forgejo via `mirror-to-github.yml`
+
 Complete infrastructure-as-code for a self-hosted home automation and media center, organized into critical and non-critical services with automated deployment via Forgejo CI/CD. HaC stands for "Homelab-as-Code."
 
 ## Architecture Overview
@@ -8,7 +10,7 @@ Complete infrastructure-as-code for a self-hosted home automation and media cent
 - **Git-based:** Configuration managed through Forgejo (self-hosted Git server)
 - **Infrastructure as Code:** All services defined via Docker Compose
 - **Automated Deployments:** Forgejo workflows trigger on file changes
-- **Multi-Host:** Three hosts — critical (home automation), non-critical (media/tools), and desktop-1 (AI/runners)
+- **Multi-Host:** Two hosts — critical (home automation) and non-critical (media/tools)
 
 ### Network Structure
 - **homeproxy:** Home services and automation (internal only)
@@ -21,7 +23,7 @@ Complete infrastructure-as-code for a self-hosted home automation and media cent
 - **authnet:** Privileged authentication services (LDAP, OAuth)
 
 ### Reverse Proxy
-- **Traefik:** Three instances (critical, non-critical, desktop-1)
+- **Traefik:** Two instances (critical and non-critical)
   - SSL termination via Let's Encrypt with Cloudflare DNS-01 challenge
   - Individual per-subdomain certificates
   - Automatic service discovery via Docker labels
@@ -35,9 +37,7 @@ HaC/
 ├── .forgejo/workflows/          # Deployment automation (Forgejo Actions)
 ├── Docker-Critical/             # Mission-critical services (hac-critical host)
 ├── Docker-NonCritical/          # Non-essential services (hac-noncritical host)
-├── Docker-Desktop1/             # AI and runner services (desktop-1 host)
 ├── scripts/                     # Utility scripts
-├── .ai/                         # AI assistant context
 ├── DOCKER-MONITORING-SETUP.md   # Docker monitoring guide
 ├── README-DOCKER-MONITORING.md  # Docker monitoring reference
 ├── FORGEJO-DOCKER-SETUP.md      # Forgejo Docker setup guide
@@ -267,7 +267,7 @@ Services running on **hac-noncritical** (non-critical host). Can restart without
 
 ### Automation & AI
 - **Open WebUI** (`Automation/AI/openwebui.yml`) - LLM interface
-  - Chat interface for Ollama (running natively on Desktop-1)
+  - Chat interface for Ollama
   - Dashboard at `chat.${DOMAIN_NAME}`
 
 - **Price Tracker** (`Automation/pricetracker.yml`) - eCommerce monitoring
@@ -311,27 +311,6 @@ Services running on **hac-noncritical** (non-critical host). Can restart without
 
 ---
 
-## Docker-Desktop1 Services
-
-Services running on **docker-desktop1** (desktop-1/AI host). Runs Ollama natively and Forgejo CI/CD runners.
-
-### Core
-- **Traefik** (`Core/Traefik/traefik.yml`) - Desktop-1 reverse proxy
-  - Routes to native services via file provider (e.g., Ollama)
-  - Dashboard at `docker-desktop1-traefik.${DOMAIN_NAME}`
-  - Uses `aiproxy` network
-
-- **Ollama** (native, proxied via `Core/Traefik/dynamic/ollama.yml`) - Local LLM server
-  - Runs natively on host (not containerized)
-  - Exposed via Traefik file provider
-  - OpenAI-compatible API
-
-- **Forgejo Runner** (`Core/Runner/runner.yml`) - CI/CD runner
-  - Forgejo Actions runner for deployment workflows
-  - Resource-limited for coexistence with desktop workloads
-
----
-
 ## Deployment
 
 ### Deployment Hosts
@@ -340,14 +319,12 @@ All services deploy via Forgejo CI/CD workflows in `.forgejo/workflows/`. Workfl
 
 **Critical services** → `runs-on: docker-critical`
 **Non-critical services** → `runs-on: docker-noncritical`
-**Desktop1 services** → `runs-on: docker-desktop1`
 
 | Service | Workflow | Host | Trigger |
 |---------|----------|------|---------|
 | Authelia | `deploy-authelia.yml` | hac-critical | Push to `Docker-Critical/Auth/**` |
 | Traefik (Critical) | `deploy-traefik-critical.yml` | hac-critical | Push to `Docker-Critical/Networking/Proxy/**` |
 | Traefik (NonCritical) | `deploy-traefik-noncritical.yml` | hac-noncritical | Push to `Docker-NonCritical/Networking/Proxy/**` |
-| Traefik (Desktop1) | `deploy-traefik-desktop1.yml` | docker-desktop1 | Push to `Docker-Desktop1/Core/Traefik/**` |
 | Home Assistant | `deploy-homeassistant.yml` | hac-critical | Push to `Docker-Critical/Home/HomeAssistant/**` |
 | ESPHome | (included in HA) | hac-critical | Push to `Docker-Critical/Home/HomeAssistant/**` |
 | RTL-SDR | `deploy-rtl-sdr.yml` | hac-critical | Push to `Docker-Critical/Home/RTL-SDR/**` |
@@ -583,10 +560,6 @@ Traefik (NonCritical)
 ├── Wazuh (SIEM)
 ├── MCP Gateway (MCP hub)
 └── Tools (IT-Tools, SearXNG, Stirling-PDF)
-
-Traefik (Desktop1)
-├── Ollama (native LLM server, via file provider)
-└── Forgejo Runner (CI/CD)
 ```
 
 ---
