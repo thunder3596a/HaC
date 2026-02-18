@@ -116,11 +116,16 @@ jobs:
             echo "Config-only change — preserving existing state"
           fi
 
-          # Ensure all bind-mounted directories exist with correct ownership
+          # Ensure all bind-mounted directories exist
+          # Indexer data — OpenSearch runs as UID 1000 from startup
           mkdir -p /srv/wazuh/indexer-data
           chown -R 1000:1000 /srv/wazuh/indexer-data
 
           # Manager directories (all bind mounts from compose)
+          # Do NOT chown these — the container's init script (0-wazuh-init)
+          # runs as root and sets correct ownership (root:wazuh for config
+          # files like ossec.conf, wazuh:wazuh for data dirs). A blanket
+          # chown to 1000:1000 breaks analysisd which requires root-owned config.
           mkdir -p /srv/wazuh/manager/api-configuration
           mkdir -p /srv/wazuh/manager/etc
           mkdir -p /srv/wazuh/manager/queue
@@ -137,7 +142,6 @@ jobs:
           mkdir -p /srv/wazuh/manager/logs/archives/$YEAR
           mkdir -p /srv/wazuh/manager/logs/firewall/$YEAR
           mkdir -p /srv/wazuh/manager/logs/cluster
-          chown -R 1000:1000 /srv/wazuh/manager
 
           # NFS archive target (this is what actually mounts at /var/ossec/logs/archives)
           mkdir -p /mnt/data/wazuh/archives/$YEAR
