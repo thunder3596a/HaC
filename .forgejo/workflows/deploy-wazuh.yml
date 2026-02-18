@@ -72,7 +72,18 @@ jobs:
             CONFIG_CHANGED=true
           fi
 
-          if [ "$IMAGE_CHANGED" = "false" ] && [ "$CONFIG_CHANGED" = "false" ]; then
+          # Check if manager services are actually healthy (catch broken previous deploys)
+          MANAGER_HEALTHY=true
+          if docker ps --format '{{.Names}}' | grep -q wazuh-manager; then
+            if ! docker exec wazuh-manager /var/ossec/bin/wazuh-control status 2>/dev/null | grep -q "wazuh-analysisd is running"; then
+              MANAGER_HEALTHY=false
+              echo "Manager exists but analysisd is not running — forcing redeploy"
+            fi
+          else
+            MANAGER_HEALTHY=false
+          fi
+
+          if [ "$IMAGE_CHANGED" = "false" ] && [ "$CONFIG_CHANGED" = "false" ] && [ "$MANAGER_HEALTHY" = "true" ]; then
             echo "No redeploy needed"
             exit 0
           fi
@@ -122,12 +133,16 @@ jobs:
           chown -R 1000:1000 /srv/wazuh/indexer-data
 
           # Manager directories (all bind mounts from compose)
-          # Do NOT chown these — the container's init script (0-wazuh-init)
-          # runs as root and sets correct ownership (root:wazuh for config
-          # files like ossec.conf, wazuh:wazuh for data dirs). A blanket
-          # chown to 1000:1000 breaks analysisd which requires root-owned config.
+          # Do NOT chown these to 1000:1000 — analysisd requires root-owned config
+          # files (ossec.conf, internal_options.conf). The container's init script
+          # runs as root and sets correct ownership per file.
           mkdir -p /srv/wazuh/manager/api-configuration
           mkdir -p /srv/wazuh/manager/etc
+
+          # Fix config file ownership: analysisd rejects ossec.conf unless
+          # owned by root. Reset etc/ to root ownership — the container init
+          # will set correct group (wazuh) as needed.
+          chown -R root:root /srv/wazuh/manager/etc
           mkdir -p /srv/wazuh/manager/queue
           mkdir -p /srv/wazuh/manager/var-multigroups
           mkdir -p /srv/wazuh/manager/integrations
@@ -157,8 +172,9 @@ jobs:
 
           compose_env docker compose -p wazuh -f security.yaml up -d --force-recreate
 
-          # Save checksum to persistent host path
-          echo "$checksum" > "$CHECKSUM_FILE"
+          # Stage checksum for saving AFTER successful verification.
+          # Do NOT save it now — a broken deploy must be retried next run.
+          echo "$checksum" > /srv/wazuh/.deploy_checksum_pending
 
           echo "✅ Wazuh stack deployed successfully"
           echo "🌐 Access at: https://wazuh.$DOMAIN_NAME"
@@ -190,6 +206,11 @@ jobs:
           for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
             if docker exec wazuh-manager /var/ossec/bin/wazuh-control status 2>/dev/null | grep -q "wazuh-analysisd is running"; then
               echo "✅ wazuh-analysisd is running"
+              # Commit the pending checksum — deploy is confirmed healthy.
+              # This ensures failed deploys are always retried on next run.
+              if [ -f /srv/wazuh/.deploy_checksum_pending ]; then
+                mv /srv/wazuh/.deploy_checksum_pending /srv/wazuh/.deploy_checksum
+              fi
               break
             fi
             if [ "$i" -eq 12 ]; then
