@@ -8,7 +8,7 @@ Complete infrastructure-as-code for a self-hosted home automation and media cent
 - **Git-based:** Configuration managed through Forgejo (self-hosted Git server)
 - **Infrastructure as Code:** All services defined via Docker Compose
 - **Automated Deployments:** Forgejo workflows trigger on file changes
-- **Multi-Host:** Critical services on main home automation host, non-critical services distributed
+- **Multi-Host:** Three hosts — critical (home automation), non-critical (media/tools), and desktop-1 (AI/runners)
 
 ### Network Structure
 - **homeproxy:** Home services and automation (internal only)
@@ -21,7 +21,7 @@ Complete infrastructure-as-code for a self-hosted home automation and media cent
 - **authnet:** Privileged authentication services (LDAP, OAuth)
 
 ### Reverse Proxy
-- **Traefik:** Two instances (critical and non-critical)
+- **Traefik:** Three instances (critical, non-critical, desktop-1)
   - SSL termination via Let's Encrypt with Cloudflare DNS-01 challenge
   - Individual per-subdomain certificates
   - Automatic service discovery via Docker labels
@@ -33,10 +33,16 @@ Complete infrastructure-as-code for a self-hosted home automation and media cent
 ```
 HaC/
 ├── .forgejo/workflows/          # Deployment automation (Forgejo Actions)
-├── Docker-Critical/             # Mission-critical services
-├── Docker-NonCritical/          # Non-essential services
-├── Tools/                       # Utility configurations
-├── MIGRATION.md                 # TrueNAS → Home Assistant migration guide
+├── Docker-Critical/             # Mission-critical services (hac-critical host)
+├── Docker-NonCritical/          # Non-essential services (hac-noncritical host)
+├── Docker-Desktop1/             # AI and runner services (desktop-1 host)
+├── scripts/                     # Utility scripts
+├── .ai/                         # AI assistant context
+├── DOCKER-MONITORING-SETUP.md   # Docker monitoring guide
+├── README-DOCKER-MONITORING.md  # Docker monitoring reference
+├── FORGEJO-DOCKER-SETUP.md      # Forgejo Docker setup guide
+├── FORGEJO-VARIABLES-SETUP.md   # Forgejo variables reference
+├── QUICK-SETUP.md               # Quick start guide
 └── README.md                    # This file
 ```
 
@@ -52,54 +58,54 @@ Services running on **hac-critical** (critical host).
 - `/mnt/hdd` for backups/logs/archives (e.g., ZIM files, service logs)
 
 ### Authentication & Access Control
-- **Authelia** (`authelia.yml`) - SSO and authentication
+- **Authelia** (`Auth/Authelia.yml`) - SSO and authentication
   - PostgreSQL backend for session storage
   - LLDAP for LDAP/Active Directory simulation
   - Traefik middleware integration for protected services
 
 ### Networking & Proxy
-- **Traefik** (`proxy.yml`) - Reverse proxy and load balancer
+- **Traefik** (`Networking/Proxy/proxy.yml`) - Reverse proxy and load balancer
   - HTTP/HTTPS with individual SSL certificates per domain
   - Dashboard at `hac-critical-traefik.${DOMAIN_NAME}`
   - Service discovery and routing
-  
-- **Omada Controller** (`omada.yml`) - TP-Link network management
+
+- **Omada Controller** (`Networking/Omada/omada.yml`) - TP-Link network management
   - WiFi and network device management
   - Dashboard at `omada.${DOMAIN_NAME}`
 
-- **Postfix SMTP Relay** (`Postfix.yml`) - Email delivery
+- **Postfix SMTP Relay** (`Networking/Mail/Postfix.yml`) - Email delivery
   - Relays outbound mail for internal services
   - Credentials via Forgejo secrets
 
-- **Cloudflared** (`Cloudflared/cloudflared.yml`) - Cloudflare Tunnel
+- **Cloudflared** (`Networking/Cloudflared/cloudflared.yml`) - Cloudflare Tunnel
   - Secure external access without port forwarding
   - Automatic DNS and certificate management
 
 ### Home Automation Core
-- **Home Assistant** (`HomeAssistant/homeassistant.yml`) - Home automation hub
+- **Home Assistant** (`Home/HomeAssistant/homeassistant.yml`) - Home automation hub
   - Core automation and smart home control
   - Dashboard at `ha.${DOMAIN_NAME}`
-  
-- **ESPHome** (`HomeAssistant/homeassistant.yml`) - IoT device management
+
+- **ESPHome** (`Home/HomeAssistant/homeassistant.yml`) - IoT device management
   - Firmware compilation for ESP8266/ESP32 devices
   - Dashboard at `esphome.${DOMAIN_NAME}`
   - Device-to-Home Assistant integration
-  
-- **RTL-SDR** (`RTL-SDR/rtl-sdr.yml`) - Software-defined radio receiver
+
+- **RTL-SDR** (`Home/RTL-SDR/rtl-sdr.yml`) - Software-defined radio receiver
   - 433 MHz and 915 MHz frequency monitoring
   - MQTT integration with Home Assistant
   - Weather station and sensor data decoding
   - Config: `/srv/rtl-sdr/`
 
-- **Govee2MQTT** (`Govee2MQTT/govee2mqtt.yml`) - Govee device MQTT bridge
+- **Govee2MQTT** (`Home/Govee2MQTT/govee2mqtt.yml`) - Govee device MQTT bridge
   - Integrates Govee lights and sensors with Home Assistant
   - MQTT-based control and monitoring
-  
-- **NUT (Network UPS Tools)** (`NUT/nut.yml`) - UPS monitoring
+
+- **NUT (Network UPS Tools)** (`Home/NUT/nut.yml`) - UPS monitoring
   - Battery backup monitoring and management
   - Automatic shutdown coordination
-  
-- **Whisper** (`Whisper/whisper.yml`) - Speech recognition
+
+- **Whisper** (`Home/Whisper/whisper.yml`) - Speech recognition
   - Local speech-to-text processing
   - Privacy-focused voice assistant integration
 
@@ -109,7 +115,7 @@ Services running on **hac-critical** (critical host).
   - CI/CD Actions runners
   - Dashboard at `git.${DOMAIN_NAME}`
   - PostgreSQL backend
-  
+
 - **NetBox** (`Home/NetBox/netbox.yml`) - Network documentation
   - IP address management (IPAM)
   - Device and network inventory
@@ -183,7 +189,7 @@ Services running on **hac-noncritical** (non-critical host). Can restart without
 - **Traefik** (`Networking/Proxy/proxy.yml`) - Non-critical reverse proxy
   - Dashboard at `hac-noncritical-traefik.${DOMAIN_NAME}`
 
-- **Gluetun** (via `torrent.yml`) - VPN/proxy container
+- **Gluetun** (via `Networking/Torrent/torrent.yml`) - VPN/proxy container
   - Network namespace for torrent services
   - Supports multiple VPN providers
 
@@ -206,7 +212,7 @@ Services running on **hac-noncritical** (non-critical host). Can restart without
 - **Radarr** (`Media/radarr/radarr.yml`) - Movie management
   - Automated movie downloads
   - Library organization and monitoring
-  
+
 - **Sonarr** (`Media/Sonarr/sonarr.yml`) - TV show management
   - Episode tracking and downloading
   - Season monitoring
@@ -234,6 +240,13 @@ Services running on **hac-noncritical** (non-critical host). Can restart without
 - **Dispatcharr** (`Media/Dispatcharr/dispatcharr.yml`) - Notification router
   - Routes Radarr/Sonarr notifications
 
+### Photos & Media
+- **Immich** (`Media/Immich/immich.yml`) - Photo and video management
+  - Self-hosted Google Photos alternative
+  - Machine learning for facial recognition and search
+  - PostgreSQL (with pgvecto.rs) + Valkey backends
+  - Dashboard at `media.${DOMAIN_NAME}`
+
 ### Books & Audiobooks
 
 - **Audiobookshelf** (`Media/Books/ebook.yml`) - Audiobook and podcast server
@@ -252,21 +265,9 @@ Services running on **hac-noncritical** (non-critical host). Can restart without
   - Dashboard at `plex.${DOMAIN_NAME}`
   - Mounts media from `/mnt/Pool01/data/`
 
-### Automation & Tools
-- **Watchtower** (`Automation/watchtower.yml`) - Container image updates
-  - Automatic Docker image updates
-  - Selective service control via labels
-
-- **ComfyUI** (`Automation/comfy.yaml`) - Stable Diffusion UI
-  - Image generation interface
-  - GPU acceleration support
-
-- **Ollama** (`Automation/AI/ai.yml`) - Local LLM server
-  - Run local language models
-  - OpenAI-compatible API
-
+### Automation & AI
 - **Open WebUI** (`Automation/AI/openwebui.yml`) - LLM interface
-  - Chat interface for Ollama
+  - Chat interface for Ollama (running natively on Desktop-1)
   - Dashboard at `chat.${DOMAIN_NAME}`
 
 - **Price Tracker** (`Automation/pricetracker.yml`) - eCommerce monitoring
@@ -292,11 +293,42 @@ Services running on **hac-noncritical** (non-critical host). Can restart without
   - Integrations: Home Assistant, OPNsense, NetBox, n8n, Omada, HomeBox
   - Dashboard at `mcp.${DOMAIN_NAME}`
 
+- **Docker Socket Proxy** (`Tools/DockerSocketProxy/docker-socket-proxy.yml`) - Secure Docker API access
+  - Non-critical instance for Traefik and monitoring
+
 ### Security
 
 - **Crowdsec** (`Security/Crowdsec/crowdsec.yml`) - Threat detection
   - IDS/crowdsourced security
   - Log analysis and blocking
+
+- **Wazuh** (`Security/security.yaml`) - SIEM and threat detection
+  - Wazuh Manager, Indexer (OpenSearch), and Dashboard
+  - Agent-based endpoint monitoring
+  - Syslog ingestion and log analysis
+  - 30-day index retention via ISM policy
+  - Dashboard at `wazuh.${DOMAIN_NAME}`
+
+---
+
+## Docker-Desktop1 Services
+
+Services running on **docker-desktop1** (desktop-1/AI host). Runs Ollama natively and Forgejo CI/CD runners.
+
+### Core
+- **Traefik** (`Core/Traefik/traefik.yml`) - Desktop-1 reverse proxy
+  - Routes to native services via file provider (e.g., Ollama)
+  - Dashboard at `docker-desktop1-traefik.${DOMAIN_NAME}`
+  - Uses `aiproxy` network
+
+- **Ollama** (native, proxied via `Core/Traefik/dynamic/ollama.yml`) - Local LLM server
+  - Runs natively on host (not containerized)
+  - Exposed via Traefik file provider
+  - OpenAI-compatible API
+
+- **Forgejo Runner** (`Core/Runner/runner.yml`) - CI/CD runner
+  - Forgejo Actions runner for deployment workflows
+  - Resource-limited for coexistence with desktop workloads
 
 ---
 
@@ -308,25 +340,63 @@ All services deploy via Forgejo CI/CD workflows in `.forgejo/workflows/`. Workfl
 
 **Critical services** → `runs-on: docker-critical`
 **Non-critical services** → `runs-on: docker-noncritical`
+**Desktop1 services** → `runs-on: docker-desktop1`
 
 | Service | Workflow | Host | Trigger |
 |---------|----------|------|---------|
 | Authelia | `deploy-authelia.yml` | hac-critical | Push to `Docker-Critical/Auth/**` |
 | Traefik (Critical) | `deploy-traefik-critical.yml` | hac-critical | Push to `Docker-Critical/Networking/Proxy/**` |
 | Traefik (NonCritical) | `deploy-traefik-noncritical.yml` | hac-noncritical | Push to `Docker-NonCritical/Networking/Proxy/**` |
+| Traefik (Desktop1) | `deploy-traefik-desktop1.yml` | docker-desktop1 | Push to `Docker-Desktop1/Core/Traefik/**` |
 | Home Assistant | `deploy-homeassistant.yml` | hac-critical | Push to `Docker-Critical/Home/HomeAssistant/**` |
 | ESPHome | (included in HA) | hac-critical | Push to `Docker-Critical/Home/HomeAssistant/**` |
 | RTL-SDR | `deploy-rtl-sdr.yml` | hac-critical | Push to `Docker-Critical/Home/RTL-SDR/**` |
 | Music Assistant | `deploy-musicassistant.yml` | hac-critical | Push to `Docker-Critical/Home/MusicAssistant/**` |
+| Govee2MQTT | `deploy-govee2mqtt.yml` | hac-critical | Push to `Docker-Critical/Home/Govee2MQTT/**` |
+| NUT | `deploy-nut.yml` | hac-critical | Push to `Docker-Critical/Home/NUT/**` |
+| Whisper | `deploy-whisper.yml` | hac-critical | Push to `Docker-Critical/Home/Whisper/**` |
 | InfluxDB | `deploy-influxdb.yml` | hac-critical | Push to `Docker-Critical/Tools/InfluxDB/**` |
+| N8N | `deploy-n8n.yml` | hac-critical | Push to `Docker-Critical/Tools/N8N/**` |
 | NetBox | `deploy-netbox.yml` | hac-critical | Push to `Docker-Critical/Home/NetBox/**` |
 | Norish | `deploy-norish.yml` | hac-critical | Push to `Docker-Critical/Home/Cooking/**` |
+| KaraKeep | `deploy-karakeep.yml` | hac-critical | Push to `Docker-Critical/Home/KaraKeep/**` |
+| HomeBox | `deploy-homebox.yml` | hac-critical | Push to `Docker-Critical/Management/HomeBox/**` |
+| Kiwix | `deploy-kiwix.yml` | hac-critical | Push to `Docker-Critical/Tools/Kiwix/**` |
 | Forgejo | `deploy-forgejo.yml` | hac-critical | Push to `Docker-Critical/Management/Git*/**` |
 | Omada | `deploy-omada.yml` | hac-critical | Push to `Docker-Critical/Networking/Omada/**` |
 | SMTP Relay | `deploy-smtprelay.yml` | hac-critical | Push to `Docker-Critical/Networking/Mail/**` |
+| Cloudflared | `deploy-cloudflared.yml` | hac-critical | Push to `Docker-Critical/Networking/Cloudflared/**` |
+| Docker Socket Proxy (Critical) | `deploy-docker-socket-proxy-critical.yml` | hac-critical | Push to `Docker-Critical/Tools/DockerSocketProxy/**` |
 | Plex | `deploy-plex.yml` | hac-noncritical | Push to `Docker-NonCritical/Media/Plex/**` |
-| Radarr/Sonarr/etc | `deploy-*.yml` | hac-noncritical | Push to `Docker-NonCritical/Media/**` |
+| Immich | `deploy-immich.yml` | hac-noncritical | Push to `Docker-NonCritical/Media/Immich/**` |
+| Radarr | `deploy-radarr.yml` | hac-noncritical | Push to `Docker-NonCritical/Media/radarr/**` |
+| Sonarr | `deploy-sonarr.yml` | hac-noncritical | Push to `Docker-NonCritical/Media/Sonarr/**` |
+| Lidarr | `deploy-lidarr.yml` | hac-noncritical | Push to `Docker-NonCritical/Media/lidarr/**` |
+| Readarr | `deploy-readarr.yml` | hac-noncritical | Push to `Docker-NonCritical/Media/readarr/**` |
+| Overseerr | `deploy-overseerr.yml` | hac-noncritical | Push to `Docker-NonCritical/Media/overseerr/**` |
+| Prowlarr | `deploy-prowlarr.yml` | hac-noncritical | Push to `Docker-NonCritical/Media/prowlarr/**` |
 | Profilarr | `deploy-profilarr.yml` | hac-noncritical | Push to `Docker-NonCritical/Media/profilarr/**` |
+| Dispatcharr | `deploy-dispatcharr.yml` | hac-noncritical | Push to `Docker-NonCritical/Media/Dispatcharr/**` |
+| FlareSolverr | `deploy-flaresolverr.yml` | hac-noncritical | Push to `Docker-NonCritical/Media/flaresolverr/**` |
+| Books (ebook) | `deploy-ebook.yml` | hac-noncritical | Push to `Docker-NonCritical/Media/Books/**` |
+| Torrent Stack | `deploy-torrent.yml` | hac-noncritical | Push to `Docker-NonCritical/Networking/Torrent/**` |
+| Open WebUI | `deploy-openwebui-noncritical.yml` | hac-noncritical | Push to `Docker-NonCritical/Automation/AI/**` |
+| IT-Tools | `deploy-it-tools.yml` | hac-noncritical | Push to `Docker-NonCritical/Tools/IT-Tools/**` |
+| SearXNG | `deploy-searx.yml` | hac-noncritical | Push to `Docker-NonCritical/Tools/SearX/**` |
+| Stirling-PDF | `deploy-stirling-pdf.yml` | hac-noncritical | Push to `Docker-NonCritical/Tools/Stirling-PDF/**` |
+| MCP Gateway | `deploy-mcpgateway.yml` | hac-noncritical | Push to `Docker-NonCritical/Tools/MCPGateway/**` |
+| Docker Socket Proxy (NC) | `deploy-docker-socket-proxy-noncritical.yml` | hac-noncritical | Push to `Docker-NonCritical/Tools/DockerSocketProxy/**` |
+| Wazuh | `deploy-wazuh.yml` | hac-noncritical | Push to `Docker-NonCritical/Security/**` |
+| CrowdSec | (via Wazuh workflow or manual) | hac-noncritical | Push to `Docker-NonCritical/Security/Crowdsec/**` |
+
+**Maintenance workflows:**
+| Workflow | Purpose |
+|----------|---------|
+| `check-updates-critical.yml` | Check for container image updates (critical) |
+| `check-updates-noncritical.yml` | Check for container image updates (non-critical) |
+| `apply-updates-critical.yml` | Apply container image updates (critical) |
+| `apply-updates-noncritical.yml` | Apply container image updates (non-critical) |
+| `mirror-to-github.yml` | Mirror repository to GitHub |
 
 ### Required Forgejo Variables
 Global variables (set in repository settings):
@@ -355,6 +425,9 @@ Encrypted secrets (set in repository settings):
 - `PROFILARR_PAT` - Profilarr API token
 - `SMTP_*` - SMTP relay credentials
 - `INFLUXDB_ADMIN_PASSWORD` - InfluxDB admin password
+- `IMMICH_DB_PASSWORD` - Immich PostgreSQL password
+- `WAZUH_INDEXER_PASSWORD` - Wazuh OpenSearch password
+- `WAZUH_API_PASSWORD` - Wazuh API password
 
 ---
 
@@ -392,8 +465,17 @@ Persistent data on primary host (tiered):
 ### Non-Critical Services
 Persistent data on docker-noncritical:
 ```
+/srv/                      # High IO services
+├── immich/                # Immich Postgres + ML model cache
+├── openwebui_data/        # Open WebUI data
+└── wazuh/                 # Wazuh indexer data + dashboard config
+
+/mnt/data/                 # NFS/shared storage
+├── family/upload/         # Immich photo uploads
+├── family/external/       # Immich external libraries
+└── wazuh/archives/        # Wazuh log archives
+
 /var/lib/docker/volumes/   # Docker-managed volumes
-/srv/ (optional)           # For higher IO services if available
 [per-service mounts]       # Absolute paths per compose file
 ```
 
@@ -470,6 +552,7 @@ sudo ./migrate-to-homeassistant.sh
 - Include health checks for critical services
 - Traefik labels always for HTTP services
 - Watchtower label `com.centurylinklabs.watchtower.enable=true` for auto-updates
+- HA monitoring labels (`ha.monitor`, `ha.category`, `ha.compose-file`, `ha.service-name`) for Home Assistant tracking
 
 ---
 
@@ -481,20 +564,29 @@ Traefik (Critical)
 ├── Omada (network dashboard)
 ├── Home Assistant (home automation hub)
 │   ├── ESPHome (device management)
-│   └── RTL-SDR (wireless sensors)
+│   ├── RTL-SDR (wireless sensors)
+│   └── Govee2MQTT (Govee devices)
 ├── InfluxDB (metrics and historical data)
 ├── Music Assistant (music server and players)
 ├── NetBox (infrastructure docs)
 ├── Norish (recipes)
-├── KaraKeep (media library)
+├── KaraKeep (bookmarks)
+├── HomeBox (inventory)
 └── Forgejo (git/CI)
 
 Traefik (NonCritical)
 ├── Plex (media streaming)
+├── Immich (photo management)
 ├── Radarr/Sonarr/etc (media management)
 ├── Overseerr (media requests)
-├── Ollama/WebUI (LLM services)
-└── Others
+├── Open WebUI (LLM chat)
+├── Wazuh (SIEM)
+├── MCP Gateway (MCP hub)
+└── Tools (IT-Tools, SearXNG, Stirling-PDF)
+
+Traefik (Desktop1)
+├── Ollama (native LLM server, via file provider)
+└── Forgejo Runner (CI/CD)
 ```
 
 ---
@@ -506,6 +598,7 @@ Traefik (NonCritical)
 - **Authentication:** Authelia protects sensitive services
 - **ACME:** Individual certificates per subdomain (no wildcard)
 - **SSH:** Via Tailscale network for secure access
+- **SIEM:** Wazuh for endpoint monitoring and log analysis
 
 ---
 
@@ -549,5 +642,5 @@ Personal home automation infrastructure. Configuration patterns based on best pr
 
 ---
 
-**Last Updated:** February 2, 2026
+**Last Updated:** February 18, 2026
 **Maintainer:** Nicholas Underwood
