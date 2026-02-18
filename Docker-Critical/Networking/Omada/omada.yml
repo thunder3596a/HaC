@@ -25,6 +25,11 @@ services:
       - "29812:29812" # Manager v2 port
       - "29813:29813" # Port for adopt and upgrade
       - "29814:29814" # Port for manager/device discovery
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=toolsproxy"
