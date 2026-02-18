@@ -131,6 +131,19 @@ jobs:
           YEAR=$(date +%Y)
           mkdir -p /mnt/data/wazuh/archives/$YEAR
 
+          # Generate dashboard wazuh.yml with actual API credentials
+          # (bind-mounted into the container alongside the named volume)
+          mkdir -p /srv/wazuh/dashboard
+          cat > /srv/wazuh/dashboard/wazuh.yml <<WAZUH_YML
+          hosts:
+            - default:
+                url: https://wazuh.manager
+                port: 55000
+                username: ${WAZUH_API_USERNAME:-wazuh-wui}
+                password: ${WAZUH_API_PASSWORD}
+                run_as: false
+          WAZUH_YML
+
           compose_env docker compose -p wazuh -f security.yaml up -d --force-recreate
 
           # Stage checksum for saving AFTER successful verification.
