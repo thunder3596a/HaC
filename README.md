@@ -161,6 +161,13 @@ Services running on **hac-critical** (critical host).
   - Host network mode for mDNS/player discovery
   - Dashboard at `music.${DOMAIN_NAME}`
 
+- **Vikunja** (`Home/Vikunja/vikunja.yml`) - Task management
+  - Self-hosted task hub (Todoist/Trello alternative)
+  - CalDAV support for iOS Reminders sync
+  - PostgreSQL backend
+  - MCP server for Claude Code integration
+  - Dashboard at `tasks.${DOMAIN_NAME}`
+
 - **HomeBox** (`Management/HomeBox/homebox.yml`) - Home inventory management
   - Track household items and their locations
   - Asset management and organization
@@ -290,7 +297,7 @@ Services running on **hac-noncritical** (non-critical host). Can restart without
 
 - **MCP Gateway** (`Tools/MCPGateway/mcpgateway.yml`) - Model Context Protocol hub
   - Central gateway for MCP servers
-  - Integrations: Home Assistant, OPNsense, NetBox, n8n, Omada, HomeBox
+  - Integrations: Home Assistant, OPNsense, NetBox, n8n, Omada, HomeBox, Vikunja
   - Dashboard at `mcp.${DOMAIN_NAME}`
 
 - **Docker Socket Proxy** (`Tools/DockerSocketProxy/docker-socket-proxy.yml`) - Secure Docker API access
@@ -338,6 +345,7 @@ All services deploy via Forgejo CI/CD workflows in `.forgejo/workflows/`. Workfl
 | Norish | `deploy-norish.yml` | hac-critical | Push to `Docker-Critical/Home/Cooking/**` |
 | KaraKeep | `deploy-karakeep.yml` | hac-critical | Push to `Docker-Critical/Home/KaraKeep/**` |
 | HomeBox | `deploy-homebox.yml` | hac-critical | Push to `Docker-Critical/Management/HomeBox/**` |
+| Vikunja | `deploy-vikunja.yml` | hac-critical | Push to `Docker-Critical/Home/Vikunja/**` |
 | Kiwix | `deploy-kiwix.yml` | hac-critical | Push to `Docker-Critical/Tools/Kiwix/**` |
 | Forgejo | `deploy-forgejo.yml` | hac-critical | Push to `Docker-Critical/Management/Git*/**` |
 | Omada | `deploy-omada.yml` | hac-critical | Push to `Docker-Critical/Networking/Omada/**` |
@@ -405,6 +413,9 @@ Encrypted secrets (set in repository settings):
 - `IMMICH_DB_PASSWORD` - Immich PostgreSQL password
 - `WAZUH_INDEXER_PASSWORD` - Wazuh OpenSearch password
 - `WAZUH_API_PASSWORD` - Wazuh API password
+- `VIKUNJA_DB_PASSWORD` - Vikunja PostgreSQL password
+- `VIKUNJA_JWT_SECRET` - Vikunja JWT signing secret
+- `VIKUNJA_API_TOKEN` - Vikunja API token (for MCP + N8N integrations)
 
 ---
 
@@ -425,6 +436,7 @@ Persistent data on primary host (tiered):
 ├── norish/                # Recipe database (app + DB + redis)
 ├── smtp-relay/            # Postfix spool
 ├── omada/                 # Controller data
+├── vikunja/               # Vikunja files + Postgres
 └── git/                   # Forgejo repositories, data + Postgres
 
 /mnt/nvme-appdata/         # NVMe #2 (appdata/search/AI)
@@ -549,6 +561,7 @@ Traefik (Critical)
 ├── Norish (recipes)
 ├── KaraKeep (bookmarks)
 ├── HomeBox (inventory)
+├── Vikunja (task management)
 └── Forgejo (git/CI)
 
 Traefik (NonCritical)
