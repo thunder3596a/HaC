@@ -58,7 +58,7 @@ services:
         condition: service_healthy
 
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3456/api/v1/info"]
+      test: ["CMD-SHELL", "cat < /dev/null > /dev/tcp/localhost/3456"]
       interval: 30s
       timeout: 10s
       retries: 3
