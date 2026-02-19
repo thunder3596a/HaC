@@ -31,6 +31,8 @@ jobs:
           CERTRESOLVER: ${{ vars.CERTRESOLVER }}
           DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
           TZ: ${{ vars.TZ }}
+          PUID: ${{ vars.PUID }}
+          PGID: ${{ vars.PGID }}
           VIKUNJA_DB_PASSWORD: ${{ secrets.VIKUNJA_DB_PASSWORD }}
           VIKUNJA_JWT_SECRET: ${{ secrets.VIKUNJA_JWT_SECRET }}
         run: |
@@ -49,6 +51,7 @@ jobs:
 
             mkdir -p /srv/vikunja/files
             mkdir -p /srv/vikunja/postgres
+            docker run --rm -v /srv/vikunja/files:/data alpine chown -R ${PUID:-568}:${PGID:-568} /data
             cp vikunja.yml /srv/vikunja/
             chmod 644 /srv/vikunja/vikunja.yml
 
