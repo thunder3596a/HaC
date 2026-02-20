@@ -45,7 +45,7 @@ jobs:
           CERTRESOLVER: ${{ vars.CERTRESOLVER }}
           MCP_DB_ROOT_PASSWORD: ${{ secrets.MCP_DB_ROOT_PASSWORD }}
           MCP_DB_PASSWORD: ${{ secrets.MCP_DB_PASSWORD }}
-          HOMEASSISTANT_URL: ${{ vars.HOMEASSISTANT_URL }}
+          HOMEASSISTANT_URL: ${{ vars.HA_URL }}
           HA_LONG_LIVED_TOKEN: ${{ secrets.HA_LONG_LIVED_TOKEN }}
           OPNSENSE_URL: ${{ vars.OPNSENSE_URL }}
           OPNSENSE_API_KEY: ${{ secrets.OPNSENSE_API_KEY }}
