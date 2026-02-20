@@ -72,13 +72,13 @@ services:
 
   # Home Assistant MCP Server
   homeassistant-mcp:
-    image: ghcr.io/tevonsb/homeassistant-mcp:latest
+    image: ghcr.io/jango-blockchained/advanced-homeassistant-mcp:latest
     container_name: mcp-homeassistant
     restart: unless-stopped
     networks:
       - mcpnet
     environment:
-      - HASS_URL=${HOMEASSISTANT_URL}
+      - HASS_HOST=${HOMEASSISTANT_URL}
       - HASS_TOKEN=${HA_LONG_LIVED_TOKEN}
       - MCP_TRANSPORT=sse
     labels:
