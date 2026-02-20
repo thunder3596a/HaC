@@ -10,13 +10,15 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - DATABASE_URL=mysql://${MCP_DB_USERNAME:-mcpuser}:${MCP_DB_PASSWORD}@mariadb:3306/mcpgateway
+      - DATABASE_URL=postgresql+psycopg2://${MCP_DB_USERNAME:-mcpuser}:${MCP_DB_PASSWORD}@mcp-postgres:5432/mcpgateway
       - REDIS_URL=redis://redis:6379
       - NODE_ENV=production
       - ADMIN_UI_ENABLED=true
     depends_on:
-      - mariadb
-      - redis
+      mcp-postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
     volumes:
       - /srv/mcp-gateway/config:/app/config
     labels:
@@ -33,26 +35,31 @@ services:
       - "ha.compose-file=Docker-NonCritical/Tools/MCPGateway/mcpgateway.yml"
       - "ha.service-name=mcp-gateway"
 
-  # MariaDB for MCP Gateway
-  mariadb:
-    image: mariadb:latest
-    container_name: mcp-mariadb
+  # PostgreSQL for MCP Gateway
+  mcp-postgres:
+    image: postgres:15
+    container_name: mcp-postgres
     restart: unless-stopped
     networks:
       - mcpnet
     environment:
-      - MYSQL_ROOT_PASSWORD=${MCP_DB_ROOT_PASSWORD}
-      - MYSQL_DATABASE=mcpgateway
-      - MYSQL_USER=${MCP_DB_USERNAME:-mcpuser}
-      - MYSQL_PASSWORD=${MCP_DB_PASSWORD}
+      - POSTGRES_DB=mcpgateway
+      - POSTGRES_USER=${MCP_DB_USERNAME:-mcpuser}
+      - POSTGRES_PASSWORD=${MCP_DB_PASSWORD}
     volumes:
-      - /srv/mcp-gateway/mariadb:/var/lib/mysql
+      - /srv/mcp-gateway/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d mcpgateway -U ${MCP_DB_USERNAME:-mcpuser}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     labels:
       - com.centurylinklabs.watchtower.enable=true
       - "ha.monitor=true"
       - "ha.category=tools"
       - "ha.compose-file=Docker-NonCritical/Tools/MCPGateway/mcpgateway.yml"
-      - "ha.service-name=mariadb"
+      - "ha.service-name=mcp-postgres"
 
   # Redis for MCP Gateway caching and federation
   redis:

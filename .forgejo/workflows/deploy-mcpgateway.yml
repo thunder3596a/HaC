@@ -28,7 +28,7 @@ jobs:
       - name: Create data directories
         run: |
           sudo mkdir -p /srv/mcp-gateway/config
-          sudo mkdir -p /srv/mcp-gateway/mariadb
+          sudo mkdir -p /srv/mcp-gateway/postgres
           sudo mkdir -p /srv/mcp-gateway/redis
           echo "Data directories created"
 
@@ -43,7 +43,6 @@ jobs:
         env:
           DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
           CERTRESOLVER: ${{ vars.CERTRESOLVER }}
-          MCP_DB_ROOT_PASSWORD: ${{ secrets.MCP_DB_ROOT_PASSWORD }}
           MCP_DB_PASSWORD: ${{ secrets.MCP_DB_PASSWORD }}
           HOMEASSISTANT_URL: ${{ vars.HA_URL }}
           HA_LONG_LIVED_TOKEN: ${{ secrets.HA_LONG_LIVED_TOKEN }}
@@ -65,7 +64,7 @@ jobs:
           VIKUNJA_API_TOKEN: ${{ secrets.VIKUNJA_API_TOKEN }}
         run: |
           # Validate required secrets
-          for var in MCP_DB_ROOT_PASSWORD MCP_DB_PASSWORD HA_LONG_LIVED_TOKEN OPNSENSE_API_KEY OPNSENSE_API_SECRET NETBOX_API_TOKEN N8N_API_KEY OMADA_USERNAME OMADA_PASSWORD HOMEBOX_EMAIL HOMEBOX_PASSWORD VIKUNJA_API_TOKEN; do
+          for var in MCP_DB_PASSWORD HA_LONG_LIVED_TOKEN OPNSENSE_API_KEY OPNSENSE_API_SECRET NETBOX_API_TOKEN N8N_API_KEY OMADA_USERNAME OMADA_PASSWORD HOMEBOX_EMAIL HOMEBOX_PASSWORD VIKUNJA_API_TOKEN; do
             eval val=\$$var
             if [ -z "$val" ]; then
               echo "Missing required secret: $var" >&2
@@ -102,8 +101,8 @@ jobs:
             # Stop and remove existing containers
             docker stop mcp-gateway 2>/dev/null || true
             docker rm mcp-gateway 2>/dev/null || true
-            docker stop mcp-mariadb 2>/dev/null || true
-            docker rm mcp-mariadb 2>/dev/null || true
+            docker stop mcp-postgres 2>/dev/null || true
+            docker rm mcp-postgres 2>/dev/null || true
             docker stop mcp-redis 2>/dev/null || true
             docker rm mcp-redis 2>/dev/null || true
 
