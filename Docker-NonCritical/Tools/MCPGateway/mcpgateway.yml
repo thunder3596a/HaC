@@ -24,6 +24,7 @@ services:
     labels:
       - com.centurylinklabs.watchtower.enable=true
       - traefik.enable=true
+      - traefik.docker.network=aiproxy
       - traefik.http.routers.mcpgateway.entrypoints=websecure
       - traefik.http.routers.mcpgateway.rule=Host(`mcp.${DOMAIN_NAME}`)
       - traefik.http.routers.mcpgateway.service=mcpgateway
