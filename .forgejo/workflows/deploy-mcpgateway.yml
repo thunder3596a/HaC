@@ -32,12 +32,6 @@ jobs:
           sudo mkdir -p /srv/mcp-gateway/redis
           echo "Data directories created"
 
-      - name: Build custom MCP servers
-        working-directory: "./Docker-NonCritical/Tools/MCPGateway"
-        run: |
-          echo "Building custom MCP servers..."
-          docker compose -f mcpgateway.yml build n8n-mcp omada-mcp homebox-mcp || true
-
       - name: Deploy MCP Gateway
         working-directory: "./Docker-NonCritical/Tools/MCPGateway"
         env:
@@ -51,20 +45,11 @@ jobs:
           OPNSENSE_API_SECRET: ${{ secrets.OPNSENSE_API_SECRET }}
           NETBOX_URL: ${{ vars.NETBOX_URL }}
           NETBOX_API_TOKEN: ${{ secrets.NETBOX_API_TOKEN }}
-          N8N_URL: ${{ vars.N8N_URL }}
-          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
-          OMADA_URL: ${{ vars.OMADA_URL }}
-          OMADA_USERNAME: ${{ secrets.OMADA_USERNAME }}
-          OMADA_PASSWORD: ${{ secrets.OMADA_PASSWORD }}
-          OMADA_SITE_ID: ${{ vars.OMADA_SITE_ID }}
-          HOMEBOX_URL: ${{ vars.HOMEBOX_URL }}
-          HOMEBOX_EMAIL: ${{ secrets.HOMEBOX_EMAIL }}
-          HOMEBOX_PASSWORD: ${{ secrets.HOMEBOX_PASSWORD }}
           VIKUNJA_URL: ${{ vars.VIKUNJA_URL }}
           VIKUNJA_API_TOKEN: ${{ secrets.VIKUNJA_API_TOKEN }}
         run: |
           # Validate required secrets
-          for var in MCP_DB_PASSWORD HA_LONG_LIVED_TOKEN OPNSENSE_API_KEY OPNSENSE_API_SECRET NETBOX_API_TOKEN N8N_API_KEY OMADA_USERNAME OMADA_PASSWORD HOMEBOX_EMAIL HOMEBOX_PASSWORD VIKUNJA_API_TOKEN; do
+          for var in MCP_DB_PASSWORD HA_LONG_LIVED_TOKEN OPNSENSE_API_KEY OPNSENSE_API_SECRET NETBOX_API_TOKEN VIKUNJA_API_TOKEN; do
             eval val=\$$var
             if [ -z "$val" ]; then
               echo "Missing required secret: $var" >&2
@@ -73,7 +58,7 @@ jobs:
           done
 
           # Validate required vars
-          for var in DOMAIN_NAME CERTRESOLVER HOMEASSISTANT_URL OPNSENSE_URL NETBOX_URL N8N_URL OMADA_URL OMADA_SITE_ID HOMEBOX_URL VIKUNJA_URL; do
+          for var in DOMAIN_NAME CERTRESOLVER HOMEASSISTANT_URL OPNSENSE_URL NETBOX_URL VIKUNJA_URL; do
             eval val=\$$var
             if [ -z "$val" ]; then
               echo "Missing required variable: $var" >&2
