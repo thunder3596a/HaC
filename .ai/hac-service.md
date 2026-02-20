@@ -258,6 +258,16 @@ labels:
 
 # Force a specific Docker network for routing (needed when service is on multiple networks)
 - traefik.docker.network=torrentproxy
+
+# Fix mixed content warnings (browser warnings about HTTP resources on HTTPS pages)
+# Use when app generates HTTP URLs for assets instead of HTTPS
+- traefik.http.routers.myservice.middlewares=myservice-headers
+- traefik.http.middlewares.myservice-headers.headers.customrequestheaders.X-Forwarded-Proto=https
+- traefik.http.middlewares.myservice-headers.headers.customrequestheaders.X-Forwarded-Scheme=https
+- traefik.http.middlewares.myservice-headers.headers.customrequestheaders.X-Forwarded-Port=443
+
+# Combine multiple middlewares with comma separation (e.g., both Authelia SSO + headers fix)
+- traefik.http.routers.myservice.middlewares=authelia@docker,myservice-headers
 ```
 
 ### Subdomain conventions
