@@ -8,12 +8,12 @@ services:
       - mcpnet
       - aiproxy
     ports:
-      - "3000:3000"
+      - "4444:4444"
     environment:
       - DATABASE_URL=postgresql+psycopg://${MCP_DB_USERNAME:-mcpuser}:${MCP_DB_PASSWORD}@mcp-postgres:5432/mcpgateway
       - REDIS_URL=redis://redis:6379
-      - NODE_ENV=production
-      - ADMIN_UI_ENABLED=true
+      - MCPGATEWAY_UI_ENABLED=true
+      - MCPGATEWAY_ADMIN_API_ENABLED=true
     depends_on:
       mcp-postgres:
         condition: service_healthy
@@ -28,7 +28,7 @@ services:
       - traefik.http.routers.mcpgateway.entrypoints=websecure
       - traefik.http.routers.mcpgateway.rule=Host(`mcp.${DOMAIN_NAME}`)
       - traefik.http.routers.mcpgateway.service=mcpgateway
-      - traefik.http.services.mcpgateway.loadbalancer.server.port=3000
+      - traefik.http.services.mcpgateway.loadbalancer.server.port=4444
       - traefik.http.routers.mcpgateway.tls.certresolver=${CERTRESOLVER}
       - traefik.http.routers.mcpgateway.tls.domains[0].main=mcp.${DOMAIN_NAME}
       - "ha.monitor=true"
