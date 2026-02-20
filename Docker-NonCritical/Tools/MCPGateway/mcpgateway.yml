@@ -31,9 +31,14 @@ services:
       - traefik.http.routers.mcpgateway.entrypoints=websecure
       - traefik.http.routers.mcpgateway.rule=Host(`mcp.${DOMAIN_NAME}`)
       - traefik.http.routers.mcpgateway.service=mcpgateway
+      - traefik.http.routers.mcpgateway.middlewares=mcpgateway-headers
       - traefik.http.services.mcpgateway.loadbalancer.server.port=4444
       - traefik.http.routers.mcpgateway.tls.certresolver=${CERTRESOLVER}
       - traefik.http.routers.mcpgateway.tls.domains[0].main=mcp.${DOMAIN_NAME}
+      # Fix mixed content warnings - tell app it's behind HTTPS proxy
+      - traefik.http.middlewares.mcpgateway-headers.headers.customrequestheaders.X-Forwarded-Proto=https
+      - traefik.http.middlewares.mcpgateway-headers.headers.customrequestheaders.X-Forwarded-Scheme=https
+      - traefik.http.middlewares.mcpgateway-headers.headers.customrequestheaders.X-Forwarded-Port=443
       - "ha.monitor=true"
       - "ha.category=tools"
       - "ha.compose-file=Docker-NonCritical/Tools/MCPGateway/mcpgateway.yml"
