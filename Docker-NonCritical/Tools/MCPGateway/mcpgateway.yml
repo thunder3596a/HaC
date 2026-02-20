@@ -12,6 +12,7 @@ services:
     environment:
       - DATABASE_URL=postgresql+psycopg://${MCP_DB_USERNAME:-mcpuser}:${MCP_DB_PASSWORD}@mcp-postgres:5432/mcpgateway
       - REDIS_URL=redis://redis:6379
+      - MCPGATEWAY_HOST=0.0.0.0
       - MCPGATEWAY_UI_ENABLED=true
       - MCPGATEWAY_ADMIN_API_ENABLED=true
     depends_on:
