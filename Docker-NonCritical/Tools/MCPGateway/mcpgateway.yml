@@ -10,7 +10,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - DATABASE_URL=postgresql+psycopg2://${MCP_DB_USERNAME:-mcpuser}:${MCP_DB_PASSWORD}@mcp-postgres:5432/mcpgateway
+      - DATABASE_URL=postgresql+psycopg://${MCP_DB_USERNAME:-mcpuser}:${MCP_DB_PASSWORD}@mcp-postgres:5432/mcpgateway
       - REDIS_URL=redis://redis:6379
       - NODE_ENV=production
       - ADMIN_UI_ENABLED=true
