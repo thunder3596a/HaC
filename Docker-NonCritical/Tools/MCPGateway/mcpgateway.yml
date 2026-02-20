@@ -13,8 +13,10 @@ services:
       - DATABASE_URL=postgresql+psycopg://${MCP_DB_USERNAME:-mcpuser}:${MCP_DB_PASSWORD}@mcp-postgres:5432/mcpgateway
       - REDIS_URL=redis://redis:6379
       - MCPGATEWAY_HOST=0.0.0.0
+      - MCPGATEWAY_PORT=4444
       - MCPGATEWAY_UI_ENABLED=true
       - MCPGATEWAY_ADMIN_API_ENABLED=true
+      - GUNICORN_CMD_ARGS=--bind 0.0.0.0:4444
     depends_on:
       mcp-postgres:
         condition: service_healthy
