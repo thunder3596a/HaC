@@ -59,10 +59,13 @@ jobs:
           OMADA_PASSWORD: ${{ secrets.OMADA_PASSWORD }}
           OMADA_SITE_ID: ${{ vars.OMADA_SITE_ID }}
           HOMEBOX_URL: ${{ vars.HOMEBOX_URL }}
-          HOMEBOX_TOKEN: ${{ secrets.HOMEBOX_TOKEN }}
+          HOMEBOX_EMAIL: ${{ secrets.HOMEBOX_EMAIL }}
+          HOMEBOX_PASSWORD: ${{ secrets.HOMEBOX_PASSWORD }}
+          VIKUNJA_URL: ${{ vars.VIKUNJA_URL }}
+          VIKUNJA_API_TOKEN: ${{ secrets.VIKUNJA_API_TOKEN }}
         run: |
           # Validate required secrets
-          for var in MCP_DB_ROOT_PASSWORD MCP_DB_PASSWORD HA_LONG_LIVED_TOKEN OPNSENSE_API_KEY OPNSENSE_API_SECRET NETBOX_API_TOKEN N8N_API_KEY OMADA_USERNAME OMADA_PASSWORD HOMEBOX_TOKEN; do
+          for var in MCP_DB_ROOT_PASSWORD MCP_DB_PASSWORD HA_LONG_LIVED_TOKEN OPNSENSE_API_KEY OPNSENSE_API_SECRET NETBOX_API_TOKEN N8N_API_KEY OMADA_USERNAME OMADA_PASSWORD HOMEBOX_EMAIL HOMEBOX_PASSWORD VIKUNJA_API_TOKEN; do
             eval val=\$$var
             if [ -z "$val" ]; then
               echo "Missing required secret: $var" >&2
@@ -71,7 +74,7 @@ jobs:
           done
 
           # Validate required vars
-          for var in DOMAIN_NAME CERTRESOLVER HOMEASSISTANT_URL OPNSENSE_URL NETBOX_URL N8N_URL OMADA_URL OMADA_SITE_ID HOMEBOX_URL; do
+          for var in DOMAIN_NAME CERTRESOLVER HOMEASSISTANT_URL OPNSENSE_URL NETBOX_URL N8N_URL OMADA_URL OMADA_SITE_ID HOMEBOX_URL VIKUNJA_URL; do
             eval val=\$$var
             if [ -z "$val" ]; then
               echo "Missing required variable: $var" >&2
