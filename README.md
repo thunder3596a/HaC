@@ -7,12 +7,14 @@ Complete infrastructure-as-code for a self-hosted home automation and media cent
 ## Architecture Overview
 
 ### Deployment Model
+
 - **Git-based:** Configuration managed through Forgejo (self-hosted Git server)
 - **Infrastructure as Code:** All services defined via Docker Compose
 - **Automated Deployments:** Forgejo workflows trigger on file changes
 - **Multi-Host:** Two hosts — critical (home automation) and non-critical (media/tools)
 
 ### Network Structure
+
 - **homeproxy:** Home services and automation (internal only)
 - **mediaproxy:** Entertainment and media services
 - **toolsproxy:** Backend utilities and infrastructure
@@ -23,6 +25,7 @@ Complete infrastructure-as-code for a self-hosted home automation and media cent
 - **authnet:** Privileged authentication services (LDAP, OAuth)
 
 ### Reverse Proxy
+
 - **Traefik:** Two instances (critical and non-critical)
   - SSL termination via Let's Encrypt with Cloudflare DNS-01 challenge
   - Individual per-subdomain certificates
@@ -53,17 +56,20 @@ HaC/
 Services running on **hac-critical** (critical host).
 
 **Storage layout on hac-critical:**
+
 - `/srv` (NVMe #1) for critical configs and high-IO databases
 - `/mnt/nvme-appdata` (NVMe #2) for appdata/search/AI tiers (NetBox, HomeBox, KaraKeep Meili, etc.)
 - `/mnt/hdd` for backups/logs/archives (e.g., ZIM files, service logs)
 
 ### Authentication & Access Control
+
 - **Authelia** (`Auth/Authelia.yml`) - SSO and authentication
   - PostgreSQL backend for session storage
   - LLDAP for LDAP/Active Directory simulation
   - Traefik middleware integration for protected services
 
 ### Networking & Proxy
+
 - **Traefik** (`Networking/Proxy/proxy.yml`) - Reverse proxy and load balancer
   - HTTP/HTTPS with individual SSL certificates per domain
   - Dashboard at `hac-critical-traefik.${DOMAIN_NAME}`
@@ -82,6 +88,7 @@ Services running on **hac-critical** (critical host).
   - Automatic DNS and certificate management
 
 ### Home Automation Core
+
 - **Home Assistant** (`Home/HomeAssistant/homeassistant.yml`) - Home automation hub
   - Core automation and smart home control
   - Dashboard at `ha.${DOMAIN_NAME}`
@@ -110,6 +117,7 @@ Services running on **hac-critical** (critical host).
   - Privacy-focused voice assistant integration
 
 ### Infrastructure Services
+
 - **Forgejo** (`Management/Git - Forgejo/git.yml`) - Self-hosted Git server
   - Repository hosting and Git service
   - CI/CD Actions runners
@@ -124,6 +132,7 @@ Services running on **hac-critical** (critical host).
   - Dashboard at `netbox.${DOMAIN_NAME}`
 
 ### Data & Monitoring
+
 - **InfluxDB** (`Tools/InfluxDB/influxdb.yml`) - Time-series database
   - Stores metrics and sensor data from Home Assistant
   - Historical data archival and analysis
@@ -190,9 +199,11 @@ Services running on **hac-critical** (critical host).
 Services running on **hac-noncritical** (non-critical host). Can restart without affecting home automation.
 
 **Storage layout on hac-noncritical:**
+
 - Per-service persistent data directories (local to host)
 
 ### Networking & Proxy
+
 - **Traefik** (`Networking/Proxy/proxy.yml`) - Non-critical reverse proxy
   - Dashboard at `hac-noncritical-traefik.${DOMAIN_NAME}`
 
@@ -203,11 +214,13 @@ Services running on **hac-noncritical** (non-critical host). Can restart without
 ### Media Stack (Entertainment)
 
 #### Request & Discovery
+
 - **Overseerr** (`Media/overseerr/overseerr.yml`) - Media request platform
   - User-friendly movie/TV show requests
   - Integrates with Radarr/Sonarr
 
 #### Indexing & Search
+
 - **Prowlarr** (`Media/prowlarr/prowlarr.yml`) - Torrent indexer manager
   - Torrent site management and search
   - Unified interface for Radarr/Sonarr
@@ -216,6 +229,7 @@ Services running on **hac-noncritical** (non-critical host). Can restart without
   - Radarr/Sonarr quality profile sync
 
 #### Media Download & Organization
+
 - **Radarr** (`Media/radarr/radarr.yml`) - Movie management
   - Automated movie downloads
   - Library organization and monitoring
@@ -232,6 +246,7 @@ Services running on **hac-noncritical** (non-critical host). Can restart without
   - eBook and audiobook tracking
 
 #### Download Clients
+
 - **qBittorrent** (via `Networking/Torrent/torrent.yml`) - Torrent client
   - Download management
   - Behind Gluetun VPN tunnel
@@ -240,6 +255,7 @@ Services running on **hac-noncritical** (non-critical host). Can restart without
   - Usenet download support
 
 #### Utilities
+
 - **FlareSolverr** (`Media/flaresolverr/flaresolverr.yml`) - CloudFlare bypass
   - Resolves CloudFlare-protected indexer sites
   - API for Radarr/Sonarr integration
@@ -248,6 +264,7 @@ Services running on **hac-noncritical** (non-critical host). Can restart without
   - Routes Radarr/Sonarr notifications
 
 ### Photos & Media
+
 - **Immich** (`Media/Immich/immich.yml`) - Photo and video management
   - Self-hosted Google Photos alternative
   - Machine learning for facial recognition and search
@@ -267,12 +284,14 @@ Services running on **hac-noncritical** (non-critical host). Can restart without
   - Dashboard at `kavita.${DOMAIN_NAME}`
 
 ### Media Center
+
 - **Plex** (`Media/Plex/plex.yml`) - Media streaming server
   - Movies, TV shows, music streaming
   - Dashboard at `plex.${DOMAIN_NAME}`
   - Mounts media from `/mnt/Pool01/data/`
 
 ### Automation & AI
+
 - **Open WebUI** (`Automation/AI/openwebui.yml`) - LLM interface
   - Chat interface for Ollama
   - Dashboard at `chat.${DOMAIN_NAME}`
@@ -281,6 +300,7 @@ Services running on **hac-noncritical** (non-critical host). Can restart without
   - Price tracking and alerts
 
 ### Tools
+
 - **IT-Tools** (`Tools/IT-Tools/it-tools.yml`) - Developer utilities
   - Collection of handy developer tools
   - Dashboard at `it-tools.${DOMAIN_NAME}`
@@ -375,6 +395,7 @@ All services deploy via Forgejo CI/CD workflows in `.forgejo/workflows/`. Workfl
 | CrowdSec | (via Wazuh workflow or manual) | hac-noncritical | Push to `Docker-NonCritical/Security/Crowdsec/**` |
 
 **Maintenance workflows:**
+
 | Workflow | Purpose |
 |----------|---------|
 | `check-updates-critical.yml` | Check for container image updates (critical) |
@@ -384,6 +405,7 @@ All services deploy via Forgejo CI/CD workflows in `.forgejo/workflows/`. Workfl
 | `mirror-to-github.yml` | Mirror repository to GitHub |
 
 ### Required Forgejo Variables
+
 Global variables (set in repository settings):
 
 - `DOMAIN_NAME` - Primary domain (e.g., `example.com`)
@@ -397,6 +419,7 @@ Global variables (set in repository settings):
 - `INFLUXDB_ADMIN_USER` - InfluxDB admin username (default: `admin`)
 
 ### Required Forgejo Secrets
+
 Encrypted secrets (set in repository settings):
 
 - `CLOUDFLARE_EMAIL`, `CLOUDFLARE_DNS_API_TOKEN` - Cloudflare DNS for ACME
@@ -422,7 +445,9 @@ Encrypted secrets (set in repository settings):
 ## Data Locations
 
 ### Critical Services
+
 Persistent data on primary host (tiered):
+
 ```
 /srv/                      # NVMe #1 (critical + high IO)
 ├── authelia/              # SSO database and config
@@ -452,7 +477,9 @@ Persistent data on primary host (tiered):
 ```
 
 ### Non-Critical Services
+
 Persistent data on docker-noncritical:
+
 ```
 /srv/                      # High IO services
 ├── immich/                # Immich Postgres + ML model cache
@@ -469,6 +496,7 @@ Persistent data on docker-noncritical:
 ```
 
 ### Media (Shared Storage)
+
 ```
 /mnt/Pool01/data/media/
 ├── movies/               # Radarr downloads
@@ -484,6 +512,7 @@ Persistent data on docker-noncritical:
 See [MIGRATION.md](Docker-Critical/MIGRATION.md) for detailed instructions on migrating services from TrueNAS to Home Assistant.
 
 **Quick start:**
+
 ```bash
 # Run migration script
 ssh user@homeassistant
@@ -498,6 +527,7 @@ sudo ./migrate-to-homeassistant.sh
 ### Adding a New Service
 
 1. **Create compose file** in appropriate folder:
+
    ```yaml
    Docker-Critical/Home/MyService/myservice.yml
    ```
@@ -510,6 +540,7 @@ sudo ./migrate-to-homeassistant.sh
    - Health checks
 
 3. **Create deployment workflow** in `.forgejo/workflows/`:
+
    ```yaml
    name: Deploy MyService
    on:
@@ -520,6 +551,7 @@ sudo ./migrate-to-homeassistant.sh
    ```
 
 4. **Test locally**:
+
    ```bash
    docker compose -p myservice -f myservice.yml up -d
    ```
@@ -591,6 +623,7 @@ Traefik (NonCritical)
 ## Troubleshooting
 
 ### Service won't start
+
 ```bash
 # Check logs
 docker logs <container-name>
@@ -603,6 +636,7 @@ docker network ls | grep proxy
 ```
 
 ### Traefik routing issues
+
 ```bash
 # Check router config
 docker logs traefik | grep router
@@ -612,6 +646,7 @@ docker inspect <service> | grep traefik
 ```
 
 ### Permissions errors
+
 ```bash
 # Verify ownership
 ls -la /srv/<service>/
