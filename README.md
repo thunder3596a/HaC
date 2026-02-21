@@ -202,7 +202,7 @@ Services running on **hac-noncritical** (non-critical host). Can restart without
 
 - Per-service persistent data directories (local to host)
 
-### Networking & Proxy
+### Networking, Proxy & VPN
 
 - **Traefik** (`Networking/Proxy/proxy.yml`) - Non-critical reverse proxy
   - Dashboard at `hac-noncritical-traefik.${DOMAIN_NAME}`
@@ -348,7 +348,7 @@ All services deploy via Forgejo CI/CD workflows in `.forgejo/workflows/`. Workfl
 **Non-critical services** → `runs-on: docker-noncritical`
 
 | Service | Workflow | Host | Trigger |
-|---------|----------|------|---------|
+| --------- | ---------- | ------------- | ----------------------------------------- |
 | Authelia | `deploy-authelia.yml` | hac-critical | Push to `Docker-Critical/Auth/**` |
 | Traefik (Critical) | `deploy-traefik-critical.yml` | hac-critical | Push to `Docker-Critical/Networking/Proxy/**` |
 | Traefik (NonCritical) | `deploy-traefik-noncritical.yml` | hac-noncritical | Push to `Docker-NonCritical/Networking/Proxy/**` |
@@ -397,7 +397,7 @@ All services deploy via Forgejo CI/CD workflows in `.forgejo/workflows/`. Workfl
 **Maintenance workflows:**
 
 | Workflow | Purpose |
-|----------|---------|
+| ----------------------- | -------------------------------------------- |
 | `check-updates-critical.yml` | Check for container image updates (critical) |
 | `check-updates-noncritical.yml` | Check for container image updates (non-critical) |
 | `apply-updates-critical.yml` | Apply container image updates (critical) |
