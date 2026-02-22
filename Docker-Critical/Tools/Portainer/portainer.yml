@@ -7,9 +7,12 @@ services:
       - toolsproxy
     volumes:
       - /srv/portainer/data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - TZ=${TZ:-America/Chicago}
-    command: --host=tcp://docker-socket-proxy:2375
+    command: --admin-password-file=/run/secrets/admin_password
+    secrets:
+      - admin_password
     labels:
       # Traefik routing
       - traefik.enable=true
@@ -38,3 +41,7 @@ services:
 networks:
   toolsproxy:
     external: true
+
+secrets:
+  admin_password:
+    file: /srv/portainer/admin_password.txt
