@@ -16,6 +16,7 @@ services:
       - MCPGATEWAY_PORT=4444
       - MCPGATEWAY_UI_ENABLED=true
       - MCPGATEWAY_ADMIN_API_ENABLED=true
+      - PLUGINS_ENABLED=true
       - GUNICORN_CMD_ARGS=--bind 0.0.0.0:4444
     depends_on:
       mcp-postgres:

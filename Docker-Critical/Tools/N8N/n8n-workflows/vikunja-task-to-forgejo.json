@@ -1,0 +1,261 @@
+{
+  "name": "Vikunja Task → Close Forgejo Issue",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vikunja-task-webhook",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Vikunja Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse Vikunja webhook payload\nconst body = $input.first().json.body;\n\n// Vikunja webhooks send the task object\nconst task = body.task || body;\n\n// Check if task is done\nconst isDone = task.done === true;\n\n// Look for the forgejo marker in the description\nconst markerRegex = /\\[forgejo:([^/]+)\\/([^#]+)#(\\d+)\\]/;\nconst match = (task.description || '').match(markerRegex);\n\nlet result = {\n  taskId: task.id,\n  taskTitle: task.title,\n  isDone: isDone,\n  hasMarker: !!match,\n  owner: match ? match[1] : null,\n  repo: match ? match[2] : null,\n  issueNumber: match ? parseInt(match[3]) : null,\n  marker: match ? match[0] : null\n};\n\nreturn [{ json: result }];"
+      },
+      "id": "parse-payload",
+      "name": "Parse Task Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "is-done",
+              "leftValue": "={{ $json.isDone }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "has-marker",
+              "leftValue": "={{ $json.hasMarker }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "filter-done-with-marker",
+      "name": "Done + Has Forgejo Link?",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [660, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.FORGEJO_URL }}/api/v1/repos/{{ $json.owner }}/{{ $json.repo }}/issues/{{ $json.issueNumber }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "get-issue",
+      "name": "Get Forgejo Issue",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "FORGEJO_CRED_ID",
+          "name": "Forgejo API Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "is-open",
+              "leftValue": "={{ $json.state }}",
+              "rightValue": "open",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "filter-open",
+      "name": "Issue Still Open?",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [1100, 300]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $env.FORGEJO_URL }}/api/v1/repos/{{ $('Parse Task Data').first().json.owner }}/{{ $('Parse Task Data').first().json.repo }}/issues/{{ $('Parse Task Data').first().json.issueNumber }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"state\": \"closed\"\n}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "close-issue",
+      "name": "Close Forgejo Issue",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1320, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "FORGEJO_CRED_ID",
+          "name": "Forgejo API Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.FORGEJO_URL }}/api/v1/repos/{{ $('Parse Task Data').first().json.owner }}/{{ $('Parse Task Data').first().json.repo }}/issues/{{ $('Parse Task Data').first().json.issueNumber }}/comments",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"body\": \"Closed via Vikunja task completion.\\nTask: {{ $('Parse Task Data').first().json.taskTitle }}\"\n}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "add-comment",
+      "name": "Add Close Comment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1540, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "FORGEJO_CRED_ID",
+          "name": "Forgejo API Token"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Vikunja Webhook": {
+      "main": [
+        [
+          {
+            "node": "Parse Task Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Task Data": {
+      "main": [
+        [
+          {
+            "node": "Done + Has Forgejo Link?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Done + Has Forgejo Link?": {
+      "main": [
+        [
+          {
+            "node": "Get Forgejo Issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Forgejo Issue": {
+      "main": [
+        [
+          {
+            "node": "Issue Still Open?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Issue Still Open?": {
+      "main": [
+        [
+          {
+            "node": "Close Forgejo Issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Close Forgejo Issue": {
+      "main": [
+        [
+          {
+            "node": "Add Close Comment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    {
+      "name": "forgejo",
+      "createdAt": "2026-02-20T00:00:00.000Z",
+      "updatedAt": "2026-02-20T00:00:00.000Z"
+    },
+    {
+      "name": "vikunja",
+      "createdAt": "2026-02-20T00:00:00.000Z",
+      "updatedAt": "2026-02-20T00:00:00.000Z"
+    }
+  ]
+}

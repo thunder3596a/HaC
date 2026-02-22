@@ -1,0 +1,416 @@
+{
+  "name": "Forgejo Issue → Vikunja Task",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "forgejo-issue-webhook",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Forgejo Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "action-filter",
+              "leftValue": "={{ $json.body.action }}",
+              "rightValue": "opened",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "filter-action",
+      "name": "Filter: Issue Opened",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract data from Forgejo webhook payload\nconst body = $input.first().json.body;\nconst issue = body.issue;\nconst repo = body.repository;\n\n// Map Forgejo labels to Vikunja labels\nconst labelMap = {\n  'bug': 'maintenance',\n  'enhancement': 'project',\n  'feature': 'project',\n  'documentation': 'docs',\n  'question': 'research',\n  'help wanted': 'collab'\n};\n\nconst forgejoLabels = (issue.labels || []).map(l => l.name);\nconst vikunjaLabels = forgejoLabels\n  .map(l => labelMap[l.toLowerCase()] || l)\n  .filter((v, i, a) => a.indexOf(v) === i); // dedupe\n\n// Build the marker for bidirectional linking\nconst marker = `[forgejo:${repo.full_name}#${issue.number}]`;\n\n// Build description with marker\nconst description = `${marker}\\n\\n${issue.body || ''}\\n\\n---\\n*Synced from [${repo.full_name}#${issue.number}](${issue.html_url})*`;\n\nreturn [{\n  json: {\n    repoFullName: repo.full_name,\n    repoName: repo.name,\n    issueNumber: issue.number,\n    issueTitle: issue.title,\n    issueBody: issue.body || '',\n    issueUrl: issue.html_url,\n    issueLabels: forgejoLabels,\n    vikunjaLabels: vikunjaLabels,\n    marker: marker,\n    description: description,\n    assignee: issue.assignee ? issue.assignee.login : null,\n    priority: forgejoLabels.includes('bug') ? 4 : 3\n  }\n}];"
+      },
+      "id": "parse-webhook",
+      "name": "Parse Webhook Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.VIKUNJA_URL }}/api/v1/projects",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "get-projects",
+      "name": "Get Vikunja Projects",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "VIKUNJA_CRED_ID",
+          "name": "Vikunja API Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Find or flag need to create the \"Forgejo\" project\nconst projects = $('Get Vikunja Projects').first().json;\nconst projectList = Array.isArray(projects) ? projects : [projects];\nconst parsed = $('Parse Webhook Data').first().json;\n\nconst forgejoProject = projectList.find(p => p.title === 'Forgejo');\n\nreturn [{\n  json: {\n    ...parsed,\n    projectId: forgejoProject ? forgejoProject.id : null,\n    projectExists: !!forgejoProject\n  }\n}];"
+      },
+      "id": "check-project",
+      "name": "Find Forgejo Project",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1100, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "project-exists",
+              "leftValue": "={{ $json.projectExists }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-project-exists",
+      "name": "Project Exists?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1320, 300]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ $env.VIKUNJA_URL }}/api/v1/projects",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"title\": \"Forgejo\",\n  \"description\": \"Tasks synced from Forgejo issues\"\n}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "create-project",
+      "name": "Create Forgejo Project",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1540, 460],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "VIKUNJA_CRED_ID",
+          "name": "Vikunja API Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get project ID from either existing or newly created\nconst prev = $('Find Forgejo Project').first().json;\nlet projectId = prev.projectId;\n\nif (!projectId) {\n  const created = $('Create Forgejo Project').first().json;\n  projectId = created.id;\n}\n\nreturn [{\n  json: {\n    ...prev,\n    projectId: projectId\n  }\n}];"
+      },
+      "id": "merge-project-id",
+      "name": "Get Project ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1760, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.VIKUNJA_URL }}/api/v1/projects/{{ $json.projectId }}/views",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "get-views",
+      "name": "Get Project Views",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1980, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "VIKUNJA_CRED_ID",
+          "name": "Vikunja API Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.VIKUNJA_URL }}/api/v1/projects/{{ $json.projectId }}/tasks?filter=description%20like%20%27%25{{ encodeURIComponent($json.marker) }}%25%27",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "check-duplicate",
+      "name": "Check Duplicate Task",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2200, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "VIKUNJA_CRED_ID",
+          "name": "Vikunja API Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "no-duplicate",
+              "leftValue": "={{ $json.length || 0 }}",
+              "rightValue": "0",
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-no-duplicate",
+      "name": "No Duplicate?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2420, 300]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ $env.VIKUNJA_URL }}/api/v1/projects/{{ $('Get Project ID').first().json.projectId }}/tasks",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"title\": \"{{ $('Parse Webhook Data').first().json.issueTitle }}\",\n  \"description\": {{ JSON.stringify($('Parse Webhook Data').first().json.description) }},\n  \"priority\": {{ $('Parse Webhook Data').first().json.priority }},\n  \"labels\": []\n}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "create-task",
+      "name": "Create Vikunja Task",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2640, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "VIKUNJA_CRED_ID",
+          "name": "Vikunja API Token"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Forgejo Webhook": {
+      "main": [
+        [
+          {
+            "node": "Filter: Issue Opened",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter: Issue Opened": {
+      "main": [
+        [
+          {
+            "node": "Parse Webhook Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Webhook Data": {
+      "main": [
+        [
+          {
+            "node": "Get Vikunja Projects",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Vikunja Projects": {
+      "main": [
+        [
+          {
+            "node": "Find Forgejo Project",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Forgejo Project": {
+      "main": [
+        [
+          {
+            "node": "Project Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Project Exists?": {
+      "main": [
+        [
+          {
+            "node": "Get Project ID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Forgejo Project",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Forgejo Project": {
+      "main": [
+        [
+          {
+            "node": "Get Project ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Project ID": {
+      "main": [
+        [
+          {
+            "node": "Get Project Views",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Project Views": {
+      "main": [
+        [
+          {
+            "node": "Check Duplicate Task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Duplicate Task": {
+      "main": [
+        [
+          {
+            "node": "No Duplicate?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Duplicate?": {
+      "main": [
+        [
+          {
+            "node": "Create Vikunja Task",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    {
+      "name": "forgejo",
+      "createdAt": "2026-02-20T00:00:00.000Z",
+      "updatedAt": "2026-02-20T00:00:00.000Z"
+    },
+    {
+      "name": "vikunja",
+      "createdAt": "2026-02-20T00:00:00.000Z",
+      "updatedAt": "2026-02-20T00:00:00.000Z"
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+name: Deploy Portainer Agent
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "Docker-NonCritical/Tools/PortainerAgent/**"
+      - ".forgejo/workflows/deploy-portainer-agent.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: docker-noncritical
+
+    defaults:
+      run:
+        shell: sh
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify compose file exists
+        run: ls -l "./Docker-NonCritical/Tools/PortainerAgent/portainer-agent.yml"
+
+      - name: Deploy Portainer Agent
+        working-directory: "./Docker-NonCritical/Tools/PortainerAgent"
+        env:
+          TZ: ${{ vars.TZ }}
+        run: |
+          if [ -z "$TZ" ]; then
+            echo "Missing required variable: TZ" >&2
+            exit 1
+          fi
+
+          defined_image=$(grep -m1 'image:.*agent' portainer-agent.yml | awk '{print $2}')
+          running_image=$(docker inspect -f '{{.Config.Image}}' portainer-agent 2>/dev/null || echo "none")
+          checksum=$(sha256sum portainer-agent.yml | awk '{print $1}')
+          old=$(cat ~/.hac-noncritical/.portainer_agent_checksum 2>/dev/null || echo "")
+
+          if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
+            echo "Redeploying Portainer Agent..."
+            mkdir -p ~/.hac-noncritical
+            mkdir -p /srv/portainer-agent/data
+
+            docker compose -p portainer-agent down --remove-orphans || true
+            docker compose -p portainer-agent -f portainer-agent.yml up -d --force-recreate
+            echo "$checksum" > ~/.hac-noncritical/.portainer_agent_checksum
+          else
+            echo "No changes detected; skipping redeploy"
+          fi

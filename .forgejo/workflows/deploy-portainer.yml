@@ -1,0 +1,57 @@
+name: Deploy Portainer
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "Docker-Critical/Tools/Portainer/**"
+      - ".forgejo/workflows/deploy-portainer.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: docker-critical
+
+    defaults:
+      run:
+        shell: sh
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify compose file exists
+        run: ls -l "./Docker-Critical/Tools/Portainer/portainer.yml"
+
+      - name: Deploy Portainer
+        working-directory: "./Docker-Critical/Tools/Portainer"
+        env:
+          DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
+          CERTRESOLVER: ${{ vars.CERTRESOLVER }}
+          TZ: ${{ vars.TZ }}
+        run: |
+          for var in DOMAIN_NAME CERTRESOLVER TZ; do
+            eval val=\$$var
+            if [ -z "$val" ]; then
+              echo "Missing required variable: $var" >&2
+              exit 1
+            fi
+          done
+
+          defined_image=$(grep -m1 'image:.*portainer-ce' portainer.yml | awk '{print $2}')
+          running_image=$(docker inspect -f '{{.Config.Image}}' portainer 2>/dev/null || echo "none")
+          checksum=$(sha256sum portainer.yml | awk '{print $1}')
+          old=$(cat ~/.hac-critical/.portainer_checksum 2>/dev/null || echo "")
+
+          if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
+            echo "Redeploying Portainer..."
+            mkdir -p ~/.hac-critical
+            mkdir -p /srv/portainer/data
+
+            docker compose -p portainer down --remove-orphans || true
+            docker compose -p portainer -f portainer.yml up -d --force-recreate
+            echo "$checksum" > ~/.hac-critical/.portainer_checksum
+          else
+            echo "No changes detected; skipping redeploy"
+          fi
