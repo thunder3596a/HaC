@@ -30,6 +30,7 @@ jobs:
           DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
           CERTRESOLVER: ${{ vars.CERTRESOLVER }}
           TZ: ${{ vars.TZ }}
+          PORTAINER_ADMIN_PASSWORD: ${{ secrets.PORTAINER_ADMIN_PASSWORD }}
         run: |
           for var in DOMAIN_NAME CERTRESOLVER TZ; do
             eval val=\$$var
@@ -39,6 +40,10 @@ jobs:
             fi
           done
 
+          # Create directories
+          mkdir -p ~/.hac-critical
+          mkdir -p /srv/portainer/data
+
           defined_image=$(grep -m1 'image:.*portainer-ce' portainer.yml | awk '{print $2}')
           running_image=$(docker inspect -f '{{.Config.Image}}' portainer 2>/dev/null || echo "none")
           checksum=$(sha256sum portainer.yml | awk '{print $1}')
@@ -46,8 +51,6 @@ jobs:
 
           if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
             echo "Redeploying Portainer..."
-            mkdir -p ~/.hac-critical
-            mkdir -p /srv/portainer/data
 
             docker compose -p portainer down --remove-orphans || true
             docker compose -p portainer -f portainer.yml up -d --force-recreate
