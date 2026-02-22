@@ -51,6 +51,8 @@ access_control:
       policy: two_factor
     - domain: 'norish.{{ env "DOMAIN_NAME" }}'
       policy: two_factor
+    - domain: 'portainer.{{ env "DOMAIN_NAME" }}'
+      policy: two_factor
 
 identity_providers:
   oidc:
