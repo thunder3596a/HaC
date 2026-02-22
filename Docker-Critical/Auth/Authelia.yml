@@ -7,8 +7,19 @@ services:
       - authnet
     volumes:
       - /srv/authelia/config:/config
+      - /srv/authelia/secrets:/secrets:ro
     environment:
       - TZ=America/Chicago
+      - X_AUTHELIA_CONFIG_FILTERS=expand-env,template
+      - DOMAIN_NAME=${DOMAIN_NAME}
+      - LDAP_BASE_DN=${LDAP_BASE_DN}
+      - AUTHELIA_JWT_SECRET=${AUTHELIA_JWT_SECRET}
+      - AUTHELIA_SESSION_SECRET=${AUTHELIA_SESSION_SECRET}
+      - AUTHELIA_STORAGE_ENCRYPTION_KEY=${AUTHELIA_STORAGE_ENCRYPTION_KEY}
+      - AUTHELIA_OIDC_HMAC_SECRET=${AUTHELIA_OIDC_HMAC_SECRET}
+      - AUTHELIA_DB_PASSWORD=${AUTHELIA_DB_PASSWORD}
+      - NORISH_OIDC_CLIENT_SECRET=${NORISH_OIDC_CLIENT_SECRET}
+      - LLDAP_LDAP_USER_PASS=${LLDAP_LDAP_USER_PASS}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.authelia.rule=Host(`authelia.${DOMAIN_NAME}`)"
@@ -23,24 +34,35 @@ services:
       - "ha.compose-file=Docker-Critical/Auth/Authelia.yml"
       - "ha.service-name=authelia"
     depends_on:
-      - authelia-db
+      authelia-db:
+        condition: service_healthy
+      lldap:
+        condition: service_started
+
   authelia-db:
-    image: postgres:13
+    image: postgres:15
     container_name: authelia-db
     restart: unless-stopped
     networks:
       - authnet
     volumes:
       - /srv/authelia/postgres:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=authelia
+      - POSTGRES_USER=authelia
+      - POSTGRES_PASSWORD=${AUTHELIA_DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d authelia -U authelia"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     labels:
       - "ha.monitor=true"
       - "ha.category=auth"
       - "ha.compose-file=Docker-Critical/Auth/Authelia.yml"
       - "ha.service-name=authelia-db"
-    environment:
-      - POSTGRES_DB=authelia
-      - POSTGRES_USER=authelia
-      - POSTGRES_PASSWORD=${AUTHELIA_DB_PASSWORD}
+
   lldap:
     image: lldap/lldap:stable
     container_name: lldap
@@ -50,11 +72,15 @@ services:
       - authnet
     expose:
       - "3890"
-    env_file:
-      - /srv/authelia/lldap/container-vars.env
+    environment:
+      - TZ=America/Chicago
+      - LLDAP_JWT_SECRET=${LLDAP_JWT_SECRET}
+      - LLDAP_KEY_SEED=${LLDAP_KEY_SEED}
+      - LLDAP_LDAP_USER_PASS=${LLDAP_LDAP_USER_PASS}
+      - LLDAP_LDAP_BASE_DN=${LDAP_BASE_DN}
+      - LLDAP_DATABASE_URL=sqlite:///data/users.db?mode=rwc
     volumes:
       - /srv/authelia/lldap/data:/data
-      - /srv/authelia/lldap/secrets:/secrets
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.lldap.rule=Host(`ldapadmin.${DOMAIN_NAME}`)"
