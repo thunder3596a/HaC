@@ -42,7 +42,6 @@ services:
 
     volumes:
       - /srv/git/data:/data
-      - ./sage-modern.css:/data/gitea/public/assets/css/theme-sage-modern.css
 
     ports:
       - "3000:3000"
