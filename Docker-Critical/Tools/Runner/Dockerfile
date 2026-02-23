@@ -5,7 +5,9 @@ RUN apk add --no-cache \
     nodejs \
     npm \
     git \
-    curl
+    curl \
+    docker-cli \
+    docker-cli-compose
 
 # Ensure proper working directory
 WORKDIR /data
