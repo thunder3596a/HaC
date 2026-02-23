@@ -31,15 +31,15 @@ jobs:
           TZ: ${{ vars.TZ }}
         run: |
           defined_image=$(grep -m1 'image:' Docker-Critical/Home/Govee2MQTT/govee2mqtt.yml | awk '{print $2}')
-          running_image=$(docker inspect -f '{{.Config.Image}}' govee2mqtt 2>/dev/null || echo "none")
+          running_image=$(sudo docker inspect -f '{{.Config.Image}}' govee2mqtt 2>/dev/null || echo "none")
           checksum=$(sha256sum Docker-Critical/Home/Govee2MQTT/govee2mqtt.yml | awk '{print $1}')
           old=$(cat /srv/govee2mqtt/.govee2mqtt_checksum 2>/dev/null || echo "")
 
           if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
             echo "Redeploying Govee2MQTT..."
-            mkdir -p /srv/govee2mqtt/data /srv/govee2mqtt/mosquitto/{config,data,log}
-            cp Docker-Critical/Home/Govee2MQTT/govee2mqtt.yml /srv/govee2mqtt/
-            chmod 644 /srv/govee2mqtt/govee2mqtt.yml
+            sudo mkdir -p /srv/govee2mqtt/data /srv/govee2mqtt/mosquitto/{config,data,log}
+            sudo cp Docker-Critical/Home/Govee2MQTT/govee2mqtt.yml /srv/govee2mqtt/
+            sudo chmod 644 /srv/govee2mqtt/govee2mqtt.yml
 
             cd /srv/govee2mqtt
             GOVEE_EMAIL=$GOVEE_EMAIL \
@@ -49,7 +49,7 @@ jobs:
             GOVEE_MQTT_PASSWORD=$GOVEE_MQTT_PASSWORD \
             GOVEE_TEMPERATURE_SCALE=${GOVEE_TEMPERATURE_SCALE:-C} \
             TZ=${TZ:-America/Chicago} \
-            docker compose -p govee2mqtt -f govee2mqtt.yml up -d --force-recreate
+            sudo docker compose -p govee2mqtt -f govee2mqtt.yml up -d --force-recreate
 
             echo "$checksum" > /srv/govee2mqtt/.govee2mqtt_checksum
           else

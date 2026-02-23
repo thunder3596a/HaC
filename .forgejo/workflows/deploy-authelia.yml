@@ -65,7 +65,7 @@ jobs:
           defined_image=$(grep -m1 'image:' Authelia.yml | awk '{print $2}')
 
           # Extract running image
-          running_image=$(docker inspect -f '{{.Config.Image}}' authelia 2>/dev/null || echo "none")
+          running_image=$(sudo docker inspect -f '{{.Config.Image}}' authelia 2>/dev/null || echo "none")
 
           # Compute checksum of compose file + config
           checksum=$(cat Authelia.yml authelia-config/configuration.yml | sha256sum | awk '{print $1}')

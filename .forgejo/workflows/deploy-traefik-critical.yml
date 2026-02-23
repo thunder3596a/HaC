@@ -44,7 +44,7 @@ jobs:
           done
 
           defined_image=$(grep -m1 'image:' proxy.yml | awk '{print $2}')
-          running_image=$(docker inspect -f '{{.Config.Image}}' traefik 2>/dev/null || echo "none")
+          running_image=$(sudo docker inspect -f '{{.Config.Image}}' traefik 2>/dev/null || echo "none")
           checksum=$(sha256sum proxy.yml | awk '{print $1}')
           old=$(cat /srv/traefik/.traefik_checksum 2>/dev/null || echo "")
 

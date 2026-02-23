@@ -45,7 +45,7 @@ jobs:
           defined_image=$(grep -m1 'image:.*forgejo' git.yml | awk '{print $2}')
 
           # Get currently running image
-          running_image=$(docker inspect -f '{{.Config.Image}}' forgejo 2>/dev/null || echo "none")
+          running_image=$(sudo docker inspect -f '{{.Config.Image}}' forgejo 2>/dev/null || echo "none")
 
           # Compute checksum of compose file
           checksum=$(sha256sum git.yml | awk '{print $1}')
@@ -61,10 +61,10 @@ jobs:
             docker rm forgejo git-db 2>/dev/null || true
 
             # Stop and remove stack cleanly
-            docker compose -p git down --remove-orphans || true
+            sudo docker compose -p git down --remove-orphans || true
 
             # Deploy stack
-            docker compose -p git -f git.yml up -d --force-recreate
+            sudo docker compose -p git -f git.yml up -d --force-recreate
 
             # Save checksum for next comparison
             echo "$checksum" > ~/.hac-critical/.git_checksum

@@ -43,7 +43,7 @@ jobs:
           done
 
           defined_image=$(grep -m1 'image:' traefik.yml | awk '{print $2}')
-          running_image=$(docker inspect -f '{{.Config.Image}}' traefik 2>/dev/null || echo "none")
+          running_image=$(sudo docker inspect -f '{{.Config.Image}}' traefik 2>/dev/null || echo "none")
           checksum=$(sha256sum traefik.yml | awk '{print $1}')
           old=$(cat ~/.docker-desktop1/.traefik_checksum 2>/dev/null || echo "")
 
@@ -51,8 +51,8 @@ jobs:
             echo "Redeploying Traefik (Desktop1)..."
             mkdir -p ~/.docker-desktop1
 
-            docker compose -p traefik down --remove-orphans || true
-            docker compose -p traefik -f traefik.yml up -d --force-recreate
+            sudo docker compose -p traefik down --remove-orphans || true
+            sudo docker compose -p traefik -f traefik.yml up -d --force-recreate
             echo "$checksum" > ~/.docker-desktop1/.traefik_checksum
           else
             echo "No changes detected; skipping redeploy"

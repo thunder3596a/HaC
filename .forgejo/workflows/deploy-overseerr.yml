@@ -36,7 +36,7 @@ jobs:
           defined_image=$(grep -m1 'image:' overseerr.yml | awk '{print $2}')
 
           # Extract running image
-          running_image=$(docker inspect -f '{{.Config.Image}}' overseerr 2>/dev/null || echo "none")
+          running_image=$(sudo docker inspect -f '{{.Config.Image}}' overseerr 2>/dev/null || echo "none")
 
           # Compute checksum of compose file
           checksum=$(sha256sum overseerr.yml | awk '{print $1}')
@@ -51,9 +51,9 @@ jobs:
 
             # Deploy
             PUID=$PUID PGID=$PGID TZ=$TZ DOMAIN_NAME=$DOMAIN_NAME CERTRESOLVER=$CERTRESOLVER \
-              docker compose -p overseerr -f overseerr.yml down --remove-orphans || true
+              sudo docker compose -p overseerr -f overseerr.yml down --remove-orphans || true
             PUID=$PUID PGID=$PGID TZ=$TZ DOMAIN_NAME=$DOMAIN_NAME CERTRESOLVER=$CERTRESOLVER \
-              docker compose -p overseerr -f overseerr.yml up -d --force-recreate
+              sudo docker compose -p overseerr -f overseerr.yml up -d --force-recreate
 
             # Save checksum
             echo "$checksum" > .overseerr_checksum

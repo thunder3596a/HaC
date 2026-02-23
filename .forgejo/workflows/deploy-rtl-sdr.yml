@@ -40,7 +40,7 @@ jobs:
           defined_image=$(grep -m1 'image:' rtl-sdr.yml | awk '{print $2}')
 
           # Extract running image
-          running_image=$(docker inspect -f '{{.Config.Image}}' rtl_433 2>/dev/null || echo "none")
+          running_image=$(sudo docker inspect -f '{{.Config.Image}}' rtl_433 2>/dev/null || echo "none")
 
           # Compute checksum of compose file
           checksum=$(cat rtl-sdr.yml config/rtl_433.conf | sha256sum | awk '{print $1}')
@@ -53,15 +53,15 @@ jobs:
           if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
             echo "Redeploying RTL-SDR"
 
-            mkdir -p /srv/rtl-sdr/config /srv/rtl-sdr/data
-            cp ./config/rtl_433.conf /srv/rtl-sdr/config/rtl_433.conf
-            chown -R "${PUID:-568}:${PGID:-568}" /srv/rtl-sdr
+            sudo mkdir -p /srv/rtl-sdr/config /srv/rtl-sdr/data
+            sudo cp ./config/rtl_433.conf /srv/rtl-sdr/config/rtl_433.conf
+            sudo chown -R "${PUID:-568}:${PGID:-568}" /srv/rtl-sdr
 
             # Deploy
             TZ=$TZ MQTT_HOST=$MQTT_HOST MQTT_PORT=$MQTT_PORT MQTT_USER=$MQTT_USER MQTT_PASSWORD=$MQTT_PASSWORD \
-              docker compose -p rtl-sdr -f rtl-sdr.yml down --remove-orphans || true
+              sudo docker compose -p rtl-sdr -f rtl-sdr.yml down --remove-orphans || true
             TZ=$TZ MQTT_HOST=$MQTT_HOST MQTT_PORT=$MQTT_PORT MQTT_USER=$MQTT_USER MQTT_PASSWORD=$MQTT_PASSWORD \
-              docker compose -p rtl-sdr -f rtl-sdr.yml up -d --force-recreate
+              sudo docker compose -p rtl-sdr -f rtl-sdr.yml up -d --force-recreate
 
             # Save checksum
             echo "$checksum" > .rtl-sdr_checksum

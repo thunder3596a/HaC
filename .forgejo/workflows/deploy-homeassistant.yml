@@ -41,7 +41,7 @@ jobs:
           defined_image=$(grep -m1 'image:' homeassistant.yml | awk '{print $2}')
 
           # Extract running image
-          running_image=$(docker inspect -f '{{.Config.Image}}' homeassistant 2>/dev/null || echo "none")
+          running_image=$(sudo docker inspect -f '{{.Config.Image}}' homeassistant 2>/dev/null || echo "none")
 
           # Compute checksum of compose file
           checksum=$(sha256sum homeassistant.yml | awk '{print $1}')
@@ -55,9 +55,9 @@ jobs:
             echo "Redeploying Home Assistant"
 
             # Deploy
-            docker compose -p homeassistant -f homeassistant.yml down --remove-orphans || true
-            docker rm -f homeassistant homeassistant-db matter-server esphome avahi 2>/dev/null || true
-            DOMAIN_NAME=$DOMAIN_NAME CERTRESOLVER=$CERTRESOLVER TZ=$TZ DNS_SERVER=$DNS_SERVER HA_HOST_IP=$HA_HOST_IP ZIGBEE_COORDINATOR_IP=$ZIGBEE_COORDINATOR_IP HOMEASSISTANT_MARIADB_ROOT_PASSWORD=$HOMEASSISTANT_MARIADB_ROOT_PASSWORD HOMEASSISTANT_MARIADB_PASSWORD=$HOMEASSISTANT_MARIADB_PASSWORD docker compose -p homeassistant -f homeassistant.yml up -d --force-recreate
+            sudo docker compose -p homeassistant -f homeassistant.yml down --remove-orphans || true
+            sudo docker rm -f homeassistant homeassistant-db matter-server esphome avahi 2>/dev/null || true
+            DOMAIN_NAME=$DOMAIN_NAME CERTRESOLVER=$CERTRESOLVER TZ=$TZ DNS_SERVER=$DNS_SERVER HA_HOST_IP=$HA_HOST_IP ZIGBEE_COORDINATOR_IP=$ZIGBEE_COORDINATOR_IP HOMEASSISTANT_MARIADB_ROOT_PASSWORD=$HOMEASSISTANT_MARIADB_ROOT_PASSWORD HOMEASSISTANT_MARIADB_PASSWORD=$HOMEASSISTANT_MARIADB_PASSWORD sudo docker compose -p homeassistant -f homeassistant.yml up -d --force-recreate
 
             # Save checksum
             echo "$checksum" > .homeassistant_checksum

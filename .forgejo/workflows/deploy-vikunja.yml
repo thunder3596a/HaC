@@ -38,7 +38,7 @@ jobs:
           defined_image=$(grep -m1 'image:' vikunja.yml | awk '{print $2}')
 
           # Extract running image
-          running_image=$(docker inspect -f '{{.Config.Image}}' vikunja 2>/dev/null || echo "none")
+          running_image=$(sudo docker inspect -f '{{.Config.Image}}' vikunja 2>/dev/null || echo "none")
 
           # Compute checksum of compose file
           checksum=$(sha256sum vikunja.yml | awk '{print $1}')
@@ -47,11 +47,11 @@ jobs:
           if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
             echo "Redeploying Vikunja..."
 
-            mkdir -p /srv/vikunja/files
-            mkdir -p /srv/vikunja/postgres
+            sudo mkdir -p /srv/vikunja/files
+            sudo mkdir -p /srv/vikunja/postgres
             docker run --rm -v /srv/vikunja/files:/data alpine chown -R 1000:1000 /data
-            cp vikunja.yml /srv/vikunja/
-            chmod 644 /srv/vikunja/vikunja.yml
+            sudo cp vikunja.yml /srv/vikunja/
+            sudo chmod 644 /srv/vikunja/vikunja.yml
 
             cd /srv/vikunja
             CERTRESOLVER=${CERTRESOLVER:-cloudflare} \
@@ -59,7 +59,7 @@ jobs:
             TZ=${TZ:-America/Chicago} \
             VIKUNJA_DB_PASSWORD=$VIKUNJA_DB_PASSWORD \
             VIKUNJA_JWT_SECRET=$VIKUNJA_JWT_SECRET \
-            docker compose -p vikunja -f vikunja.yml up -d --force-recreate
+            sudo docker compose -p vikunja -f vikunja.yml up -d --force-recreate
 
             echo "$checksum" > /srv/vikunja/.vikunja_checksum
           else

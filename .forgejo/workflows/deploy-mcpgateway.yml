@@ -70,7 +70,7 @@ jobs:
           defined_image=$(grep -m1 'image: ghcr.io/ibm/mcp-context-forge' mcpgateway.yml | awk '{print $2}')
 
           # Extract running image
-          running_image=$(docker inspect -f '{{.Config.Image}}' mcp-gateway 2>/dev/null || echo "none")
+          running_image=$(sudo docker inspect -f '{{.Config.Image}}' mcp-gateway 2>/dev/null || echo "none")
 
           # Compute checksum of compose file
           checksum=$(sha256sum mcpgateway.yml | awk '{print $1}')
@@ -92,10 +92,10 @@ jobs:
             docker rm mcp-redis 2>/dev/null || true
 
             # Clean up with docker compose
-            docker compose -p mcpgateway -f mcpgateway.yml down --remove-orphans || true
+            sudo docker compose -p mcpgateway -f mcpgateway.yml down --remove-orphans || true
 
             # Deploy
-            docker compose -p mcpgateway -f mcpgateway.yml up -d --force-recreate
+            sudo docker compose -p mcpgateway -f mcpgateway.yml up -d --force-recreate
 
             # Save checksum
             echo "$checksum" > .mcpgateway_checksum

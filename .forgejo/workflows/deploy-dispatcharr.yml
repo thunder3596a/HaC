@@ -36,7 +36,7 @@ jobs:
           defined_image=$(grep -m1 'image:' dispatcharr.yml | awk '{print $2}')
 
           # Extract running image
-          running_image=$(docker inspect -f '{{.Config.Image}}' dispatcharr 2>/dev/null || echo "none")
+          running_image=$(sudo docker inspect -f '{{.Config.Image}}' dispatcharr 2>/dev/null || echo "none")
 
           # Compute checksum of compose file
           checksum=$(sha256sum dispatcharr.yml | awk '{print $1}')
@@ -49,9 +49,14 @@ jobs:
           if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
             echo "Redeploying Dispatcharr"
 
-            # Deploy
+            # Stop old containers
+            sudo docker rm -f dispatcharr || true
+
+            # Bring stack down
             PUID=$PUID PGID=$PGID TZ=$TZ DOMAIN_NAME=$DOMAIN_NAME CERTRESOLVER=$CERTRESOLVER \
               sudo docker compose -p dispatcharr -f dispatcharr.yml down --remove-orphans || true
+
+            # Deploy stack
             PUID=$PUID PGID=$PGID TZ=$TZ DOMAIN_NAME=$DOMAIN_NAME CERTRESOLVER=$CERTRESOLVER \
               sudo docker compose -p dispatcharr -f dispatcharr.yml up -d --force-recreate
 
