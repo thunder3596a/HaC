@@ -51,9 +51,9 @@ jobs:
 
             # Deploy
             PUID=$PUID PGID=$PGID TZ=$TZ DOMAIN_NAME=$DOMAIN_NAME CERTRESOLVER=$CERTRESOLVER \
-              docker compose -p dispatcharr -f dispatcharr.yml down --remove-orphans || true
+              sudo docker compose -p dispatcharr -f dispatcharr.yml down --remove-orphans || true
             PUID=$PUID PGID=$PGID TZ=$TZ DOMAIN_NAME=$DOMAIN_NAME CERTRESOLVER=$CERTRESOLVER \
-              docker compose -p dispatcharr -f dispatcharr.yml up -d --force-recreate
+              sudo docker compose -p dispatcharr -f dispatcharr.yml up -d --force-recreate
 
             # Save checksum
             echo "$checksum" > .dispatcharr_checksum
