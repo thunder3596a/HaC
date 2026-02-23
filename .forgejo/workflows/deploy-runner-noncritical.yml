@@ -11,10 +11,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: docker-noncritical
-    container:
-      image: forgejo-runner-noncritical:latest
-      options: --network host -v /var/run/docker.sock:/var/run/docker.sock -v /srv:/srv
+    runs-on: docker-noncritical:host
     defaults:
       run:
         shell: sh
