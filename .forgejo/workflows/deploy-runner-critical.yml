@@ -1,0 +1,52 @@
+name: Deploy Forgejo Runner (Critical)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "Docker-Critical/Tools/Runner/**"
+      - ".forgejo/workflows/deploy-runner-critical.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: docker-critical
+    defaults:
+      run:
+        shell: sh
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify compose file exists
+        run: ls -l "./Docker-Critical/Tools/Runner/runner.yml"
+
+      - name: Deploy Runner
+        working-directory: "./Docker-Critical/Tools/Runner"
+        env:
+          DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
+        run: |
+          # Create data directory
+          mkdir -p /srv/forgejo-runner-critical
+
+          # Extract defined image
+          defined_image=$(grep -m1 'image:' runner.yml | awk '{print $2}')
+          running_image=$(docker inspect -f '{{.Config.Image}}' forgejo-runner-critical 2>/dev/null || echo "none")
+
+          # Compute checksum
+          checksum=$(sha256sum runner.yml | awk '{print $1}')
+          old=$(cat ~/.hac-critical/.runner_checksum 2>/dev/null || echo "")
+
+          if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
+            echo "Redeploying Forgejo Runner on docker-critical..."
+            mkdir -p ~/.hac-critical
+
+            docker compose -p forgejo-runner-critical -f runner.yml down --remove-orphans || true
+            DOMAIN_NAME=$DOMAIN_NAME docker compose -p forgejo-runner-critical -f runner.yml up -d --force-recreate
+
+            echo "$checksum" > ~/.hac-critical/.runner_checksum
+          else
+            echo "No changes detected; skipping redeploy"
+          fi

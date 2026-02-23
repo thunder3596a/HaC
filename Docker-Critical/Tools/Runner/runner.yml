@@ -1,0 +1,43 @@
+services:
+  forgejo-runner-critical:
+    image: gitea/act_runner:latest
+    container_name: forgejo-runner-critical
+    restart: unless-stopped
+    network_mode: host
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '2.0'
+        reservations:
+          memory: 256M
+          cpus: '0.5'
+
+    environment:
+      - GITEA_INSTANCE_URL=https://git.${DOMAIN_NAME}
+      - GITEA_RUNNER_NAME=docker-critical
+      - GITEA_RUNNER_LABELS=docker-critical
+
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+      - "ha.monitor=true"
+      - "ha.category=tools"
+      - "ha.compose-file=Docker-Critical/Tools/Runner/runner.yml"
+      - "ha.service-name=forgejo-runner-critical"
+
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /srv/forgejo-runner-critical:/data
+    
+    command: >
+      sh -c "
+        if [ ! -f /data/.runner ]; then
+          echo 'Runner not registered. Please register with:';
+          echo 'docker exec -it forgejo-runner-critical act_runner register --instance https://git.u-acres.com --name docker-critical --labels docker-critical';
+          sleep infinity;
+        else
+          act_runner daemon;
+        fi
+      "
