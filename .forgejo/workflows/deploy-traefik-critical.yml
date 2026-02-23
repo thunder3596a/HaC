@@ -54,17 +54,23 @@ jobs:
 
           if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
             echo "Redeploying Traefik..."
-            sudo mkdir -p /srv/traefik
-            sudo cp proxy.yml /srv/traefik/
-            sudo chmod 644 /srv/traefik/proxy.yml
+            sudo -n mkdir -p /srv/traefik || { echo "Error: sudo failed or password required"; exit 1; }
+            sudo -n cp proxy.yml /srv/traefik/ || { echo "Error: failed to copy proxy.yml"; exit 1; }
+            sudo -n chmod 644 /srv/traefik/proxy.yml
             
             # Ensure acme.json exists with correct permissions
-            sudo touch /srv/traefik/acme.json
-            sudo chmod 600 /srv/traefik/acme.json
+            sudo -n touch /srv/traefik/acme.json
+            sudo -n chmod 600 /srv/traefik/acme.json
             
             cd /srv/traefik
-            sudo docker compose -p proxy -f proxy.yml up -d --force-recreate
-            sudo bash -c 'echo "$checksum" > /srv/traefik/.traefik_checksum'
+            echo "Starting docker compose..."
+            timeout 120 sudo -n docker compose -p proxy -f proxy.yml up -d --force-recreate || { 
+              echo "Error: docker compose failed or timed out"; 
+              sudo -n docker compose -p proxy -f proxy.yml logs --tail=50
+              exit 1; 
+            }
+            echo "Traefik deployment completed"
+            sudo -n bash -c 'echo "$checksum" > /srv/traefik/.traefik_checksum'
           else
             echo "No changes detected; skipping redeploy"
           fi
