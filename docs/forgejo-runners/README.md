@@ -1,10 +1,10 @@
 # Forgejo Runners Setup & Documentation
 
-This directory contains documentation for deploying and managing Forgejo CI/CD runners on the HaC infrastructure.
+This directory contains documentation for deploying and managing Forgejo CI/CD runners on the homelab infrastructure.
 
 ## Overview
 
-The HaC infrastructure uses two Forgejo runners for distributed CI/CD job execution:
+The homelab infrastructure uses two Forgejo runners for distributed CI/CD job execution:
 
 - **docker-critical**: Runner on the critical infrastructure host (mission-critical services)
 - **docker-noncritical**: Runner on the noncritical infrastructure host (media, AI, tools)
@@ -16,7 +16,7 @@ Both runners are containerized using custom Docker images that extend `gitea/act
 ```
 ┌─────────────────────────────────────────────────┐
 │       Forgejo Instance                          │
-│   (git.u-acres.com:3000 / Port 2222)            │
+│   (git.example.com:3000 / Port 2222)            │
 │                                                 │
 │  ├─ Database: PostgreSQL 15 (git-db)            │
 │  └─ Git Repositories: /srv/git/data             │
@@ -24,18 +24,18 @@ Both runners are containerized using custom Docker images that extend `gitea/act
 │            Action Runners                       │
 │                                                 │
 │  Runner 2: docker-critical (ID 2)               │
-│  ├─ Host: docker-critical                       │
+│  ├─ Host: HOST_CRITICAL                         │
 │  ├─ Network: host mode                          │
 │  ├─ Container: forgejo-runner-critical          │
-│  ├─ UUID: 263a556e-2ead-414e-866c-c99bac7aff40 │
+│  ├─ UUID: <REDACTED>                             │
 │  ├─ Labels: docker-critical:host                │
 │  └─ Storage: /srv/forgejo-runner-critical       │
 │                                                 │
 │  Runner 3: docker-noncritical (ID 3)            │
-│  ├─ Host: docker-noncritical                    │
+│  ├─ Host: HOST_NONCRITICAL                      │
 │  ├─ Network: host mode                          │
 │  ├─ Container: forgejo-runner-noncritical       │
-│  ├─ UUID: b59c3135-bfa2-4dbf-b6fc-25438231fe28 │
+│  ├─ UUID: <REDACTED>                             │
 │  ├─ Labels: docker-noncritical:host             │
 │  └─ Storage: /srv/forgejo-runner-noncritical    │
 └─────────────────────────────────────────────────┘
@@ -72,7 +72,7 @@ CMD ["sh", "-c", "cd /data && exec act_runner daemon"]
 
 **Environment Variables:**
 ```yaml
-GITEA_INSTANCE_URL=https://git.u-acres.com
+GITEA_INSTANCE_URL=https://git.example.com
 GITEA_RUNNER_NAME=docker-critical  # or docker-noncritical
 GITEA_RUNNER_LABELS=docker-critical  # or docker-noncritical
 ```
@@ -94,7 +94,7 @@ The docker-critical runner is deployed via:
 **To redeploy docker-critical runner:**
 
 ```bash
-ssh nicholas@docker-critical
+ssh user@HOST_CRITICAL
 
 # Stop and remove old container
 docker stop forgejo-runner-critical && docker rm forgejo-runner-critical
@@ -131,7 +131,7 @@ The deployment script `setup-runner-noncritical.sh` handles:
 4. Starting daemon container
 
 ```bash
-ssh nicholas@docker-noncritical
+ssh user@HOST_NONCRITICAL
 
 # Copy and run setup script (with sudo/root access)
 su root
@@ -154,7 +154,7 @@ Registration tokens are created in Forgejo's database and allow runners to authe
 
 1. **Connect to Forgejo database:**
 ```bash
-ssh nicholas@docker-critical
+ssh user@HOST_CRITICAL
 docker exec git-db psql -U git -d git
 ```
 
@@ -190,7 +190,7 @@ docker run --rm --entrypoint "" --network host \
   -v /srv/forgejo-runner-HOSTNAME:/data \
   gitea/act_runner:latest \
   sh -c "cd /data && act_runner register --no-interactive \
-    --instance https://git.u-acres.com \
+    --instance https://git.example.com \
     --token YOUR_REGISTRATION_TOKEN \
     --name RUNNER_NAME \
     --labels RUNNER_LABELS"
@@ -250,7 +250,7 @@ Example workflows in this repository:
 
 **On docker-critical:**
 ```bash
-ssh nicholas@docker-critical
+ssh user@HOST_CRITICAL
 
 # View container status
 docker ps | grep runner
@@ -265,7 +265,7 @@ docker logs --tail 100 forgejo-runner-critical
 
 **On docker-noncritical:**
 ```bash
-ssh nicholas@docker-noncritical
+ssh user@HOST_NONCRITICAL
 
 # With root access (required)
 su root
