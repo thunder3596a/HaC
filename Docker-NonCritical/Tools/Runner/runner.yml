@@ -1,6 +1,8 @@
 services:
   forgejo-runner-noncritical:
-    image: gitea/act_runner:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: forgejo-runner-noncritical
     restart: unless-stopped
     network_mode: host
