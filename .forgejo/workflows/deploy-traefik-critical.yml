@@ -63,13 +63,7 @@ jobs:
             chmod 600 /srv/traefik/acme.json
             
             cd /srv/traefik
-            echo "Starting docker compose..."
-            timeout 120 docker compose -p proxy -f proxy.yml up -d --force-recreate || { 
-              echo "Error: docker compose failed or timed out"; 
-              docker compose -p proxy -f proxy.yml logs --tail=50
-              exit 1; 
-            }
-            echo "Traefik deployment completed"
+            docker compose -p proxy -f proxy.yml up -d --force-recreate
             echo "$checksum" > /srv/traefik/.traefik_checksum
           else
             echo "No changes detected; skipping redeploy"
