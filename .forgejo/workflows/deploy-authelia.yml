@@ -30,19 +30,19 @@ jobs:
       - name: Prepare server directories and config
         run: |
           # Ensure directories exist
-          mkdir -p /srv/authelia/config
-          mkdir -p /srv/authelia/secrets
-          mkdir -p /srv/authelia/postgres
-          mkdir -p /srv/authelia/lldap/data
+          sudo mkdir -p /srv/authelia/config
+          sudo mkdir -p /srv/authelia/secrets
+          sudo mkdir -p /srv/authelia/postgres
+          sudo mkdir -p /srv/authelia/lldap/data
 
           # Copy config from repo to server
-          cp ./Docker-Critical/Auth/authelia-config/configuration.yml /srv/authelia/config/configuration.yml
+          sudo cp ./Docker-Critical/Auth/authelia-config/configuration.yml /srv/authelia/config/configuration.yml
 
           # Generate OIDC JWKS key if missing
           if [ ! -f /srv/authelia/secrets/oidc-jwks.pem ]; then
             echo "Generating OIDC JWKS RSA key..."
-            openssl genrsa -out /srv/authelia/secrets/oidc-jwks.pem 4096
-            chmod 600 /srv/authelia/secrets/oidc-jwks.pem
+            sudo openssl genrsa -out /srv/authelia/secrets/oidc-jwks.pem 4096
+            sudo chmod 600 /srv/authelia/secrets/oidc-jwks.pem
           fi
 
       - name: Compare image and config
@@ -79,13 +79,25 @@ jobs:
             echo "Redeploying Authelia"
 
             # Stop old containers if exist
-            docker rm -f authelia lldap authelia-db || true
+            sudo docker rm -f authelia lldap authelia-db || true
 
             # Bring stack down cleanly
-            docker compose -p authelia -f Authelia.yml down --remove-orphans || true
+            sudo docker compose -p authelia -f Authelia.yml down --remove-orphans || true
 
             # Deploy stack
-            docker compose -p authelia -f Authelia.yml up -d --force-recreate
+            DOMAIN_NAME=$DOMAIN_NAME \
+            CERTRESOLVER=$CERTRESOLVER \
+            LDAP_BASE_DN=$LDAP_BASE_DN \
+            AUTHELIA_DB_PASSWORD=$AUTHELIA_DB_PASSWORD \
+            AUTHELIA_JWT_SECRET=$AUTHELIA_JWT_SECRET \
+            AUTHELIA_SESSION_SECRET=$AUTHELIA_SESSION_SECRET \
+            AUTHELIA_STORAGE_ENCRYPTION_KEY=$AUTHELIA_STORAGE_ENCRYPTION_KEY \
+            AUTHELIA_OIDC_HMAC_SECRET=$AUTHELIA_OIDC_HMAC_SECRET \
+            NORISH_OIDC_CLIENT_SECRET=$NORISH_OIDC_CLIENT_SECRET \
+            LLDAP_JWT_SECRET=$LLDAP_JWT_SECRET \
+            LLDAP_KEY_SEED=$LLDAP_KEY_SEED \
+            LLDAP_LDAP_USER_PASS=$LLDAP_LDAP_USER_PASS \
+            sudo docker compose -p authelia -f Authelia.yml up -d --force-recreate
 
             # Save checksum locally for next comparison
             echo "$checksum" > .authelia_checksum
