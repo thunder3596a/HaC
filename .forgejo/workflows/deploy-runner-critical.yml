@@ -12,6 +12,9 @@ on:
 jobs:
   deploy:
     runs-on: docker-critical
+    container:
+      image: forgejo-runner-critical:latest
+      options: --network host -v /var/run/docker.sock:/var/run/docker.sock -v /srv:/srv
     defaults:
       run:
         shell: sh
