@@ -11,16 +11,22 @@ services:
     environment:
       - TZ=${TZ:-America/Chicago}
     labels:
-      # Traefik routing
+      # Traefik routing - Web UI with Authelia
       - traefik.enable=true
       - traefik.http.routers.portainer.entrypoints=websecure
-      - traefik.http.routers.portainer.rule=Host(`portainer.${DOMAIN_NAME}`)
+      - traefik.http.routers.portainer.rule=Host(`portainer.${DOMAIN_NAME}`) && !PathPrefix(`/api`)
       - traefik.http.routers.portainer.service=portainer
       - traefik.http.routers.portainer.tls.certresolver=${CERTRESOLVER:-cloudflare}
       - traefik.http.routers.portainer.tls.domains[0].main=portainer.${DOMAIN_NAME}
-      - traefik.http.services.portainer.loadbalancer.server.port=9000
-      # Authelia protection
       - traefik.http.routers.portainer.middlewares=authelia@docker
+      # Separate route for API - no Authelia
+      - traefik.http.routers.portainer-api.entrypoints=websecure
+      - traefik.http.routers.portainer-api.rule=Host(`portainer.${DOMAIN_NAME}`) && PathPrefix(`/api`)
+      - traefik.http.routers.portainer-api.service=portainer
+      - traefik.http.routers.portainer-api.tls.certresolver=${CERTRESOLVER:-cloudflare}
+      - traefik.http.routers.portainer-api.priority=100
+      # Shared service definition
+      - traefik.http.services.portainer.loadbalancer.server.port=9000
       # Watchtower auto-updates
       - com.centurylinklabs.watchtower.enable=true
       # Home Assistant monitoring
