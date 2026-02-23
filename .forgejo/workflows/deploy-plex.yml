@@ -5,13 +5,13 @@ on:
     branches:
       - main
     paths:
-      - "Docker-NonCritical/Media/Plex/**"
+      - "Docker-Critical/Media/Plex/**"
       - ".forgejo/workflows/deploy-plex.yml"
   workflow_dispatch:
 
 jobs:
   deploy:
-    runs-on: docker-noncritical
+    runs-on: docker-critical
 
     defaults:
       run:
@@ -23,10 +23,10 @@ jobs:
 
       - name: Verify Plex compose file exists
         run: |
-          ls -l "./Docker-NonCritical/Media/Plex/plex.yml"
+          ls -l "./Docker-Critical/Media/Plex/plex.yml"
 
       - name: Compare image and config
-        working-directory: "./Docker-NonCritical/Media/Plex"
+        working-directory: "./Docker-Critical/Media/Plex"
         env:
           PUID: ${{ vars.PUID }}
           PGID: ${{ vars.PGID }}
