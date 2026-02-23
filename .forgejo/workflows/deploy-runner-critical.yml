@@ -43,6 +43,10 @@ jobs:
             echo "Redeploying Forgejo Runner on docker-critical..."
             mkdir -p ~/.hac-critical
 
+            # Force remove existing container if present
+            docker stop forgejo-runner-critical 2>/dev/null || true
+            docker rm -f forgejo-runner-critical 2>/dev/null || true
+            
             docker compose -p forgejo-runner-critical -f runner.yml down --remove-orphans || true
             DOMAIN_NAME=$DOMAIN_NAME docker compose -p forgejo-runner-critical -f runner.yml up -d --force-recreate
 

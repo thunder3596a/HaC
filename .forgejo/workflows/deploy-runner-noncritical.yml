@@ -43,6 +43,10 @@ jobs:
             echo "Redeploying Forgejo Runner on docker-noncritical..."
             mkdir -p ~/.hac-noncritical
 
+            # Force remove existing container if present
+            docker stop forgejo-runner-noncritical 2>/dev/null || true
+            docker rm -f forgejo-runner-noncritical 2>/dev/null || true
+            
             docker compose -p forgejo-runner-noncritical -f runner.yml down --remove-orphans || true
             DOMAIN_NAME=$DOMAIN_NAME docker compose -p forgejo-runner-noncritical -f runner.yml up -d --force-recreate
 
