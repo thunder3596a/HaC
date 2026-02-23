@@ -5,6 +5,7 @@ services:
     restart: unless-stopped
     networks:
       - authnet
+    #this is ok
     environment:
       - TZ=${TZ:-America/Chicago}
       - DOMAIN=https://vault.${DOMAIN_NAME}
