@@ -10,7 +10,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: docker-critical
+    runs-on: docker-critical:host
 
     steps:
       - name: Checkout repository

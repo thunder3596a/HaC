@@ -8,7 +8,7 @@ on:
 
 jobs:
   check-updates:
-    runs-on: docker-critical
+    runs-on: docker-critical:host
 
     defaults:
       run:
