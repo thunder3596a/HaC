@@ -16,7 +16,7 @@ on:
 
 jobs:
   apply-updates:
-    runs-on: docker-critical:host
+    runs-on: docker-critical
 
     defaults:
       run:
