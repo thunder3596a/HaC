@@ -52,7 +52,7 @@ jobs:
             TZ=${TZ:-America/Chicago} \
             docker compose -p govee2mqtt -f govee2mqtt.yml up -d --force-recreate
 
-            echo "$checksum" > /srv/govee2mqtt/.govee2mqtt_checksum
+            echo "$checksum" | sudo tee /srv/govee2mqtt/.govee2mqtt_checksum > /dev/null
           else
             echo "No changes detected; skipping redeploy"
           fi
