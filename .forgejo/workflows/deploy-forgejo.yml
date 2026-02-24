@@ -63,16 +63,13 @@ jobs:
             # Stop and remove stack cleanly
             sudo docker compose -p git down --remove-orphans || true
 
-            # Deploy stack with env file to work around sudo restrictions
-            cat > /tmp/forgejo.env <<EOF
-DOMAIN_NAME=$DOMAIN_NAME
-CERTRESOLVER=$CERTRESOLVER
-GIT_DB_PASSWORD=$GIT_DB_PASSWORD
-POSTGRES_USER=$POSTGRES_USER
-POSTGRES_DB=$POSTGRES_DB
-EOF
-            sudo docker compose -p git -f git.yml --env-file /tmp/forgejo.env up -d --force-recreate
-            rm -f /tmp/forgejo.env
+            # Deploy stack - docker compose without sudo (nicholas in docker group)
+            env DOMAIN_NAME=$DOMAIN_NAME \
+            CERTRESOLVER=$CERTRESOLVER \
+            GIT_DB_PASSWORD=$GIT_DB_PASSWORD \
+            POSTGRES_USER=$POSTGRES_USER \
+            POSTGRES_DB=$POSTGRES_DB \
+            docker compose -p git -f git.yml up -d --force-recreate
 
             # Save checksum for next comparison
             echo "$checksum" > ~/.hac-critical/.git_checksum
