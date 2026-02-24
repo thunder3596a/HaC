@@ -3,22 +3,14 @@ services:
     image: cloudflare/cloudflared:latest
     container_name: cloudflared
     restart: unless-stopped
-    networks:
-      - homeproxy
+    network_mode: host
     environment:
       - TZ=${TZ:-America/Chicago}
+      - TUNNEL_TOKEN=${HA_CF_TUNNEL_TOKEN}
     labels:
       - com.centurylinklabs.watchtower.enable=true
       - "ha.monitor=true"
       - "ha.category=networking"
       - "ha.compose-file=Docker-Critical/Networking/Cloudflared/cloudflared.yml"
       - "ha.service-name=cloudflared"
-    volumes:
-      - /srv/cloudflared:/config
-    command: tunnel --config /config/config.yml run
-    cap_add:
-      - NET_ADMIN
-
-networks:
-  homeproxy:
-    external: true
+    command: tunnel --no-autoupdate run --token ${HA_CF_TUNNEL_TOKEN}
