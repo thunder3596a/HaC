@@ -1,3 +1,4 @@
+# Test deployment with secrets configured
 networks:
   gitproxy:
     name: gitproxy
