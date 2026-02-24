@@ -54,9 +54,9 @@ jobs:
             echo "Redeploying Norish..."
 
             # Copy compose file to local /srv
-            mkdir -p /srv/norish
-            cp norish.yml /srv/norish/
-            chmod 644 /srv/norish/norish.yml
+            sudo mkdir -p /srv/norish
+            sudo cp norish.yml /srv/norish/
+            sudo chmod 644 /srv/norish/norish.yml
 
             # Deploy locally
             cd /srv/norish

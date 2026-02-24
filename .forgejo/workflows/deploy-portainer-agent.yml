@@ -42,7 +42,7 @@ jobs:
           if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
             echo "Redeploying Portainer Agent..."
             mkdir -p ~/.hac-noncritical
-            mkdir -p /srv/portainer-agent/data
+            sudo mkdir -p /srv/portainer-agent/data
 
             docker compose -p portainer-agent down --remove-orphans || true
             docker compose -p portainer-agent -f portainer-agent.yml up -d --force-recreate

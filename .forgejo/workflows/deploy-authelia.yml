@@ -30,19 +30,19 @@ jobs:
       - name: Prepare server directories and config
         run: |
           # Ensure directories exist
-          mkdir -p /srv/authelia/config
-          mkdir -p /srv/authelia/secrets
-          mkdir -p /srv/authelia/postgres
-          mkdir -p /srv/authelia/lldap/data
+          sudo mkdir -p /srv/authelia/config
+          sudo mkdir -p /srv/authelia/secrets
+          sudo mkdir -p /srv/authelia/postgres
+          sudo mkdir -p /srv/authelia/lldap/data
 
           # Copy config from repo to server
-          cp ./Docker-Critical/Auth/authelia-config/configuration.yml /srv/authelia/config/configuration.yml
+          sudo cp ./Docker-Critical/Auth/authelia-config/configuration.yml /srv/authelia/config/configuration.yml
 
           # Generate OIDC JWKS key if missing
           if [ ! -f /srv/authelia/secrets/oidc-jwks.pem ]; then
             echo "Generating OIDC JWKS RSA key..."
-            openssl genrsa -out /srv/authelia/secrets/oidc-jwks.pem 4096
-            chmod 600 /srv/authelia/secrets/oidc-jwks.pem
+            sudo openssl genrsa -out /srv/authelia/secrets/oidc-jwks.pem 4096
+            sudo chmod 600 /srv/authelia/secrets/oidc-jwks.pem
           fi
 
       - name: Compare image and config

@@ -124,8 +124,8 @@ jobs:
           fi
 
           # Ensure indexer bind-mount dir exists with correct ownership
-          mkdir -p /srv/wazuh/indexer-data
-          chown -R 1000:1000 /srv/wazuh/indexer-data
+          sudo mkdir -p /srv/wazuh/indexer-data
+          sudo chown -R 1000:1000 /srv/wazuh/indexer-data
 
           # Ensure NFS archive target exists
           YEAR=$(date +%Y)
@@ -133,11 +133,11 @@ jobs:
 
           # Generate dashboard wazuh.yml with actual API credentials
           # (bind-mounted into the container alongside the named volume)
-          mkdir -p /srv/wazuh/dashboard
+          sudo mkdir -p /srv/wazuh/dashboard
           printf 'hosts:\n  - default:\n      url: https://wazuh.manager\n      port: 55000\n      username: %s\n      password: "%s"\n      run_as: false\n' \
             "${WAZUH_API_USERNAME:-wazuh-wui}" "$WAZUH_API_PASSWORD" \
             > /srv/wazuh/dashboard/wazuh.yml
-          chmod 666 /srv/wazuh/dashboard/wazuh.yml
+          sudo chmod 666 /srv/wazuh/dashboard/wazuh.yml
 
           compose_env docker compose -p wazuh -f security.yaml up -d --force-recreate
 

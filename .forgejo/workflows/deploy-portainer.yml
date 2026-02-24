@@ -47,7 +47,7 @@ jobs:
           if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
             echo "Redeploying Portainer..."
             mkdir -p ~/.hac-critical
-            mkdir -p /srv/portainer/data
+            sudo mkdir -p /srv/portainer/data
 
             docker compose -p portainer down --remove-orphans || true
             docker compose -p portainer -f portainer.yml up -d --force-recreate
