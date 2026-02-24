@@ -25,7 +25,7 @@ jobs:
           TZ: ${{ vars.TZ }}
         run: |
           defined_image=$(grep -m1 'image:' Docker-Critical/Networking/Cloudflared/cloudflared.yml | awk '{print $2}')
-          running_image=$(sudo docker inspect -f '{{.Config.Image}}' cloudflared 2>/dev/null || echo "none")
+          running_image=$(docker inspect -f '{{.Config.Image}}' cloudflared 2>/dev/null || echo "none")
           checksum=$(sha256sum Docker-Critical/Networking/Cloudflared/cloudflared.yml | awk '{print $1}')
           old=$(sudo cat /srv/cloudflared/.cloudflared_checksum 2>/dev/null || echo "")
 
@@ -37,7 +37,7 @@ jobs:
 
             cd /srv/cloudflared
             env TZ=${TZ:-America/Chicago} \
-              sudo docker compose -p cloudflared -f cloudflared.yml up -d --force-recreate
+              docker compose -p cloudflared -f cloudflared.yml up -d --force-recreate
 
             sudo sh -c "echo '$checksum' > /srv/cloudflared/.cloudflared_checksum"
           else

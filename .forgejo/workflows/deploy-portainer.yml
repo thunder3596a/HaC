@@ -45,15 +45,15 @@ jobs:
           sudo mkdir -p /srv/portainer/data
 
           defined_image=$(grep -m1 'image:.*portainer-ce' portainer.yml | awk '{print $2}')
-          running_image=$(sudo docker inspect -f '{{.Config.Image}}' portainer 2>/dev/null || echo "none")
+          running_image=$(docker inspect -f '{{.Config.Image}}' portainer 2>/dev/null || echo "none")
           checksum=$(sha256sum portainer.yml | awk '{print $1}')
           old=$(cat ~/.hac-critical/.portainer_checksum 2>/dev/null || echo "")
 
           if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
             echo "Redeploying Portainer..."
 
-            sudo docker compose -p portainer down --remove-orphans || true
-            sudo docker compose -p portainer -f portainer.yml up -d --force-recreate
+            docker compose -p portainer down --remove-orphans || true
+            docker compose -p portainer -f portainer.yml up -d --force-recreate
             echo "$checksum" > ~/.hac-critical/.portainer_checksum
           else
             echo "No changes detected; skipping redeploy"

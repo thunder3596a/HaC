@@ -40,7 +40,7 @@ jobs:
           defined_image=$(grep -m1 'image:' norish.yml | awk '{print $2}')
 
           # Extract running image from remote host
-          running_image=$(sudo docker inspect -f '{{.Config.Image}}' norish-app 2>/dev/null || echo "none")
+          running_image=$(docker inspect -f '{{.Config.Image}}' norish-app 2>/dev/null || echo "none")
 
           # Compute checksum of compose file
           checksum=$(sha256sum norish.yml | awk '{print $1}')
@@ -65,7 +65,7 @@ jobs:
             NORISH_MASTER_KEY=$NORISH_MASTER_KEY \
             NORISH_OIDC_CLIENT_SECRET=$NORISH_OIDC_CLIENT_SECRET \
             NORISH_DB_PASSWORD=$NORISH_DB_PASSWORD \
-            sudo docker compose -p norish -f norish.yml up -d --force-recreate
+            docker compose -p norish -f norish.yml up -d --force-recreate
 
             # Save checksum
             echo "$checksum" > /srv/norish/.norish_checksum

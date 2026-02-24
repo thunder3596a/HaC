@@ -55,7 +55,7 @@ jobs:
           defined_image=$(grep -m1 'image:' Postfix.yml | awk '{print $2}')
 
           # Extract running image
-          running_image=$(sudo docker inspect -f '{{.Config.Image}}' smtp-relay 2>/dev/null || echo "none")
+          running_image=$(docker inspect -f '{{.Config.Image}}' smtp-relay 2>/dev/null || echo "none")
 
           # Compute checksum of compose file
           checksum=$(sha256sum Postfix.yml | awk '{print $1}')
@@ -84,7 +84,7 @@ jobs:
               DOMAIN_NAME=$DOMAIN_NAME \
               SENDER_DOMAIN=$SENDER_DOMAIN \
               TZ=${TZ:-America/Chicago} \
-              sudo docker compose -p postfix -f Postfix.yml up -d --force-recreate
+              docker compose -p postfix -f Postfix.yml up -d --force-recreate
 
             sudo sh -c "echo '$checksum' > /srv/smtp-relay/.postfix_checksum"
           else

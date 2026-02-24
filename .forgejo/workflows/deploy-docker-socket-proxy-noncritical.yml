@@ -26,4 +26,4 @@ jobs:
         env:
           TZ: ${{ vars.TZ }}
         run: |
-          sudo docker compose -p docker-socket-proxy-noncritical -f docker-socket-proxy.yml up -d --force-recreate
+          docker compose -p docker-socket-proxy-noncritical -f docker-socket-proxy.yml up -d --force-recreate

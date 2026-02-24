@@ -36,7 +36,7 @@ jobs:
           defined_image=$(grep -m1 'image:' lidarr.yml | awk '{print $2}')
 
           # Extract running image
-          running_image=$(sudo docker inspect -f '{{.Config.Image}}' lidarr 2>/dev/null || echo "none")
+          running_image=$(docker inspect -f '{{.Config.Image}}' lidarr 2>/dev/null || echo "none")
 
           # Compute checksum of compose file
           checksum=$(sha256sum lidarr.yml | awk '{print $1}')
@@ -51,9 +51,9 @@ jobs:
 
             # Deploy
             PUID=$PUID PGID=$PGID TZ=$TZ DOMAIN_NAME=$DOMAIN_NAME CERTRESOLVER=$CERTRESOLVER \
-              sudo docker compose -p lidarr -f lidarr.yml down --remove-orphans || true
+              docker compose -p lidarr -f lidarr.yml down --remove-orphans || true
             PUID=$PUID PGID=$PGID TZ=$TZ DOMAIN_NAME=$DOMAIN_NAME CERTRESOLVER=$CERTRESOLVER \
-              sudo docker compose -p lidarr -f lidarr.yml up -d --force-recreate
+              docker compose -p lidarr -f lidarr.yml up -d --force-recreate
 
             # Save checksum
             echo "$checksum" > .lidarr_checksum

@@ -38,7 +38,7 @@ jobs:
           defined_image=$(grep -m1 'image:' vikunja.yml | awk '{print $2}')
 
           # Extract running image
-          running_image=$(sudo docker inspect -f '{{.Config.Image}}' vikunja 2>/dev/null || echo "none")
+          running_image=$(docker inspect -f '{{.Config.Image}}' vikunja 2>/dev/null || echo "none")
 
           # Compute checksum of compose file
           checksum=$(sha256sum vikunja.yml | awk '{print $1}')
@@ -59,7 +59,7 @@ jobs:
             TZ=${TZ:-America/Chicago} \
             VIKUNJA_DB_PASSWORD=$VIKUNJA_DB_PASSWORD \
             VIKUNJA_JWT_SECRET=$VIKUNJA_JWT_SECRET \
-            sudo docker compose -p vikunja -f vikunja.yml up -d --force-recreate
+            docker compose -p vikunja -f vikunja.yml up -d --force-recreate
 
             echo "$checksum" > /srv/vikunja/.vikunja_checksum
           else

@@ -36,7 +36,7 @@ jobs:
           done
 
           defined_image=$(grep -m1 'image:' Docker-Critical/Home/NUT/nut.yml | awk '{print $2}')
-          running_image=$(sudo docker inspect -f '{{.Config.Image}}' nut-ups1 2>/dev/null || echo "none")
+          running_image=$(docker inspect -f '{{.Config.Image}}' nut-ups1 2>/dev/null || echo "none")
           checksum=$(sha256sum Docker-Critical/Home/NUT/nut.yml | awk '{print $1}')
           old=$(cat /srv/nut/.nut_checksum 2>/dev/null || echo "")
 
@@ -51,7 +51,7 @@ jobs:
             NUT_UPS1_SERIAL=$NUT_UPS1_SERIAL \
             NUT_UPS2_SERIAL=$NUT_UPS2_SERIAL \
             NUT_API_PASSWORD=$NUT_API_PASSWORD \
-            sudo docker compose -p nut -f nut.yml up -d --force-recreate
+            docker compose -p nut -f nut.yml up -d --force-recreate
 
             echo "$checksum" > /srv/nut/.nut_checksum
           else

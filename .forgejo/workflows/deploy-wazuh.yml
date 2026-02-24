@@ -101,7 +101,7 @@ jobs:
               "$@"
           }
 
-          compose_env sudo docker compose -p wazuh -f security.yaml down --remove-orphans || true
+          compose_env docker compose -p wazuh -f security.yaml down --remove-orphans || true
           sleep 5
 
           if [ "$IMAGE_CHANGED" = "true" ]; then
@@ -139,7 +139,7 @@ jobs:
             > /srv/wazuh/dashboard/wazuh.yml
           sudo chmod 666 /srv/wazuh/dashboard/wazuh.yml
 
-          compose_env sudo docker compose -p wazuh -f security.yaml up -d --force-recreate
+          compose_env docker compose -p wazuh -f security.yaml up -d --force-recreate
 
           # Stage checksum for saving AFTER successful verification.
           # Do NOT save it now — a broken deploy must be retried next run.

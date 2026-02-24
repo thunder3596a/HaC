@@ -65,7 +65,7 @@ jobs:
           defined_image=$(grep -m1 'image:' Authelia.yml | awk '{print $2}')
 
           # Extract running image
-          running_image=$(sudo docker inspect -f '{{.Config.Image}}' authelia 2>/dev/null || echo "none")
+          running_image=$(docker inspect -f '{{.Config.Image}}' authelia 2>/dev/null || echo "none")
 
           # Compute checksum of compose file + config
           checksum=$(cat Authelia.yml authelia-config/configuration.yml | sha256sum | awk '{print $1}')
@@ -79,10 +79,10 @@ jobs:
             echo "Redeploying Authelia"
 
             # Stop old containers if exist
-            sudo docker rm -f authelia lldap authelia-db || true
+            docker rm -f authelia lldap authelia-db || true
 
             # Bring stack down cleanly
-            sudo docker compose -p authelia -f Authelia.yml down --remove-orphans || true
+            docker compose -p authelia -f Authelia.yml down --remove-orphans || true
 
             # Deploy stack
             DOMAIN_NAME=$DOMAIN_NAME \
@@ -97,7 +97,7 @@ jobs:
             LLDAP_JWT_SECRET=$LLDAP_JWT_SECRET \
             LLDAP_KEY_SEED=$LLDAP_KEY_SEED \
             LLDAP_LDAP_USER_PASS=$LLDAP_LDAP_USER_PASS \
-            sudo docker compose -p authelia -f Authelia.yml up -d --force-recreate
+            docker compose -p authelia -f Authelia.yml up -d --force-recreate
 
             # Save checksum locally for next comparison
             echo "$checksum" > .authelia_checksum

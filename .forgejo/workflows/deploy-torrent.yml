@@ -73,11 +73,11 @@ jobs:
             PUID=$PUID PGID=$PGID TZ=$TZ DOMAIN_NAME=$DOMAIN_NAME CERTRESOLVER=$CERTRESOLVER \
               VPN_SERVICE_PROVIDER=$VPN_SERVICE_PROVIDER VPN_SERVER_COUNTRIES=$VPN_SERVER_COUNTRIES \
               LAN_SUBNET=$LAN_SUBNET OPENVPN_USER=$OPENVPN_USER OPENVPN_PASSWORD=$OPENVPN_PASSWORD \
-              sudo docker compose -p torrent -f torrent.yml down --remove-orphans || true
+              docker compose -p torrent -f torrent.yml down --remove-orphans || true
             PUID=$PUID PGID=$PGID TZ=$TZ DOMAIN_NAME=$DOMAIN_NAME CERTRESOLVER=$CERTRESOLVER \
               VPN_SERVICE_PROVIDER=$VPN_SERVICE_PROVIDER VPN_SERVER_COUNTRIES=$VPN_SERVER_COUNTRIES \
               LAN_SUBNET=$LAN_SUBNET OPENVPN_USER=$OPENVPN_USER OPENVPN_PASSWORD=$OPENVPN_PASSWORD \
-              sudo docker compose -p torrent -f torrent.yml up -d --force-recreate
+              docker compose -p torrent -f torrent.yml up -d --force-recreate
 
             # Save checksum
             echo "$checksum" > .torrent_checksum

@@ -37,14 +37,14 @@ jobs:
         run: |
           # Check if image or config changed; redeploy if needed
           defined_image=$(grep -m1 'image:' homebox.yml | awk '{print $2}')
-          running_image=$(sudo docker inspect -f '{{.Config.Image}}' homebox 2>/dev/null || echo "none")
+          running_image=$(docker inspect -f '{{.Config.Image}}' homebox 2>/dev/null || echo "none")
           checksum=$(sha256sum homebox.yml | awk '{print $1}')
           old=$(cat .homebox_checksum 2>/dev/null || echo "")
 
           if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
             echo "Redeploying HomeBox..."
-            sudo docker compose -p homebox -f homebox.yml down --remove-orphans || true
-            CERTRESOLVER="$CERTRESOLVER" DOMAIN_NAME="$DOMAIN_NAME" sudo docker compose -p homebox -f homebox.yml up -d --force-recreate
+            docker compose -p homebox -f homebox.yml down --remove-orphans || true
+            CERTRESOLVER="$CERTRESOLVER" DOMAIN_NAME="$DOMAIN_NAME" docker compose -p homebox -f homebox.yml up -d --force-recreate
             echo "$checksum" > .homebox_checksum
             docker logs homebox --tail 20
           else

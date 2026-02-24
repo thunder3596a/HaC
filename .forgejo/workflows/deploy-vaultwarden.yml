@@ -38,7 +38,7 @@ jobs:
           defined_image=$(grep -m1 'image:' vaultwarden.yml | awk '{print $2}')
 
           # Extract running image
-          running_image=$(sudo docker inspect -f '{{.Config.Image}}' vaultwarden 2>/dev/null || echo "none")
+          running_image=$(docker inspect -f '{{.Config.Image}}' vaultwarden 2>/dev/null || echo "none")
 
           # Compute checksum of compose file
           checksum=$(sha256sum vaultwarden.yml | awk '{print $1}')
@@ -52,10 +52,10 @@ jobs:
             echo "Redeploying Vaultwarden"
 
             # Stop old container if exists
-            sudo docker rm -f vaultwarden vaultwarden-db || true
+            docker rm -f vaultwarden vaultwarden-db || true
 
             # Bring stack down cleanly
-            sudo docker compose -p vaultwarden -f vaultwarden.yml down --remove-orphans || true
+            docker compose -p vaultwarden -f vaultwarden.yml down --remove-orphans || true
 
             # Deploy stack
             DOMAIN_NAME=$DOMAIN_NAME \
@@ -63,7 +63,7 @@ jobs:
             TZ=$TZ \
             VAULTWARDEN_DB_PASSWORD=$VAULTWARDEN_DB_PASSWORD \
             VAULTWARDEN_ADMIN_TOKEN=$VAULTWARDEN_ADMIN_TOKEN \
-            sudo docker compose -p vaultwarden -f vaultwarden.yml up -d --force-recreate
+            docker compose -p vaultwarden -f vaultwarden.yml up -d --force-recreate
 
             # Save checksum locally for next comparison
             echo "$checksum" > .vaultwarden_checksum

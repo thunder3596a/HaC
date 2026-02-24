@@ -41,7 +41,7 @@ jobs:
           done
 
           defined_image=$(grep -m1 'image:.*n8n' n8n.yml | awk '{print $2}')
-          running_image=$(sudo docker inspect -f '{{.Config.Image}}' n8n 2>/dev/null || echo "none")
+          running_image=$(docker inspect -f '{{.Config.Image}}' n8n 2>/dev/null || echo "none")
           checksum=$(sha256sum n8n.yml | awk '{print $1}')
           old=$(cat ~/.hac-critical/.n8n_checksum 2>/dev/null || echo "")
 
@@ -49,8 +49,8 @@ jobs:
             echo "Redeploying N8N..."
             mkdir -p ~/.hac-critical
 
-            sudo docker compose -p n8n down --remove-orphans || true
-            sudo docker compose -p n8n -f n8n.yml up -d --force-recreate
+            docker compose -p n8n down --remove-orphans || true
+            docker compose -p n8n -f n8n.yml up -d --force-recreate
             echo "$checksum" > ~/.hac-critical/.n8n_checksum
           else
             echo "No changes detected; skipping redeploy"

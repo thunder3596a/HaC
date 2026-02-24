@@ -39,7 +39,7 @@ jobs:
           defined_image=$(grep -m1 'image:' immich.yml | awk '{print $2}')
 
           # Extract running image
-          running_image=$(sudo docker inspect -f '{{.Config.Image}}' immich 2>/dev/null || echo "none")
+          running_image=$(docker inspect -f '{{.Config.Image}}' immich 2>/dev/null || echo "none")
 
           # Compute checksum of compose file
           checksum=$(sha256sum immich.yml | awk '{print $1}')
@@ -55,10 +55,10 @@ jobs:
             # Deploy
             TZ=$TZ DOMAIN_NAME=$DOMAIN_NAME CERTRESOLVER=$CERTRESOLVER \
               IMMICH_DB_USERNAME=$IMMICH_DB_USERNAME IMMICH_DB_PASSWORD=$IMMICH_DB_PASSWORD IMMICH_DB_DATABASE=$IMMICH_DB_DATABASE \
-              sudo docker compose -p immich -f immich.yml down --remove-orphans || true
+              docker compose -p immich -f immich.yml down --remove-orphans || true
             TZ=$TZ DOMAIN_NAME=$DOMAIN_NAME CERTRESOLVER=$CERTRESOLVER \
               IMMICH_DB_USERNAME=$IMMICH_DB_USERNAME IMMICH_DB_PASSWORD=$IMMICH_DB_PASSWORD IMMICH_DB_DATABASE=$IMMICH_DB_DATABASE \
-              sudo docker compose -p immich -f immich.yml up -d --force-recreate
+              docker compose -p immich -f immich.yml up -d --force-recreate
 
             # Save checksum
             echo "$checksum" > .immich_checksum

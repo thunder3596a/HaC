@@ -32,7 +32,7 @@ jobs:
         run: |
           # Check if image or config changed; redeploy if needed
           defined_image=$(grep -m1 'image:' musicassistant.yml | awk '{print $2}')
-          running_image=$(sudo docker inspect -f '{{.Config.Image}}' music-assistant 2>/dev/null || echo "none")
+          running_image=$(docker inspect -f '{{.Config.Image}}' music-assistant 2>/dev/null || echo "none")
           checksum=$(sha256sum musicassistant.yml | awk '{print $1}')
           old=$(cat .musicassistant_checksum 2>/dev/null || echo "")
 
@@ -42,8 +42,8 @@ jobs:
             docker stop music-assistant 2>/dev/null || true
             docker rm music-assistant 2>/dev/null || true
             # Clean up with docker compose
-            sudo docker compose -p music-assistant -f musicassistant.yml down --remove-orphans || true
-            DOMAIN_NAME="$DOMAIN_NAME" CERTRESOLVER="$CERTRESOLVER" TZ="$TZ" sudo docker compose -p music-assistant -f musicassistant.yml up -d --force-recreate
+            docker compose -p music-assistant -f musicassistant.yml down --remove-orphans || true
+            DOMAIN_NAME="$DOMAIN_NAME" CERTRESOLVER="$CERTRESOLVER" TZ="$TZ" docker compose -p music-assistant -f musicassistant.yml up -d --force-recreate
             echo "$checksum" > .musicassistant_checksum
             docker logs music-assistant --tail 20
           else

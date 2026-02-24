@@ -38,7 +38,7 @@ jobs:
           done
 
           defined_image=$(grep -m1 'image:' openwebui.yml | awk '{print $2}')
-          running_image=$(sudo docker inspect -f '{{.Config.Image}}' open-webui 2>/dev/null || echo "none")
+          running_image=$(docker inspect -f '{{.Config.Image}}' open-webui 2>/dev/null || echo "none")
           checksum=$(sha256sum openwebui.yml | awk '{print $1}')
           old=$(cat ~/.hac-noncritical/.openwebui_checksum 2>/dev/null || echo "")
 
@@ -46,8 +46,8 @@ jobs:
             echo "Redeploying Open WebUI (NonCritical)..."
             mkdir -p ~/.hac-noncritical
 
-            sudo docker compose -p openwebui down --remove-orphans || true
-            sudo docker compose -p openwebui -f openwebui.yml up -d --force-recreate
+            docker compose -p openwebui down --remove-orphans || true
+            docker compose -p openwebui -f openwebui.yml up -d --force-recreate
             echo "$checksum" > ~/.hac-noncritical/.openwebui_checksum
           else
             echo "No changes detected; skipping redeploy"

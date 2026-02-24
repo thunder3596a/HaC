@@ -45,7 +45,7 @@ jobs:
           defined_image=$(grep -m1 'image:.*forgejo' git.yml | awk '{print $2}')
 
           # Get currently running image
-          running_image=$(sudo docker inspect -f '{{.Config.Image}}' forgejo 2>/dev/null || echo "none")
+          running_image=$(docker inspect -f '{{.Config.Image}}' forgejo 2>/dev/null || echo "none")
 
           # Compute checksum of compose file
           checksum=$(sha256sum git.yml | awk '{print $1}')
@@ -57,11 +57,11 @@ jobs:
             mkdir -p ~/.hac-critical
 
             # Force remove containers if they exist
-            sudo docker stop forgejo git-db 2>/dev/null || true
-            sudo docker rm forgejo git-db 2>/dev/null || true
+            docker stop forgejo git-db 2>/dev/null || true
+            docker rm forgejo git-db 2>/dev/null || true
 
             # Stop and remove stack cleanly
-            sudo docker compose -p git down --remove-orphans || true
+            docker compose -p git down --remove-orphans || true
 
             # Deploy stack - docker compose without sudo (nicholas in docker group)
             env DOMAIN_NAME=$DOMAIN_NAME \
