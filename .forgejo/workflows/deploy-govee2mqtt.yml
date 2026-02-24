@@ -42,6 +42,7 @@ jobs:
             sudo chmod 644 /srv/govee2mqtt/govee2mqtt.yml
 
             cd /srv/govee2mqtt
+            docker compose -p govee2mqtt -f govee2mqtt.yml down --remove-orphans || true
             GOVEE_EMAIL=$GOVEE_EMAIL \
             GOVEE_PASSWORD=$GOVEE_PASSWORD \
             GOVEE_API_KEY=$GOVEE_API_KEY \
