@@ -34,8 +34,8 @@ services:
       - FORGEJO__actions__DISABLE_GITHUB_WEBHOOKS=false
       - FORGEJO__repository__ENABLE_LOCAL_PATH_MIGRATION=true
       - SSH_LISTEN_PORT=2222
-      - FORGEJO__ui__THEMES=forgejo-light,forgejo-dark,sage-modern
-      - FORGEJO__ui__DEFAULT_THEME=sage-modern
+      - FORGEJO__ui__THEMES=forgejo-light,forgejo-dark
+      - FORGEJO__ui__DEFAULT_THEME=forgejo-dark
 
     networks:
       - gitproxy

@@ -57,13 +57,18 @@ jobs:
             mkdir -p ~/.hac-critical
 
             # Force remove containers if they exist
-            docker stop forgejo git-db 2>/dev/null || true
-            docker rm forgejo git-db 2>/dev/null || true
+            sudo docker stop forgejo git-db 2>/dev/null || true
+            sudo docker rm forgejo git-db 2>/dev/null || true
 
             # Stop and remove stack cleanly
             sudo docker compose -p git down --remove-orphans || true
 
             # Deploy stack
+            DOMAIN_NAME=$DOMAIN_NAME \
+            CERTRESOLVER=$CERTRESOLVER \
+            GIT_DB_PASSWORD=$GIT_DB_PASSWORD \
+            POSTGRES_USER=$POSTGRES_USER \
+            POSTGRES_DB=$POSTGRES_DB \
             sudo docker compose -p git -f git.yml up -d --force-recreate
 
             # Save checksum for next comparison
