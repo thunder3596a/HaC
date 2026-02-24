@@ -42,9 +42,9 @@ jobs:
 
           if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
             echo "Redeploying NUT..."
-            sudo mkdir -p /srv/nut
-            sudo cp Docker-Critical/Home/NUT/nut.yml /srv/nut/
-            sudo chmod 644 /srv/nut/nut.yml
+            mkdir -p /srv/nut
+            cp Docker-Critical/Home/NUT/nut.yml /srv/nut/
+            chmod 644 /srv/nut/nut.yml
 
             cd /srv/nut
             TZ=${TZ:-America/Chicago} \

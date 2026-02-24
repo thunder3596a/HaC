@@ -54,24 +54,17 @@ jobs:
 
           if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
             echo "Redeploying Traefik..."
-            sudo mkdir -p /srv/traefik
-            sudo cp proxy.yml /srv/traefik/
-            sudo chmod 644 /srv/traefik/proxy.yml
-
+            mkdir -p /srv/traefik
+            cp proxy.yml /srv/traefik/
+            chmod 644 /srv/traefik/proxy.yml
+            
             # Ensure acme.json exists with correct permissions
-            sudo touch /srv/traefik/acme.json
-            sudo chmod 600 /srv/traefik/acme.json
-
+            touch /srv/traefik/acme.json
+            chmod 600 /srv/traefik/acme.json
+            
             cd /srv/traefik
-            CLOUDFLARE_EMAIL=$CLOUDFLARE_EMAIL \
-            CLOUDFLARE_DNS_API_TOKEN=$CLOUDFLARE_DNS_API_TOKEN \
-            CLOUDFLARE_ZONE_API_TOKEN=$CLOUDFLARE_ZONE_API_TOKEN \
-            LETS_ENCRYPT_EMAIL=$LETS_ENCRYPT_EMAIL \
-            DOMAIN_NAME=$DOMAIN_NAME \
-            CERTRESOLVER=$CERTRESOLVER \
-            TZ=$TZ \
             docker compose -p proxy -f proxy.yml up -d --force-recreate
-            echo "$checksum" | sudo tee /srv/traefik/.traefik_checksum > /dev/null
+            echo "$checksum" > /srv/traefik/.traefik_checksum
           else
             echo "No changes detected; skipping redeploy"
           fi

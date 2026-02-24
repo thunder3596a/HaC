@@ -37,9 +37,9 @@ jobs:
 
           if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
             echo "Redeploying Govee2MQTT..."
-            sudo mkdir -p /srv/govee2mqtt/data /srv/govee2mqtt/mosquitto/{config,data,log}
-            sudo cp Docker-Critical/Home/Govee2MQTT/govee2mqtt.yml /srv/govee2mqtt/
-            sudo chmod 644 /srv/govee2mqtt/govee2mqtt.yml
+            mkdir -p /srv/govee2mqtt/data /srv/govee2mqtt/mosquitto/{config,data,log}
+            cp Docker-Critical/Home/Govee2MQTT/govee2mqtt.yml /srv/govee2mqtt/
+            chmod 644 /srv/govee2mqtt/govee2mqtt.yml
 
             cd /srv/govee2mqtt
             GOVEE_EMAIL=$GOVEE_EMAIL \

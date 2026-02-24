@@ -47,11 +47,11 @@ jobs:
           if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
             echo "Redeploying Vikunja..."
 
-            sudo mkdir -p /srv/vikunja/files
-            sudo mkdir -p /srv/vikunja/postgres
+            mkdir -p /srv/vikunja/files
+            mkdir -p /srv/vikunja/postgres
             docker run --rm -v /srv/vikunja/files:/data alpine chown -R 1000:1000 /data
-            sudo cp vikunja.yml /srv/vikunja/
-            sudo chmod 644 /srv/vikunja/vikunja.yml
+            cp vikunja.yml /srv/vikunja/
+            chmod 644 /srv/vikunja/vikunja.yml
 
             cd /srv/vikunja
             CERTRESOLVER=${CERTRESOLVER:-cloudflare} \

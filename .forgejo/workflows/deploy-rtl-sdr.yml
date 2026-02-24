@@ -53,9 +53,9 @@ jobs:
           if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
             echo "Redeploying RTL-SDR"
 
-            sudo mkdir -p /srv/rtl-sdr/config /srv/rtl-sdr/data
-            sudo cp ./config/rtl_433.conf /srv/rtl-sdr/config/rtl_433.conf
-            sudo chown -R "${PUID:-568}:${PGID:-568}" /srv/rtl-sdr
+            mkdir -p /srv/rtl-sdr/config /srv/rtl-sdr/data
+            cp ./config/rtl_433.conf /srv/rtl-sdr/config/rtl_433.conf
+            chown -R "${PUID:-568}:${PGID:-568}" /srv/rtl-sdr
 
             # Deploy
             TZ=$TZ MQTT_HOST=$MQTT_HOST MQTT_PORT=$MQTT_PORT MQTT_USER=$MQTT_USER MQTT_PASSWORD=$MQTT_PASSWORD \

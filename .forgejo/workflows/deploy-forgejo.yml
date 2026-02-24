@@ -56,19 +56,10 @@ jobs:
             echo "Redeploying Forgejo on docker-critical..."
             mkdir -p ~/.hac-critical
 
-            # Force remove containers if they exist
-            docker stop forgejo git-db 2>/dev/null || true
-            docker rm forgejo git-db 2>/dev/null || true
-
             # Stop and remove stack cleanly
             docker compose -p git down --remove-orphans || true
 
-            # Deploy stack - docker compose without sudo (nicholas in docker group)
-            env DOMAIN_NAME=$DOMAIN_NAME \
-            CERTRESOLVER=$CERTRESOLVER \
-            GIT_DB_PASSWORD=$GIT_DB_PASSWORD \
-            POSTGRES_USER=$POSTGRES_USER \
-            POSTGRES_DB=$POSTGRES_DB \
+            # Deploy stack
             docker compose -p git -f git.yml up -d --force-recreate
 
             # Save checksum for next comparison

@@ -21,10 +21,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Verify compose file exists
-        run: ls -l "./Docker-NonCritical/Media/Dispatcharr/dispatcharr.yml"
+        run: ls -l "./Docker-NonCritical/dispatcharr/dispatcharr.yml"
 
       - name: Compare image and config
-        working-directory: "./Docker-NonCritical/Media/Dispatcharr"
+        working-directory: "./Docker-NonCritical/dispatcharr"
         env:
           PUID: ${{ vars.PUID }}
           PGID: ${{ vars.PGID }}
@@ -49,14 +49,9 @@ jobs:
           if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
             echo "Redeploying Dispatcharr"
 
-            # Stop old containers
-            docker rm -f dispatcharr || true
-
-            # Bring stack down
+            # Deploy
             PUID=$PUID PGID=$PGID TZ=$TZ DOMAIN_NAME=$DOMAIN_NAME CERTRESOLVER=$CERTRESOLVER \
               docker compose -p dispatcharr -f dispatcharr.yml down --remove-orphans || true
-
-            # Deploy stack
             PUID=$PUID PGID=$PGID TZ=$TZ DOMAIN_NAME=$DOMAIN_NAME CERTRESOLVER=$CERTRESOLVER \
               docker compose -p dispatcharr -f dispatcharr.yml up -d --force-recreate
 

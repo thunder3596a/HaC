@@ -34,9 +34,6 @@ jobs:
             exit 1
           fi
 
-          # Create directories
-          mkdir -p ~/.hac-noncritical
-
           defined_image=$(grep -m1 'image:.*agent' portainer-agent.yml | awk '{print $2}')
           running_image=$(docker inspect -f '{{.Config.Image}}' portainer-agent 2>/dev/null || echo "none")
           checksum=$(sha256sum portainer-agent.yml | awk '{print $1}')
@@ -44,6 +41,8 @@ jobs:
 
           if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
             echo "Redeploying Portainer Agent..."
+            mkdir -p ~/.hac-noncritical
+            mkdir -p /srv/portainer-agent/data
 
             docker compose -p portainer-agent down --remove-orphans || true
             docker compose -p portainer-agent -f portainer-agent.yml up -d --force-recreate

@@ -52,17 +52,12 @@ jobs:
             echo "Redeploying Vaultwarden"
 
             # Stop old container if exists
-            docker rm -f vaultwarden vaultwarden-db || true
+            docker rm -f vaultwarden || true
 
             # Bring stack down cleanly
             docker compose -p vaultwarden -f vaultwarden.yml down --remove-orphans || true
 
             # Deploy stack
-            DOMAIN_NAME=$DOMAIN_NAME \
-            CERTRESOLVER=$CERTRESOLVER \
-            TZ=$TZ \
-            VAULTWARDEN_DB_PASSWORD=$VAULTWARDEN_DB_PASSWORD \
-            VAULTWARDEN_ADMIN_TOKEN=$VAULTWARDEN_ADMIN_TOKEN \
             docker compose -p vaultwarden -f vaultwarden.yml up -d --force-recreate
 
             # Save checksum locally for next comparison
