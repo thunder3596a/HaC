@@ -68,7 +68,6 @@ services:
       - ha.category=auth
       - ha.compose-file=Docker-Critical/Auth/vaultwarden.yml
       - ha.service-name=vaultwarden-db
-      - com.centurylinklabs.watchtower.enable=true
 
 networks:
   authnet:

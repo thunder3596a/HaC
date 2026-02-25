@@ -1,0 +1,52 @@
+name: Deploy Watchtower (Critical)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "Docker-Critical/Management/Watchtower/**"
+      - ".forgejo/workflows/deploy-watchtower-critical.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: docker-critical
+
+    defaults:
+      run:
+        shell: sh
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify compose file exists
+        run: ls -l "./Docker-Critical/Management/Watchtower/watchtower.yml"
+
+      - name: Deploy Watchtower
+        working-directory: "./Docker-Critical/Management/Watchtower"
+        env:
+          TZ: ${{ vars.TZ }}
+        run: |
+          defined_image=$(grep -m1 'image:' watchtower.yml | awk '{print $2}')
+          running_image=$(docker inspect -f '{{.Config.Image}}' watchtower 2>/dev/null || echo "none")
+          checksum=$(sha256sum watchtower.yml | awk '{print $1}')
+          old=$(cat /srv/watchtower/.watchtower_checksum 2>/dev/null || echo "")
+
+          if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
+            echo "Redeploying Watchtower..."
+            sudo mkdir -p /srv/watchtower
+            sudo cp watchtower.yml /srv/watchtower/
+            sudo chmod 644 /srv/watchtower/watchtower.yml
+
+            docker compose -p watchtower down --remove-orphans || true
+            cd /srv/watchtower
+            TZ=${TZ:-America/Chicago} \
+            docker compose -p watchtower -f watchtower.yml up -d --force-recreate
+
+            sudo sh -c "echo '$checksum' > /srv/watchtower/.watchtower_checksum"
+            docker logs watchtower --tail 20
+          else
+            echo "No changes detected; skipping redeploy"
+          fi

@@ -1,0 +1,23 @@
+services:
+  watchtower:
+    image: nickfedor/watchtower:latest
+    container_name: watchtower
+    restart: unless-stopped
+
+    environment:
+      - TZ=${TZ:-America/Chicago}
+
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+    # --label-enable: only update containers with com.centurylinklabs.watchtower.enable=true
+    # --cleanup: remove old images after update
+    # --schedule: cron expression (6-field, with seconds) — runs at 4:00 AM daily
+    command: --cleanup --label-enable --schedule "0 0 4 * * *"
+
+    labels:
+      - com.centurylinklabs.watchtower.enable=false
+      - ha.monitor=true
+      - ha.category=management
+      - ha.compose-file=Docker-NonCritical/Management/Watchtower/watchtower.yml
+      - ha.service-name=watchtower

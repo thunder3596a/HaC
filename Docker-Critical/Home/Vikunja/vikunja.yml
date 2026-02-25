@@ -84,7 +84,6 @@ services:
       - ha.category=home
       - ha.compose-file=Docker-Critical/Home/Vikunja/vikunja.yml
       - ha.service-name=vikunja-db
-      - com.centurylinklabs.watchtower.enable=true
 
     networks:
       - toolsproxy

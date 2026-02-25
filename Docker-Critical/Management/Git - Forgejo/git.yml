@@ -96,5 +96,3 @@ services:
       - ha.category=management
       - ha.compose-file=Docker-Critical/Management/Git - Forgejo/git.yml
       - ha.service-name=git-db
-      # Watchtower updates
-      - com.centurylinklabs.watchtower.enable=true
