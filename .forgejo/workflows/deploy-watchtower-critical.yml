@@ -40,7 +40,7 @@ jobs:
             sudo cp watchtower.yml /srv/watchtower/
             sudo chmod 644 /srv/watchtower/watchtower.yml
 
-            docker compose -p watchtower down --remove-orphans || true
+            docker compose -p watchtower -f /srv/watchtower/watchtower.yml down --remove-orphans || true
             cd /srv/watchtower
             TZ=${TZ:-America/Chicago} \
             docker compose -p watchtower -f watchtower.yml up -d --force-recreate

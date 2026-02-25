@@ -57,7 +57,7 @@ jobs:
             mkdir -p ~/.hac-critical
 
             # Stop and remove stack cleanly
-            docker compose -p git down --remove-orphans || true
+            docker compose -p git -f git.yml down --remove-orphans || true
 
             # Deploy stack
             docker compose -p git -f git.yml up -d --force-recreate

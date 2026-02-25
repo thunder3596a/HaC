@@ -38,7 +38,7 @@ jobs:
             echo "Redeploying Watchtower..."
             mkdir -p ~/.hac-noncritical
 
-            docker compose -p watchtower down --remove-orphans || true
+            docker compose -p watchtower -f watchtower.yml down --remove-orphans || true
             TZ=${TZ:-America/Chicago} \
             docker compose -p watchtower -f watchtower.yml up -d --force-recreate
 
