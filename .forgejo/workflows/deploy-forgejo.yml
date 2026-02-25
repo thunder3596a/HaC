@@ -56,6 +56,9 @@ jobs:
             echo "Redeploying Forgejo on docker-critical..."
             mkdir -p ~/.hac-critical
 
+            # Force-remove by name first (handles containers without compose labels)
+            docker rm -f forgejo git-db || true
+
             # Stop and remove stack cleanly
             docker compose -p git -f git.yml down --remove-orphans || true
 
