@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - "Docker-NonCritical/Tools/MCPGateway/**"
+      - "Docker-NonCritical/Automation/AI/MCPGateway/**"
       - ".forgejo/workflows/deploy-mcpgateway.yml"
   workflow_dispatch:
 
@@ -23,7 +23,7 @@ jobs:
 
       - name: Verify compose file exists
         run: |
-          ls -l "./Docker-NonCritical/Tools/MCPGateway/mcpgateway.yml"
+          ls -l "./Docker-NonCritical/Automation/AI/MCPGateway/mcpgateway.yml"
 
       - name: Create data directories
         run: |
@@ -33,7 +33,7 @@ jobs:
           echo "Data directories created"
 
       - name: Deploy MCP Gateway
-        working-directory: "./Docker-NonCritical/Tools/MCPGateway"
+        working-directory: "./Docker-NonCritical/Automation/AI/MCPGateway"
         env:
           DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
           CERTRESOLVER: ${{ vars.CERTRESOLVER }}
