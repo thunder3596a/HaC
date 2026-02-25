@@ -25,6 +25,8 @@ services:
       - "ha.category=media"
       - "ha.compose-file=Docker-NonCritical/Media/Plex/plex.yml"
       - "ha.service-name=plex"
+    devices:
+      - /dev/dri/renderD128:/dev/dri/renderD128
     volumes:
       - /srv/plex/config:/config
       - /mnt/data/media/movies:/movies
