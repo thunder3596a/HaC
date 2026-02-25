@@ -40,12 +40,8 @@ HaC/
 ├── .forgejo/workflows/          # Deployment automation (Forgejo Actions)
 ├── Docker-Critical/             # Mission-critical services (hac-critical host)
 ├── Docker-NonCritical/          # Non-essential services (hac-noncritical host)
+├── docs/                        # Supplemental documentation and guides
 ├── scripts/                     # Utility scripts
-├── DOCKER-MONITORING-SETUP.md   # Docker monitoring guide
-├── README-DOCKER-MONITORING.md  # Docker monitoring reference
-├── FORGEJO-DOCKER-SETUP.md      # Forgejo Docker setup guide
-├── FORGEJO-VARIABLES-SETUP.md   # Forgejo variables reference
-├── QUICK-SETUP.md               # Quick start guide
 └── README.md                    # This file
 ```
 
@@ -406,6 +402,8 @@ All services deploy via Forgejo CI/CD workflows in `.forgejo/workflows/`. Workfl
 
 ### Required Forgejo Variables
 
+> See [docs/forgejo-variables.md](docs/forgejo-variables.md) for full details and troubleshooting.
+
 Global variables (set in repository settings):
 
 - `DOMAIN_NAME` - Primary domain (e.g., `example.com`)
@@ -573,7 +571,7 @@ sudo ./migrate-to-homeassistant.sh
 - Include health checks for critical services
 - Traefik labels always for HTTP services
 - Watchtower label `com.centurylinklabs.watchtower.enable=true` for auto-updates
-- HA monitoring labels (`ha.monitor`, `ha.category`, `ha.compose-file`, `ha.service-name`) for Home Assistant tracking
+- HA monitoring labels (`ha.monitor`, `ha.category`, `ha.compose-file`, `ha.service-name`) for Home Assistant tracking — see [docs/docker-monitoring.md](docs/docker-monitoring.md)
 
 ---
 
@@ -663,5 +661,5 @@ Personal home automation infrastructure. Configuration patterns based on best pr
 
 ---
 
-**Last Updated:** February 18, 2026
+**Last Updated:** February 24, 2026
 **Maintainer:** Nicholas Underwood

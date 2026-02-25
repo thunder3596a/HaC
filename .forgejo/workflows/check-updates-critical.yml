@@ -101,6 +101,13 @@ jobs:
           echo "DEBUG: Sending payload:"
           echo "$payload" | jq .
 
+          # Validate HA_URL is set
+          echo "DEBUG: HA_URL=${HA_URL}"
+          if [ -z "$HA_URL" ]; then
+            echo "ERROR: HA_URL variable is not set in repository variables"
+            exit 1
+          fi
+
           # Fire an event to Home Assistant
           response=$(curl -s -w "\n%{http_code}" -X POST \
             -H "Authorization: Bearer ${HA_TOKEN}" \

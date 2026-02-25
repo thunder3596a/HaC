@@ -97,13 +97,12 @@ Developer Tools → YAML → Restart
 
 ## Next Steps After Setup
 
-1. Add labels to remaining compose files (see DOCKER-MONITORING-SETUP.md)
+1. Add labels to remaining compose files (see [docker-monitoring.md](docker-monitoring.md))
 2. Import docker-dashboard.yaml to Home Assistant
 3. Test container updates via dashboard buttons
 
 ## Need Help?
 
 See the detailed guides:
-- [DOCKER-MONITORING-SETUP.md](DOCKER-MONITORING-SETUP.md) - Complete technical setup
-- [FORGEJO-VARIABLES-SETUP.md](FORGEJO-VARIABLES-SETUP.md) - Detailed variable documentation
-- [forgejo-config-template.yml](forgejo-config-template.yml) - Template with all values
+- [docker-monitoring.md](docker-monitoring.md) - Complete technical setup
+- [forgejo-variables.md](forgejo-variables.md) - Detailed variable documentation
