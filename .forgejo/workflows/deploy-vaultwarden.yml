@@ -51,8 +51,8 @@ jobs:
           if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
             echo "Redeploying Vaultwarden"
 
-            # Stop old container if exists
-            docker rm -f vaultwarden || true
+            # Stop old containers if they exist
+            docker rm -f vaultwarden vaultwarden-db || true
 
             # Bring stack down cleanly
             docker compose -p vaultwarden -f vaultwarden.yml down --remove-orphans || true
