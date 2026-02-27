@@ -16,7 +16,7 @@ services:
         reservations:
           memory: 256M
           cpus: '0.5'
-#
+
     environment:
       - VIKUNJA_SERVICE_PUBLICURL=https://tasks.${DOMAIN_NAME}
       - VIKUNJA_SERVICE_ENABLECALDAV=true
