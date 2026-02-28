@@ -5,6 +5,7 @@ services:
     restart: unless-stopped
     networks:
       - authnet
+      
     volumes:
       - /srv/authelia/config:/config
       - /srv/authelia/secrets:/secrets:ro
