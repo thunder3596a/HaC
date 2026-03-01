@@ -53,6 +53,8 @@ access_control:
       policy: two_factor
     - domain: 'portainer.{{ env "DOMAIN_NAME" }}'
       policy: two_factor
+    - domain: 'request.{{ env "DOMAIN_NAME" }}'
+      policy: one_factor
 
 identity_providers:
   oidc:

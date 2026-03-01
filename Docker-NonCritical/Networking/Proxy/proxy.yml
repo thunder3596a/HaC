@@ -62,7 +62,7 @@ services:
       - "traefik.http.routers.dashboard.tls.domains[0].main=hac-noncritical-traefik.${DOMAIN_NAME}"
 
       #  Authelia ForwardAuth Middleware (GLOBAL)
-      - "traefik.http.middlewares.authelia.forwardauth.address=http://authelia:9091/api/verify?rd=https://authelia.${DOMAIN_NAME}"
+      - "traefik.http.middlewares.authelia.forwardauth.address=https://authelia.${DOMAIN_NAME}/api/verify?rd=https://authelia.${DOMAIN_NAME}"
       - "traefik.http.middlewares.authelia.forwardauth.trustForwardHeader=true"
       - "traefik.http.middlewares.authelia.forwardauth.authResponseHeaders=Remote-User,Remote-Groups,Remote-Name,Remote-Email"
 
