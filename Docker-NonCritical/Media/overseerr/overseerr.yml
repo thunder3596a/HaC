@@ -26,7 +26,6 @@ services:
       - "ha.service-name=overseerr"
     volumes:
       - /srv/overseerr/config:/config
-
 networks:
   mediaproxy:
     external: true
