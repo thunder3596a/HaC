@@ -21,7 +21,7 @@ services:
       # Watchtower auto-updates
       - com.centurylinklabs.watchtower.enable=true
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9001/"]
+      test: ["CMD", "/app/agent", "--help"]
       interval: 30s
       timeout: 10s
       retries: 3
