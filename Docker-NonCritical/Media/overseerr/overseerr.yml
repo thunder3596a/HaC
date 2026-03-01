@@ -1,15 +1,11 @@
 services:
   overseerr:
-    image: linuxserver/overseerr:latest
+    image: ghcr.io/seerr-team/seerr:latest
     container_name: overseerr
     restart: unless-stopped
+    init: true
     networks:
       - mediaproxy
-    environment:
-      - PUID=${PUID:-568}
-      - PGID=${PGID:-568}
-      - TZ=${TZ:-America/Chicago}
-      - LOG_LEVEL=info
     labels:
       - traefik.enable=true
       - traefik.http.routers.overseerr.entrypoints=websecure
@@ -25,7 +21,7 @@ services:
       - "ha.compose-file=Docker-NonCritical/Media/overseerr/overseerr.yml"
       - "ha.service-name=overseerr"
     volumes:
-      - /srv/overseerr/config:/config
+      - /srv/overseerr/config:/app/config
 networks:
   mediaproxy:
     external: true

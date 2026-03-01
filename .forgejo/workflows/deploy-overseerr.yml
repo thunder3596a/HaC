@@ -26,9 +26,6 @@ jobs:
       - name: Compare image and config
         working-directory: "./Docker-NonCritical/Media/overseerr"
         env:
-          PUID: ${{ vars.PUID }}
-          PGID: ${{ vars.PGID }}
-          TZ: ${{ vars.TZ }}
           DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
           CERTRESOLVER: ${{ vars.CERTRESOLVER }}
         run: |
@@ -49,10 +46,13 @@ jobs:
           if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
             echo "Redeploying Overseerr"
 
+            # Ensure config dir is owned by node user (UID 1000) required by seerr image
+            sudo chown -R 1000:1000 /srv/overseerr/config
+
             # Deploy
-            PUID=$PUID PGID=$PGID TZ=$TZ DOMAIN_NAME=$DOMAIN_NAME CERTRESOLVER=$CERTRESOLVER \
+            DOMAIN_NAME=$DOMAIN_NAME CERTRESOLVER=$CERTRESOLVER \
               docker compose -p overseerr -f overseerr.yml down --remove-orphans || true
-            PUID=$PUID PGID=$PGID TZ=$TZ DOMAIN_NAME=$DOMAIN_NAME CERTRESOLVER=$CERTRESOLVER \
+            DOMAIN_NAME=$DOMAIN_NAME CERTRESOLVER=$CERTRESOLVER \
               docker compose -p overseerr -f overseerr.yml up -d --force-recreate
 
             # Save checksum
