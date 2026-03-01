@@ -39,6 +39,7 @@ services:
       - FREE_ONLY=off
     networks:
       - torrentproxy
+      - mediaproxy
     labels:
       # Watchtower
       - com.centurylinklabs.watchtower.enable=true
