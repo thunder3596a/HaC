@@ -8,7 +8,7 @@ on:
       - "Docker-Critical/Auth/Authentik.yml"
       - ".forgejo/workflows/deploy-authentik.yml"
   workflow_dispatch:
-
+#
 jobs:
   deploy:
     runs-on: docker-critical
