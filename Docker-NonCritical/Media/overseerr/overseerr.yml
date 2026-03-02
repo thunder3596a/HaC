@@ -14,7 +14,7 @@ services:
       - traefik.http.services.overseerr.loadbalancer.server.port=5055
       - traefik.http.routers.overseerr.tls.certresolver=${CERTRESOLVER:-cloudflare}
       - traefik.http.routers.overseerr.tls.domains[0].main=request.${DOMAIN_NAME}
-      - traefik.http.routers.overseerr.middlewares=authelia@docker
+      - traefik.http.routers.overseerr.middlewares=authentik@docker
       - com.centurylinklabs.watchtower.enable=true
       - "ha.monitor=true"
       - "ha.category=media"

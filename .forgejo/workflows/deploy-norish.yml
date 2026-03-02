@@ -33,6 +33,7 @@ jobs:
           CERTRESOLVER: ${{ vars.CERTRESOLVER }}
           DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
           NORISH_MASTER_KEY: ${{ secrets.NORISH_MASTER_KEY }}
+          NORISH_OIDC_CLIENT_ID: ${{ vars.NORISH_OIDC_CLIENT_ID }}
           NORISH_OIDC_CLIENT_SECRET: ${{ secrets.NORISH_OIDC_CLIENT_SECRET }}
           NORISH_DB_PASSWORD: ${{ secrets.NORISH_DB_PASSWORD }}
         run: |
@@ -63,6 +64,7 @@ jobs:
             CERTRESOLVER=${CERTRESOLVER:-cloudflare} \
             DOMAIN_NAME=$DOMAIN_NAME \
             NORISH_MASTER_KEY=$NORISH_MASTER_KEY \
+            NORISH_OIDC_CLIENT_ID=$NORISH_OIDC_CLIENT_ID \
             NORISH_OIDC_CLIENT_SECRET=$NORISH_OIDC_CLIENT_SECRET \
             NORISH_DB_PASSWORD=$NORISH_DB_PASSWORD \
             docker compose -p norish -f norish.yml up -d --force-recreate

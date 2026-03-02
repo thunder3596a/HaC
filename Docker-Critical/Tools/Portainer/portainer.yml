@@ -20,7 +20,7 @@ services:
       - traefik.http.routers.portainer.service=portainer
       - traefik.http.routers.portainer.tls.certresolver=${CERTRESOLVER:-cloudflare}
       - traefik.http.routers.portainer.tls.domains[0].main=portainer.${DOMAIN_NAME}
-      - traefik.http.routers.portainer.middlewares=authelia@docker
+      - traefik.http.routers.portainer.middlewares=authentik@docker
       # Separate route for API - no Authelia
       - traefik.http.routers.portainer-api.entrypoints=websecure
       - traefik.http.routers.portainer-api.rule=Host(`portainer.${DOMAIN_NAME}`) && PathPrefix(`/api`)

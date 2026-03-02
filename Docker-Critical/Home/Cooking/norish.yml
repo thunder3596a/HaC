@@ -36,11 +36,11 @@ services:
       #PASSWORD_AUTH_ENABLED=false
 
       # Option 2: OIDC (Authentik, Keycloak, PocketID, etc.)
-      OIDC_NAME: Authelia
-      OIDC_ISSUER: https://authelia.${DOMAIN_NAME}
-      OIDC_CLIENT_ID: norish
+      OIDC_NAME: Authentik
+      OIDC_ISSUER: https://authentik.${DOMAIN_NAME}/application/o/norish/
+      OIDC_CLIENT_ID: ${NORISH_OIDC_CLIENT_ID}
       OIDC_CLIENT_SECRET: ${NORISH_OIDC_CLIENT_SECRET} #secret
-      OIDC_WELLKNOWN: https://authelia.${DOMAIN_NAME}/.well-known/openid-configuration
+      OIDC_WELLKNOWN: https://authentik.${DOMAIN_NAME}/application/o/norish/.well-known/openid-configuration
       # Wellknown is optional: By default the wellknown URL is derived from the issuer by appending /.well-known/openid-configuration
 
       # Option 3: GitHub OAuth (uncomment and remove OIDC above)
@@ -61,7 +61,7 @@ services:
       - "traefik.http.routers.norish.tls.certresolver=${CERTRESOLVER:-cloudflare}"
       - "traefik.http.routers.norish.tls.domains[0].main=norish.${DOMAIN_NAME}"
       - "traefik.http.services.norish.loadbalancer.server.port=3000"
-      - "traefik.http.routers.norish.middlewares=authelia@docker"
+      - "traefik.http.routers.norish.middlewares=authentik@docker"
       - "ha.monitor=true"
       - "ha.category=home"
       - "ha.compose-file=Docker-Critical/Home/Cooking/norish.yml"
