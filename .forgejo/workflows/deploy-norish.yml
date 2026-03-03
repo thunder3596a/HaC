@@ -61,6 +61,8 @@ jobs:
 
             # Deploy locally
             cd /srv/norish
+            docker rm -f norish-app norish-db norish-redis chrome-headless || true
+            docker compose -p norish -f norish.yml down --remove-orphans || true
             CERTRESOLVER=${CERTRESOLVER:-cloudflare} \
             DOMAIN_NAME=$DOMAIN_NAME \
             NORISH_MASTER_KEY=$NORISH_MASTER_KEY \
