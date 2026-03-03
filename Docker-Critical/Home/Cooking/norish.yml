@@ -61,7 +61,6 @@ services:
       - "traefik.http.routers.norish.tls.certresolver=${CERTRESOLVER:-cloudflare}"
       - "traefik.http.routers.norish.tls.domains[0].main=norish.${DOMAIN_NAME}"
       - "traefik.http.services.norish.loadbalancer.server.port=3000"
-      - "traefik.http.routers.norish.middlewares=authentik@docker"
       - "ha.monitor=true"
       - "ha.category=home"
       - "ha.compose-file=Docker-Critical/Home/Cooking/norish.yml"
