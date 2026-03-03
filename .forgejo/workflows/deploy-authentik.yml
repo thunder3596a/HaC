@@ -31,6 +31,8 @@ jobs:
           sudo mkdir -p /srv/authentik/media
           sudo mkdir -p /srv/authentik/custom-templates
           sudo mkdir -p /srv/authentik/certs
+          # Authentik runs as UID 1000 internally; media/templates/certs must be writable
+          sudo chown -R 1000:1000 /srv/authentik/media /srv/authentik/custom-templates /srv/authentik/certs
 
       - name: Compare image and config
         working-directory: "./Docker-Critical/Auth"
