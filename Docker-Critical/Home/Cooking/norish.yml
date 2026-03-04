@@ -65,7 +65,7 @@ services:
       - "ha.category=home"
       - "ha.compose-file=Docker-Critical/Home/Cooking/norish.yml"
       - "ha.service-name=norish"
-
+# Postgres database for Norish
   db:
     image: postgres:17-alpine
     container_name: norish-db
