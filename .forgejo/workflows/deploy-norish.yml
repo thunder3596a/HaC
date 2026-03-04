@@ -72,7 +72,7 @@ jobs:
             docker compose -p norish -f norish.yml up -d --force-recreate
 
             # Save checksum
-            echo "$checksum" > /srv/norish/.norish_checksum
+            echo "$checksum" | sudo tee /srv/norish/.norish_checksum > /dev/null
           else
             echo "No changes detected; skipping redeploy"
           fi
