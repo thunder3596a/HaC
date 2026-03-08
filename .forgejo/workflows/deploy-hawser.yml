@@ -27,17 +27,12 @@ jobs:
       - name: Deploy Hawser
         working-directory: "./Docker-NonCritical/Tools/Hawser"
         env:
-          DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
           TZ: ${{ vars.TZ }}
-          HAWSER_TOKEN: ${{ secrets.HAWSER_TOKEN }}
         run: |
-          for var in DOMAIN_NAME TZ HAWSER_TOKEN; do
-            eval val=\$$var
-            if [ -z "$val" ]; then
-              echo "Missing required variable: $var" >&2
-              exit 1
-            fi
-          done
+          if [ -z "$TZ" ]; then
+            echo "Missing required variable: TZ" >&2
+            exit 1
+          fi
 
           defined_image=$(grep -m1 'image:.*hawser' hawser.yml | awk '{print $2}')
           running_image=$(docker inspect -f '{{.Config.Image}}' hawser 2>/dev/null || echo "none")

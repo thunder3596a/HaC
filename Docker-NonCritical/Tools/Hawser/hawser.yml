@@ -3,12 +3,12 @@ services:
     image: ghcr.io/finsys/hawser:latest
     container_name: hawser
     restart: unless-stopped
+    ports:
+      - "2376:2376"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - hawser_stacks:/data/stacks
     environment:
-      - DOCKHAND_SERVER_URL=wss://dockhand.${DOMAIN_NAME}/api/hawser/connect
-      - TOKEN=${HAWSER_TOKEN}
       - AGENT_NAME=hac-noncritical
       - STACKS_DIR=/data/stacks
       - TZ=${TZ}
