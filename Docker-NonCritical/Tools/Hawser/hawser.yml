@@ -1,0 +1,31 @@
+services:
+  hawser:
+    image: ghcr.io/finsys/hawser:latest
+    container_name: hawser
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - hawser_stacks:/data/stacks
+    environment:
+      - DOCKHAND_SERVER_URL=wss://dockhand.${DOMAIN_NAME}/api/hawser/connect
+      - TOKEN=${HAWSER_TOKEN}
+      - AGENT_NAME=hac-noncritical
+      - STACKS_DIR=/data/stacks
+      - TZ=${TZ}
+    labels:
+      # Home Assistant monitoring
+      - ha.monitor=true
+      - ha.category=tools
+      - ha.compose-file=Docker-NonCritical/Tools/Hawser/hawser.yml
+      - ha.service-name=hawser
+      # Watchtower auto-updates
+      - com.centurylinklabs.watchtower.enable=true
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:2376/_hawser/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  hawser_stacks:
