@@ -114,12 +114,11 @@ services:
     networks:
       - mcpnet
     working_dir: /app
-    command: npx -y @pixelworlds/opnsense-mcp-server
+    command: sh -c "npx -y supergateway --port 3000 --stdio 'npx -y @pixelworlds/opnsense-mcp-server'"
     environment:
       - OPNSENSE_URL=${OPNSENSE_URL}
       - OPNSENSE_API_KEY=${OPNSENSE_API_KEY}
       - OPNSENSE_API_SECRET=${OPNSENSE_API_SECRET}
-      - MCP_TRANSPORT=sse
     labels:
       - com.centurylinklabs.watchtower.enable=true
       - "ha.monitor=true"
@@ -135,11 +134,10 @@ services:
     networks:
       - mcpnet
     working_dir: /app
-    command: npx -y @netboxlabs/netbox-mcp-server
+    command: sh -c "npx -y supergateway --port 3000 --stdio 'npx -y @netboxlabs/netbox-mcp-server'"
     environment:
       - NETBOX_URL=${NETBOX_URL}
       - NETBOX_API_TOKEN=${NETBOX_API_TOKEN}
-      - MCP_TRANSPORT=sse
     labels:
       - com.centurylinklabs.watchtower.enable=true
       - "ha.monitor=true"
@@ -150,9 +148,6 @@ services:
   # n8n — uses built-in MCP Server Trigger node, no separate container needed.
   #        Configure via MCP Gateway admin UI pointing at n8n's /mcp endpoint.
 
-  # Omada / HomeBox — no npm packages available yet.
-  #        Add back when published, or build from GitHub repos later.
-
   # Vikunja MCP Server (task management)
   vikunja-mcp:
     image: node:20-alpine
@@ -161,11 +156,10 @@ services:
     networks:
       - mcpnet
     working_dir: /app
-    command: npx -y @democratize-technology/vikunja-mcp
+    command: sh -c "npx -y supergateway --port 3000 --stdio 'npx -y @democratize-technology/vikunja-mcp'"
     environment:
       - VIKUNJA_URL=${VIKUNJA_URL}
       - VIKUNJA_API_TOKEN=${VIKUNJA_API_TOKEN}
-      - MCP_TRANSPORT=sse
     labels:
       - com.centurylinklabs.watchtower.enable=false
       - "ha.monitor=true"
@@ -182,11 +176,12 @@ services:
     restart: unless-stopped
     networks:
       - mcpnet
+    working_dir: /app
+    command: sh -c "npx -y supergateway --port 3000 --stdio 'node index.js'"
     environment:
       - HOMEBOX_URL=${HOMEBOX_URL}
       - HOMEBOX_EMAIL=${HOMEBOX_EMAIL}
       - HOMEBOX_PASSWORD=${HOMEBOX_PASSWORD}
-      - MCP_TRANSPORT=sse
     labels:
       - com.centurylinklabs.watchtower.enable=false
       - "ha.monitor=true"
@@ -196,6 +191,7 @@ services:
 
 networks:
   mcpnet:
-    driver: bridge
+    name: mcpnet
+    external: true
   aiproxy:
     external: true
