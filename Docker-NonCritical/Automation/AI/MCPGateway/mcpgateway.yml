@@ -19,6 +19,7 @@ services:
       - PLUGINS_ENABLED=true
       - GUNICORN_CMD_ARGS=--bind 0.0.0.0:4444
       - SSRF_PROTECTION_ENABLED=false
+      - SSRF_DNS_FAIL_CLOSED=false
     depends_on:
       mcp-postgres:
         condition: service_healthy
