@@ -59,10 +59,10 @@ Services running on **hac-critical** (critical host).
 
 ### Authentication & Access Control
 
-- **Authelia** (`Auth/Authelia.yml`) - SSO and authentication
-  - PostgreSQL backend for session storage
-  - LLDAP for LDAP/Active Directory simulation
-  - Traefik middleware integration for protected services
+- **Authentik** (`Auth/Authentik.yml`) - Identity provider and SSO
+  - OAuth2, OIDC, SAML, LDAP support
+  - Built-in user directory (replaces LLDAP)
+  - Traefik forward auth integration for protected services
 
 ### Networking & Proxy
 
@@ -149,7 +149,7 @@ Services running on **hac-critical** (critical host).
 - **Norish** (`Home/Cooking/norish.yml`) - Recipe manager
   - Recipe collection and meal planning
   - Web page recipe clipping with headless Chrome
-  - OIDC authentication via Authelia
+  - OIDC authentication via Authentik
   - PostgreSQL + Redis backends
   - Dashboard at `norish.${DOMAIN_NAME}`
 
@@ -311,10 +311,14 @@ Services running on **hac-noncritical** (non-critical host). Can restart without
   - Merge, split, compress, OCR
   - Dashboard at `pdf.${DOMAIN_NAME}`
 
-- **MCP Gateway** (`Tools/MCPGateway/mcpgateway.yml`) - Model Context Protocol hub
-  - Central gateway for MCP servers
-  - Integrations: Home Assistant, OPNsense, NetBox, n8n, Omada, HomeBox, Vikunja
+- **MCP Gateway** (`Automation/AI/MCPGateway/mcpgateway.yml`) - Model Context Protocol hub
+  - IBM ContextForge: central gateway for all MCP servers
   - Dashboard at `mcp.${DOMAIN_NAME}`
+
+- **MCP Servers** (`Automation/AI/MCPGateway/mcpservers.yml`) - stdio-to-HTTP MCP bridges
+  - Vikunja MCP (task management), HomeBox MCP (inventory)
+  - Uses supergateway to expose stdio servers as Streamable HTTP
+  - Home Assistant MCP served natively by HA at `/api/mcp`
 
 - **Docker Socket Proxy** (`Tools/DockerSocketProxy/docker-socket-proxy.yml`) - Secure Docker API access
   - Non-critical instance for Traefik and monitoring
@@ -345,7 +349,7 @@ All services deploy via Forgejo CI/CD workflows in `.forgejo/workflows/`. Workfl
 
 | Service | Workflow | Host | Trigger |
 | --------- | ---------- | ------------- | ----------------------------------------- |
-| Authelia | `deploy-authelia.yml` | hac-critical | Push to `Docker-Critical/Auth/**` |
+| Authentik | `deploy-authentik.yml` | hac-critical | Push to `Docker-Critical/Auth/**` |
 | Traefik (Critical) | `deploy-traefik-critical.yml` | hac-critical | Push to `Docker-Critical/Networking/Proxy/**` |
 | Traefik (NonCritical) | `deploy-traefik-noncritical.yml` | hac-noncritical | Push to `Docker-NonCritical/Networking/Proxy/**` |
 | Home Assistant | `deploy-homeassistant.yml` | hac-critical | Push to `Docker-Critical/Home/HomeAssistant/**` |
@@ -385,7 +389,8 @@ All services deploy via Forgejo CI/CD workflows in `.forgejo/workflows/`. Workfl
 | IT-Tools | `deploy-it-tools.yml` | hac-noncritical | Push to `Docker-NonCritical/Tools/IT-Tools/**` |
 | SearXNG | `deploy-searx.yml` | hac-noncritical | Push to `Docker-NonCritical/Tools/SearX/**` |
 | Stirling-PDF | `deploy-stirling-pdf.yml` | hac-noncritical | Push to `Docker-NonCritical/Tools/Stirling-PDF/**` |
-| MCP Gateway | `deploy-mcpgateway.yml` | hac-noncritical | Push to `Docker-NonCritical/Tools/MCPGateway/**` |
+| MCP Gateway | `deploy-mcpgateway.yml` | hac-noncritical | Push to `Docker-NonCritical/Automation/AI/MCPGateway/mcpgateway.yml` |
+| MCP Servers | `deploy-mcpservers.yml` | hac-noncritical | Push to `Docker-NonCritical/Automation/AI/MCPGateway/mcpservers.yml` or `mcp-servers/**` |
 | Docker Socket Proxy (NC) | `deploy-docker-socket-proxy-noncritical.yml` | hac-noncritical | Push to `Docker-NonCritical/Tools/DockerSocketProxy/**` |
 | Wazuh | `deploy-wazuh.yml` | hac-noncritical | Push to `Docker-NonCritical/Security/**` |
 | CrowdSec | (via Wazuh workflow or manual) | hac-noncritical | Push to `Docker-NonCritical/Security/Crowdsec/**` |
@@ -423,7 +428,8 @@ Encrypted secrets (set in repository settings):
 - `CLOUDFLARE_EMAIL`, `CLOUDFLARE_DNS_API_TOKEN` - Cloudflare DNS for ACME
 - `CLOUDFLARE_ZONE_API_TOKEN` - Zone API token
 - `LETS_ENCRYPT_EMAIL` - Let's Encrypt contact
-- `AUTHELIA_DB_PASSWORD` - Authelia PostgreSQL password
+- `AUTHENTIK_SECRET_KEY` - Authentik secret key
+- `AUTHENTIK_DB_PASSWORD` - Authentik PostgreSQL password
 - `GIT_DB_PASSWORD` - Forgejo PostgreSQL password
 - `NETBOX_DB_PASSWORD`, `NETBOX_SECRET_KEY` - NetBox secrets
 - `PLEX_CLAIM` - Plex initial setup token
@@ -448,7 +454,7 @@ Persistent data on primary host (tiered):
 
 ```
 /srv/                      # NVMe #1 (critical + high IO)
-├── authelia/              # SSO database and config
+├── authentik/             # Authentik identity provider data and config
 ├── traefik/               # Reverse proxy config and ACME certs
 ├── homeassistant/         # HA config and automations
 ├── avahi/                 # mDNS reflection config
@@ -579,7 +585,7 @@ sudo ./migrate-to-homeassistant.sh
 
 ```
 Traefik (Critical)
-├── Authelia (authentication provider)
+├── Authentik (identity provider)
 ├── Omada (network dashboard)
 ├── Home Assistant (home automation hub)
 │   ├── ESPHome (device management)
@@ -611,7 +617,7 @@ Traefik (NonCritical)
 
 - **Split Horizon DNS:** Not needed - Unbound on OpnSense provides local DNS overrides
 - **External Access:** Via Cloudflare Tunnel to avoid port forwarding
-- **Authentication:** Authelia protects sensitive services
+- **Authentication:** Authentik protects sensitive services
 - **ACME:** Individual certificates per subdomain (no wildcard)
 - **SSH:** Via Tailscale network for secure access
 - **SIEM:** Wazuh for endpoint monitoring and log analysis
@@ -661,5 +667,5 @@ Personal home automation infrastructure. Configuration patterns based on best pr
 
 ---
 
-**Last Updated:** February 24, 2026
+**Last Updated:** March 9, 2026
 **Maintainer:** Nicholas Underwood
