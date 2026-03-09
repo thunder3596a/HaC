@@ -107,25 +107,26 @@ services:
       - "ha.compose-file=Docker-NonCritical/Automation/AI/MCPGateway/mcpgateway.yml"
       - "ha.service-name=homeassistant-mcp"
 
-  # OPNsense MCP Server
-  opnsense-mcp:
-    image: node:20-alpine
-    container_name: mcp-opnsense
-    restart: unless-stopped
-    networks:
-      - mcpnet
-    working_dir: /app
-    command: sh -c "npx -y supergateway --port 3000 --stdio 'npx -y @pixelworlds/opnsense-mcp-server'"
-    environment:
-      - OPNSENSE_URL=${OPNSENSE_URL}
-      - OPNSENSE_API_KEY=${OPNSENSE_API_KEY}
-      - OPNSENSE_API_SECRET=${OPNSENSE_API_SECRET}
-    labels:
-      - com.centurylinklabs.watchtower.enable=true
-      - "ha.monitor=true"
-      - "ha.category=tools"
-      - "ha.compose-file=Docker-NonCritical/Automation/AI/MCPGateway/mcpgateway.yml"
-      - "ha.service-name=opnsense-mcp"
+  # OPNsense MCP Server — disabled: @pixelworlds/opnsense-mcp-server does not exist on npm
+  # Find a valid package or build from source before re-enabling
+  # opnsense-mcp:
+  #   image: node:20-alpine
+  #   container_name: mcp-opnsense
+  #   restart: unless-stopped
+  #   networks:
+  #     - mcpnet
+  #   working_dir: /app
+  #   command: sh -c "npx -y supergateway --port 3000 --stdio 'npx -y @pixelworlds/opnsense-mcp-server'"
+  #   environment:
+  #     - OPNSENSE_URL=${OPNSENSE_URL}
+  #     - OPNSENSE_API_KEY=${OPNSENSE_API_KEY}
+  #     - OPNSENSE_API_SECRET=${OPNSENSE_API_SECRET}
+  #   labels:
+  #     - com.centurylinklabs.watchtower.enable=true
+  #     - "ha.monitor=true"
+  #     - "ha.category=tools"
+  #     - "ha.compose-file=Docker-NonCritical/Automation/AI/MCPGateway/mcpgateway.yml"
+  #     - "ha.service-name=opnsense-mcp"
 
   # NetBox MCP Server
   netbox-mcp:
