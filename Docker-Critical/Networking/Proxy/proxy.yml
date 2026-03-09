@@ -1,8 +1,6 @@
 networks:
   homeproxy:
     name: homeproxy
-  proxy:
-    name: proxy
   toolsproxy:
     name: toolsproxy
   torrentproxy:
@@ -81,7 +79,6 @@ services:
 
     networks:
       - toolsproxy
-      - proxy
       - homeproxy
       - gitproxy
       - authnet
