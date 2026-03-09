@@ -128,24 +128,25 @@ services:
   #     - "ha.compose-file=Docker-NonCritical/Automation/AI/MCPGateway/mcpgateway.yml"
   #     - "ha.service-name=opnsense-mcp"
 
-  # NetBox MCP Server
-  netbox-mcp:
-    image: node:20-alpine
-    container_name: mcp-netbox
-    restart: unless-stopped
-    networks:
-      - mcpnet
-    working_dir: /app
-    command: sh -c "npx -y supergateway --port 3000 --stdio 'npx -y @netboxlabs/netbox-mcp-server'"
-    environment:
-      - NETBOX_URL=${NETBOX_URL}
-      - NETBOX_API_TOKEN=${NETBOX_API_TOKEN}
-    labels:
-      - com.centurylinklabs.watchtower.enable=true
-      - "ha.monitor=true"
-      - "ha.category=tools"
-      - "ha.compose-file=Docker-NonCritical/Automation/AI/MCPGateway/mcpgateway.yml"
-      - "ha.service-name=netbox-mcp"
+  # NetBox MCP Server — disabled: @netboxlabs/netbox-mcp-server does not exist on npm
+  # Find the correct package name before re-enabling
+  # netbox-mcp:
+  #   image: node:20-alpine
+  #   container_name: mcp-netbox
+  #   restart: unless-stopped
+  #   networks:
+  #     - mcpnet
+  #   working_dir: /app
+  #   command: sh -c "npx -y supergateway --port 3000 --stdio 'npx -y @netboxlabs/netbox-mcp-server'"
+  #   environment:
+  #     - NETBOX_URL=${NETBOX_URL}
+  #     - NETBOX_API_TOKEN=${NETBOX_API_TOKEN}
+  #   labels:
+  #     - com.centurylinklabs.watchtower.enable=true
+  #     - "ha.monitor=true"
+  #     - "ha.category=tools"
+  #     - "ha.compose-file=Docker-NonCritical/Automation/AI/MCPGateway/mcpgateway.yml"
+  #     - "ha.service-name=netbox-mcp"
 
   # n8n — uses built-in MCP Server Trigger node, no separate container needed.
   #        Configure via MCP Gateway admin UI pointing at n8n's /mcp endpoint.
