@@ -159,7 +159,7 @@ services:
     networks:
       - mcpnet
     working_dir: /app
-    command: sh -c "npx -y supergateway --port 3000 --stdio 'npx -y @democratize-technology/vikunja-mcp'"
+    command: sh -c "npx -y supergateway --port 3000 --outputTransport streamableHttp --stdio 'npx -y @democratize-technology/vikunja-mcp'"
     environment:
       - VIKUNJA_URL=${VIKUNJA_URL}
       - VIKUNJA_API_TOKEN=${VIKUNJA_API_TOKEN}
@@ -180,7 +180,7 @@ services:
     networks:
       - mcpnet
     working_dir: /app
-    command: sh -c "npx -y supergateway --port 3000 --stdio 'node index.js'"
+    command: sh -c "npx -y supergateway --port 3000 --outputTransport streamableHttp --stdio 'node index.js'"
     environment:
       - HOMEBOX_URL=${HOMEBOX_URL}
       - HOMEBOX_EMAIL=${HOMEBOX_EMAIL}
