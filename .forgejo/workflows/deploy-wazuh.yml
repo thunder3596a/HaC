@@ -127,6 +127,16 @@ jobs:
           sudo mkdir -p /srv/wazuh/indexer-data
           sudo chown -R 1000:1000 /srv/wazuh/indexer-data
 
+          # Copy config files to stable host paths so containers can be
+          # restarted independently of the CI runner's ephemeral checkout dir
+          sudo mkdir -p /srv/wazuh/indexer /srv/wazuh/manager /srv/wazuh/dashboard
+          sudo cp indexer-config/opensearch.yml /srv/wazuh/indexer/opensearch.yml
+          sudo cp indexer-config/ism-policy.json /srv/wazuh/indexer/ism-policy.json
+          sudo cp indexer-config/apply-ism-policy.sh /srv/wazuh/indexer/apply-ism-policy.sh
+          sudo chmod +x /srv/wazuh/indexer/apply-ism-policy.sh
+          sudo cp manager-config/wazuh_manager.conf /srv/wazuh/manager/wazuh_manager.conf
+          sudo cp dashboard-config/opensearch_dashboards.yml /srv/wazuh/dashboard/opensearch_dashboards.yml
+
           # Ensure NFS archive target exists
           YEAR=$(date +%Y)
           mkdir -p /mnt/data/wazuh/archives/$YEAR
