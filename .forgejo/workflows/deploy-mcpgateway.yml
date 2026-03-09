@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - "Docker-NonCritical/Automation/AI/MCPGateway/**"
+      - "Docker-NonCritical/Automation/AI/MCPGateway/mcpgateway.yml"
       - ".forgejo/workflows/deploy-mcpgateway.yml"
   workflow_dispatch:
 
@@ -38,16 +38,9 @@ jobs:
           DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
           CERTRESOLVER: ${{ vars.CERTRESOLVER }}
           MCP_DB_PASSWORD: ${{ secrets.MCP_DB_PASSWORD }}
-          HOMEASSISTANT_URL: ${{ vars.HA_URL }}
-          HA_LONG_LIVED_TOKEN: ${{ secrets.HA_LONG_LIVED_TOKEN }}
-          VIKUNJA_URL: ${{ vars.VIKUNJA_URL }}
-          VIKUNJA_API_TOKEN: ${{ secrets.VIKUNJA_API_TOKEN }}
-          HOMEBOX_URL: ${{ vars.HOMEBOX_URL }}
-          HOMEBOX_EMAIL: ${{ secrets.HOMEBOX_EMAIL }}
-          HOMEBOX_PASSWORD: ${{ secrets.HOMEBOX_PASSWORD }}
         run: |
           # Validate required secrets
-          for var in MCP_DB_PASSWORD HA_LONG_LIVED_TOKEN VIKUNJA_API_TOKEN; do
+          for var in MCP_DB_PASSWORD; do
             eval val=\$$var
             if [ -z "$val" ]; then
               echo "Missing required secret: $var" >&2
@@ -56,7 +49,7 @@ jobs:
           done
 
           # Validate required vars
-          for var in DOMAIN_NAME CERTRESOLVER HOMEASSISTANT_URL VIKUNJA_URL; do
+          for var in DOMAIN_NAME CERTRESOLVER; do
             eval val=\$$var
             if [ -z "$val" ]; then
               echo "Missing required variable: $var" >&2

@@ -1,0 +1,76 @@
+name: Deploy MCP Servers
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "Docker-NonCritical/Automation/AI/MCPGateway/mcpservers.yml"
+      - "Docker-NonCritical/Automation/AI/MCPGateway/mcp-servers/**"
+      - ".forgejo/workflows/deploy-mcpservers.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: docker-noncritical
+
+    defaults:
+      run:
+        shell: sh
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify compose file exists
+        run: |
+          ls -l "./Docker-NonCritical/Automation/AI/MCPGateway/mcpservers.yml"
+
+      - name: Deploy MCP Servers
+        working-directory: "./Docker-NonCritical/Automation/AI/MCPGateway"
+        env:
+          VIKUNJA_URL: ${{ vars.VIKUNJA_URL }}
+          VIKUNJA_API_TOKEN: ${{ secrets.VIKUNJA_API_TOKEN }}
+          HOMEBOX_URL: ${{ vars.HOMEBOX_URL }}
+          HOMEBOX_EMAIL: ${{ secrets.HOMEBOX_EMAIL }}
+          HOMEBOX_PASSWORD: ${{ secrets.HOMEBOX_PASSWORD }}
+        run: |
+          # Validate required secrets
+          for var in VIKUNJA_API_TOKEN HOMEBOX_EMAIL HOMEBOX_PASSWORD; do
+            eval val=\$$var
+            if [ -z "$val" ]; then
+              echo "Missing required secret: $var" >&2
+              exit 1
+            fi
+          done
+
+          # Validate required vars
+          for var in VIKUNJA_URL HOMEBOX_URL; do
+            eval val=\$$var
+            if [ -z "$val" ]; then
+              echo "Missing required variable: $var" >&2
+              exit 1
+            fi
+          done
+
+          # Compute checksum of compose file + custom server source files
+          checksum=$(cat mcpservers.yml \
+            mcp-servers/homebox/Dockerfile \
+            mcp-servers/homebox/index.js \
+            mcp-servers/homebox/package.json \
+            | sha256sum | awk '{print $1}')
+          old=$(cat .mcpservers_checksum 2>/dev/null || echo "")
+
+          echo "Checksum: $checksum vs $old"
+
+          if [ "$checksum" != "$old" ]; then
+            echo "Redeploying MCP Servers"
+
+            # Build custom images and deploy
+            docker compose -p mcpservers -f mcpservers.yml up -d --build --force-recreate --remove-orphans
+
+            # Save checksum
+            echo "$checksum" > .mcpservers_checksum
+          else
+            echo "No redeploy needed"
+          fi

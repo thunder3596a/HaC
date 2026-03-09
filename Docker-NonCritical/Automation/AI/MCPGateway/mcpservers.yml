@@ -1,0 +1,123 @@
+services:
+  # Vikunja MCP Server (task management)
+  vikunja-mcp:
+    image: node:20-alpine
+    container_name: mcp-vikunja
+    restart: unless-stopped
+    networks:
+      - mcpnet
+    working_dir: /app
+    command: sh -c "npx -y supergateway --port 3000 --outputTransport streamableHttp --stdio 'npx -y @democratize-technology/vikunja-mcp'"
+    environment:
+      - VIKUNJA_URL=${VIKUNJA_URL}
+      - VIKUNJA_API_TOKEN=${VIKUNJA_API_TOKEN}
+    labels:
+      - com.centurylinklabs.watchtower.enable=false
+      - "ha.monitor=true"
+      - "ha.category=tools"
+      - "ha.compose-file=Docker-NonCritical/Automation/AI/MCPGateway/mcpservers.yml"
+      - "ha.service-name=vikunja-mcp"
+
+  # HomeBox MCP Server (inventory management)
+  homebox-mcp:
+    build:
+      context: ./mcp-servers/homebox
+      dockerfile: Dockerfile
+    container_name: mcp-homebox
+    restart: unless-stopped
+    networks:
+      - mcpnet
+    working_dir: /app
+    command: sh -c "npx -y supergateway --port 3000 --outputTransport streamableHttp --stdio 'node index.js'"
+    environment:
+      - HOMEBOX_URL=${HOMEBOX_URL}
+      - HOMEBOX_EMAIL=${HOMEBOX_EMAIL}
+      - HOMEBOX_PASSWORD=${HOMEBOX_PASSWORD}
+    labels:
+      - com.centurylinklabs.watchtower.enable=false
+      - "ha.monitor=true"
+      - "ha.category=tools"
+      - "ha.compose-file=Docker-NonCritical/Automation/AI/MCPGateway/mcpservers.yml"
+      - "ha.service-name=homebox-mcp"
+
+  # OPNsense MCP Server — disabled: @pixelworlds/opnsense-mcp-server does not exist on npm
+  # Find a valid package or build from source before re-enabling
+  # opnsense-mcp:
+  #   image: node:20-alpine
+  #   container_name: mcp-opnsense
+  #   restart: unless-stopped
+  #   networks:
+  #     - mcpnet
+  #   working_dir: /app
+  #   command: sh -c "npx -y supergateway --port 3000 --outputTransport streamableHttp --stdio 'npx -y @pixelworlds/opnsense-mcp-server'"
+  #   environment:
+  #     - OPNSENSE_URL=${OPNSENSE_URL}
+  #     - OPNSENSE_API_KEY=${OPNSENSE_API_KEY}
+  #     - OPNSENSE_API_SECRET=${OPNSENSE_API_SECRET}
+  #   labels:
+  #     - com.centurylinklabs.watchtower.enable=false
+  #     - "ha.monitor=true"
+  #     - "ha.category=tools"
+  #     - "ha.compose-file=Docker-NonCritical/Automation/AI/MCPGateway/mcpservers.yml"
+  #     - "ha.service-name=opnsense-mcp"
+
+  # NetBox MCP Server — disabled: @netboxlabs/netbox-mcp-server does not exist on npm
+  # Find the correct package name before re-enabling
+  # netbox-mcp:
+  #   image: node:20-alpine
+  #   container_name: mcp-netbox
+  #   restart: unless-stopped
+  #   networks:
+  #     - mcpnet
+  #   working_dir: /app
+  #   command: sh -c "npx -y supergateway --port 3000 --outputTransport streamableHttp --stdio 'npx -y @netboxlabs/netbox-mcp-server'"
+  #   environment:
+  #     - NETBOX_URL=${NETBOX_URL}
+  #     - NETBOX_API_TOKEN=${NETBOX_API_TOKEN}
+  #   labels:
+  #     - com.centurylinklabs.watchtower.enable=false
+  #     - "ha.monitor=true"
+  #     - "ha.category=tools"
+  #     - "ha.compose-file=Docker-NonCritical/Automation/AI/MCPGateway/mcpservers.yml"
+  #     - "ha.service-name=netbox-mcp"
+
+  # n8n MCP Server — disabled: needs testing before enabling
+  # n8n-mcp:
+  #   build:
+  #     context: ./mcp-servers/n8n
+  #     dockerfile: Dockerfile
+  #   container_name: mcp-n8n
+  #   restart: unless-stopped
+  #   networks:
+  #     - mcpnet
+  #   working_dir: /app
+  #   command: sh -c "npx -y supergateway --port 3000 --outputTransport streamableHttp --stdio 'node index.js'"
+  #   labels:
+  #     - com.centurylinklabs.watchtower.enable=false
+  #     - "ha.monitor=true"
+  #     - "ha.category=tools"
+  #     - "ha.compose-file=Docker-NonCritical/Automation/AI/MCPGateway/mcpservers.yml"
+  #     - "ha.service-name=n8n-mcp"
+
+  # Omada MCP Server — disabled: needs testing before enabling
+  # omada-mcp:
+  #   build:
+  #     context: ./mcp-servers/omada
+  #     dockerfile: Dockerfile
+  #   container_name: mcp-omada
+  #   restart: unless-stopped
+  #   networks:
+  #     - mcpnet
+  #   working_dir: /app
+  #   command: sh -c "npx -y supergateway --port 3000 --outputTransport streamableHttp --stdio 'node index.js'"
+  #   labels:
+  #     - com.centurylinklabs.watchtower.enable=false
+  #     - "ha.monitor=true"
+  #     - "ha.category=tools"
+  #     - "ha.compose-file=Docker-NonCritical/Automation/AI/MCPGateway/mcpservers.yml"
+  #     - "ha.service-name=omada-mcp"
+
+networks:
+  mcpnet:
+    name: mcpnet
+    external: true
