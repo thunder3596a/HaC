@@ -66,7 +66,12 @@ class MB8611Driver(ModemDriver):
             r2 = self._session.post(post_url, data=fields, timeout=15, allow_redirects=True)
             r2.raise_for_status()
             if "login" in r2.url.lower():
-                log.warning("MB8611: login may have failed — still on login page after POST (url=%s)", r2.url)
+                # Some MB8611 firmware doesn't redirect after POST — verify by fetching MotoHome
+                check = self._session.get(f"{self._real_base}/MotoHome.html", timeout=10)
+                if check.status_code == 200 and "login" not in check.url.lower():
+                    log.info("MB8611: login successful (confirmed via MotoHome.html)")
+                else:
+                    log.warning("MB8611: login may have failed — still on login page after POST (url=%s)", r2.url)
             else:
                 log.info("MB8611: login successful, landed on %s", r2.url)
         except requests.RequestException as e:
@@ -80,6 +85,10 @@ class MB8611Driver(ModemDriver):
         "/motoconnectionstatus.html",
         "/connection_status.html",
         "/status_docsis.asp",
+        "/MotoConnection.html",
+        "/MotoStatus.html",
+        "/channel_status.html",
+        "/docsis_status.html",
     ]
 
     def _find_status_url(self) -> str | None:
@@ -96,12 +105,12 @@ class MB8611Driver(ModemDriver):
                 found_paths.append(f"{path}=ERR({e})")
                 continue
 
-        # scrape root page — check both <a href> and JS strings for page references
+        # scrape MotoHome.html (authenticated home) for status page links
         try:
-            root = self._session.get(f"{self._real_base}/", timeout=10)
+            root = self._session.get(f"{self._real_base}/MotoHome.html", timeout=10)
             # extract all href attrs and any quoted .html/.htm/.asp strings from JS
             all_refs = re.findall(r'["\']([^"\']*\.(?:html?|asp))["\']', root.text, re.IGNORECASE)
-            log.warning("MB8611: all page refs found on root: %s", sorted(set(all_refs)))
+            log.warning("MB8611: all page refs found on MotoHome: %s", sorted(set(all_refs)))
             keywords = ("status", "docsis", "connection", "connect", "channel")
             for ref in all_refs:
                 if any(kw in ref.lower() for kw in keywords):
