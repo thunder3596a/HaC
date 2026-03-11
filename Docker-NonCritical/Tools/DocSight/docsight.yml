@@ -1,13 +1,11 @@
 networks:
   toolsproxy:
     external: true
-
 services:
   docsight:
     image: ghcr.io/itsdnns/docsight:latest
     container_name: docsight
     restart: unless-stopped
-
     # Xfinity bridge mode can block modem UI polling from LAN in some setups.
     # If DOCSIS polling fails, use Generic Router mode in the setup wizard.
     environment:
@@ -22,7 +20,6 @@ services:
       - MQTT_TOPIC_PREFIX=${DOCSIGHT_MQTT_TOPIC_PREFIX:-docsight}
       - MQTT_DISCOVERY_PREFIX=${DOCSIGHT_MQTT_DISCOVERY_PREFIX:-homeassistant}
       - PUBLIC_URL=${DOCSIGHT_PUBLIC_URL:-https://docsight.${DOMAIN_NAME}}
-
     labels:
       # Home Assistant monitoring
       - ha.monitor=true
@@ -36,10 +33,8 @@ services:
       - traefik.http.routers.docsight.service=docsight
       - traefik.http.services.docsight.loadbalancer.server.port=8765
       - traefik.http.routers.docsight.tls.certresolver=${CERTRESOLVER}
-
     networks:
       - toolsproxy
-
     volumes:
       - /srv/docsight/data:/data
       - /srv/docsight/modules:/modules
