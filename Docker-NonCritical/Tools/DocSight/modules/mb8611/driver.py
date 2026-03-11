@@ -115,6 +115,9 @@ class MB8611Driver(ModemDriver):
 
     # Known status page paths across MB8611 firmware versions
     _STATUS_PATHS = [
+        # MB8611-specific paths (most likely first)
+        "/MotoConnectionStatus.html",
+        "/MotoStatusConnection.html",
         "/cmconnectionstatus.html",
         "/DocsisStatus.htm",
         "/RgConnect.asp",
@@ -133,9 +136,10 @@ class MB8611Driver(ModemDriver):
         for path in self._STATUS_PATHS:
             try:
                 resp = self._session.get(f"{self._real_base}{path}", timeout=10)
-                found_paths.append(f"{path}={resp.status_code}")
-                if resp.status_code == 200 and "<table" in resp.text.lower():
-                    log.debug("MB8611: status page found at %s", path)
+                table_count = resp.text.lower().count("<table")
+                found_paths.append(f"{path}={resp.status_code}(t={table_count})")
+                if resp.status_code == 200 and table_count >= 3:
+                    log.debug("MB8611: status page found at %s (tables=%d)", path, table_count)
                     return f"{self._real_base}{path}"
             except requests.RequestException as e:
                 found_paths.append(f"{path}=ERR({e})")
@@ -153,7 +157,11 @@ class MB8611Driver(ModemDriver):
                     url = ref if ref.startswith("http") else f"{self._real_base}/{ref.lstrip('/')}"
                     log.info("MB8611: trying discovered ref: %s", url)
                     resp = self._session.get(url, timeout=10)
-                    if resp.status_code == 200 and "<table" in resp.text.lower():
+                    # Require ≥3 tables — the DOCSIS page has DS table + US table + others;
+                    # software/firmware pages may have tables but not enough for channel data
+                    table_count = resp.text.lower().count("<table")
+                    log.info("MB8611: %s -> status=%d tables=%d", url, resp.status_code, table_count)
+                    if resp.status_code == 200 and table_count >= 3:
                         return url
         except requests.RequestException:
             pass
