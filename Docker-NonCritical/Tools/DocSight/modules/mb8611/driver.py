@@ -1,11 +1,4 @@
-"""Motorola MB8611 driver for DOCSight.
-
-The MB8611 is a standalone DOCSIS 3.1 cable modem.
-It exposes channel data via HTML tables at /cmconnectionstatus.html.
-No authentication is required — the page is open on the LAN.
-
-Default URL: http://192.168.100.1
-"""
+"""Motorola MB8611 driver for DOCSight."""
 
 import logging
 
@@ -21,7 +14,6 @@ log = logging.getLogger("docsis.driver.mb8611")
 
 
 class MB8611Driver(ModemDriver):
-    """Driver for Motorola MB8611 DOCSIS 3.1 cable modem."""
 
     DRIVER_KEY = "mb8611"
 
@@ -48,13 +40,6 @@ class MB8611Driver(ModemDriver):
             raise RuntimeError(f"MB8611: login failed: {e}")
 
     def get_docsis_data(self) -> dict:
-        """Scrape DOCSIS channel tables from /cmconnectionstatus.html.
-
-        Page layout:
-          tables[0]: Startup procedure
-          tables[1]: Downstream bonded channels (SC-QAM + OFDM)
-          tables[2]: Upstream bonded channels (SC-QAM + OFDMA)
-        """
         try:
             r = self._session.get(
                 f"{self._url}/cmconnectionstatus.html",
@@ -90,8 +75,6 @@ class MB8611Driver(ModemDriver):
 
     def get_connection_info(self) -> dict:
         return {}
-
-    # ── Parsers ──────────────────────────────────────────────────────────────
 
     def _parse_downstream(self, table) -> list:
         rows = table.find_all("tr")
@@ -180,8 +163,6 @@ class MB8611Driver(ModemDriver):
         return result
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
-
 def _find_header_row(rows):
     for row in rows:
         cells = row.find_all(["th", "td"])
@@ -219,7 +200,8 @@ def _map_ds_columns(headers):
         elif "uncorrect" in h:
             col["uncorrected"] = i
     # positional fallbacks
-    col.setdefault("channel_id", 0) or col.__setitem__("channel_id", col["channel_id"] or 0)
+    if col["channel_id"] is None:
+        col["channel_id"] = 0
     if col["lock_status"] is None:
         col["lock_status"] = 1
     if col["frequency"] is None:
