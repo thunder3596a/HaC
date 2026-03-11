@@ -182,6 +182,12 @@ class MB8611Driver(ModemDriver):
         soup = BeautifulSoup(r.text, "html.parser")
         tables = soup.find_all("table")
 
+        log.warning("MB8611: status_url=%s tables=%d", status_url, len(tables))
+        for i, t in enumerate(tables):
+            rows = t.find_all("tr")
+            first_row_text = rows[0].get_text(" | ", strip=True) if rows else "(empty)"
+            log.warning("MB8611: table[%d] rows=%d first_row=%r", i, len(rows), first_row_text[:120])
+
         if len(tables) < 3:
             raise RuntimeError(
                 f"MB8611: expected ≥3 tables, found {len(tables)}"
@@ -189,6 +195,7 @@ class MB8611Driver(ModemDriver):
 
         downstream = self._parse_downstream(tables[1])
         upstream = self._parse_upstream(tables[2])
+        log.warning("MB8611: parsed DS=%d US=%d", len(downstream), len(upstream))
 
         return {
             "docsis": "3.1",
