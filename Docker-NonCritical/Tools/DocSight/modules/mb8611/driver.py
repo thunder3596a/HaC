@@ -67,7 +67,6 @@ class MB8611Driver(ModemDriver):
                 log.debug("MB8611: %s -> %s", path, resp.status_code)
             except requests.RequestException:
                 continue
-
         # scrape the root page for a link to a status/connection/docsis page
         try:
             root = self._session.get(f"{self._real_base}/", timeout=10)
