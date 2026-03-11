@@ -160,7 +160,7 @@ class MB8611Driver(ModemDriver):
             root = self._session.get(f"{self._real_base}/MotoHome.html", timeout=10)
             # extract all href attrs and any quoted .html/.htm/.asp strings from JS
             all_refs = re.findall(r'["\']([^"\']*\.(?:html?|asp))["\']', root.text, re.IGNORECASE)
-            log.warning("MB8611: all page refs found on MotoHome: %s", sorted(set(all_refs)))
+            log.debug("MB8611: all page refs found on MotoHome: %s", sorted(set(all_refs)))
             keywords = ("status", "docsis", "connection", "connect", "channel")
             for ref in all_refs:
                 if any(kw in ref.lower() for kw in keywords):
@@ -190,8 +190,8 @@ class MB8611Driver(ModemDriver):
             "GetMotoStatusUpstreamChannelInfo",
             {"GetMotoStatusUpstreamChannelInfo": ""},
         )
-        log.warning("MB8611: HNAP DS raw: %r", str(resp_ds)[:600])
-        log.warning("MB8611: HNAP US raw: %r", str(resp_us)[:600])
+        log.debug("MB8611: HNAP DS raw: %r", str(resp_ds)[:600])
+        log.debug("MB8611: HNAP US raw: %r", str(resp_us)[:600])
 
         ds_body = resp_ds.get("GetMotoStatusDownstreamChannelInfoResponse", resp_ds)
         us_body = resp_us.get("GetMotoStatusUpstreamChannelInfoResponse", resp_us)
@@ -204,7 +204,7 @@ class MB8611Driver(ModemDriver):
             us_body.get("MotoConnUpstreamChannel", ""),
             us_body.get("MotoConnOfdmaChannel", ""),
         )
-        log.warning("MB8611: parsed DS=%d US=%d", len(downstream), len(upstream))
+        log.info("MB8611: parsed DS=%d US=%d", len(downstream), len(upstream))
 
         return {
             "docsis": "3.1",
@@ -225,7 +225,6 @@ class MB8611Driver(ModemDriver):
                 continue
             for entry in raw.strip("|").split("|"):
                 parts = [p.strip() for p in entry.split("^")]
-                log.warning("MB8611: DS %s parts(%d): %s", ch_kind, len(parts), parts[:10])
                 if len(parts) < 9:
                     continue
                 if parts[1].lower() != "locked":
@@ -267,7 +266,6 @@ class MB8611Driver(ModemDriver):
                 continue
             for entry in raw.strip("|").split("|"):
                 parts = [p.strip() for p in entry.split("^")]
-                log.warning("MB8611: US %s parts(%d): %s", ch_kind, len(parts), parts[:10])
                 if len(parts) < 7:
                     continue
                 if parts[1].lower() != "locked":
