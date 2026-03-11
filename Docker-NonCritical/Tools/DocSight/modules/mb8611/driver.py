@@ -35,21 +35,40 @@ class MB8611Driver(ModemDriver):
             r.raise_for_status()
             parsed = urlparse(r.url)
             self._real_base = f"{parsed.scheme}://{parsed.netloc}"
-            login_url = f"{self._real_base}/Login.html"
-            if "login" not in r.url.lower() and "logout" in r.text.lower():
+
+            if "logout" in r.text.lower() and "login" not in r.url.lower():
                 return  # already authenticated
-            r2 = self._session.post(
-                login_url,
-                data={"loginUsername": self._user, "loginPassword": self._password},
-                timeout=15,
-                allow_redirects=True,
-            )
-            r2.raise_for_status()
-            # Success: modem redirects to MotoHome.html; failure: stays on Login.html
-            if "login" in r2.url.lower():
-                log.warning("MB8611: login may have failed — check credentials (still on login page after POST)")
+
+            # Parse the login form to find the real action URL and field names
+            soup = BeautifulSoup(r.text, "html.parser")
+            form = soup.find("form")
+            if form:
+                action = form.get("action", "/")
+                post_url = action if action.startswith("http") else f"{self._real_base}/{action.lstrip('/')}"
+                fields = {inp.get("name"): inp.get("value", "") for inp in form.find_all("input") if inp.get("name")}
+                log.debug("MB8611: login form action=%s fields=%s", post_url, list(fields.keys()))
+                # Fill in credentials — try common field name pairs
+                user_key = next((k for k in fields if "user" in k.lower() or k.lower() == "username"), None)
+                pass_key = next((k for k in fields if "pass" in k.lower() or k.lower() == "password"), None)
+                if user_key:
+                    fields[user_key] = self._user
+                if pass_key:
+                    fields[pass_key] = self._password
+                if not user_key or not pass_key:
+                    log.warning("MB8611: could not identify user/pass fields in form, using defaults; found fields: %s", list(fields.keys()))
+                    fields["loginUsername"] = self._user
+                    fields["loginPassword"] = self._password
             else:
-                log.debug("MB8611: login successful, landed on %s", r2.url)
+                log.warning("MB8611: no form found on login page, falling back to default POST")
+                post_url = f"{self._real_base}/Login.html"
+                fields = {"loginUsername": self._user, "loginPassword": self._password}
+
+            r2 = self._session.post(post_url, data=fields, timeout=15, allow_redirects=True)
+            r2.raise_for_status()
+            if "login" in r2.url.lower():
+                log.warning("MB8611: login may have failed — still on login page after POST (url=%s)", r2.url)
+            else:
+                log.info("MB8611: login successful, landed on %s", r2.url)
         except requests.RequestException as e:
             raise RuntimeError(f"MB8611: login failed: {e}")
 
