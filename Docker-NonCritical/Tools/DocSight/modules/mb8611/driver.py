@@ -4,6 +4,7 @@ import hashlib
 import hmac
 import logging
 import re
+import time
 from urllib.parse import urlparse
 
 import urllib3
@@ -27,6 +28,7 @@ class MB8611Driver(ModemDriver):
         self._session.verify = False  # MB8611 uses a self-signed certificate
         self._session.headers.update({"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"})
         self._real_base = url.rstrip("/")
+        self._private_key: str = ""  # set after successful HNAP login
 
     # HNAP1 — MB8611 firmware uses JSON-HNAP (not SOAP XML)
     _HNAP_URL = "/HNAP1/"
@@ -35,12 +37,19 @@ class MB8611Driver(ModemDriver):
     def _hnap_request(self, action: str, payload: dict, cookie: str = "") -> dict:
         """POST a JSON HNAP1 request and return the parsed response dict."""
         url = f"{self._real_base}{self._HNAP_URL}"
+        soap_action = f'"{self._HNAP_BASE}{action}"'
         headers = {
             "Content-Type": "application/json",
-            "SOAPAction": f'"{self._HNAP_BASE}{action}"',
+            "SOAPAction": soap_action,
         }
         if cookie:
+            # During login challenge/response only
             headers["Cookie"] = f"uid={cookie}"
+        elif self._private_key:
+            # Authenticated requests require HNAP_AUTH: HMAC-MD5(PrivateKey, ts+SOAPAction) ts
+            ts = str(int(time.time() * 1000) % 2_000_000_000)
+            auth_hash = self._hmac_md5(self._private_key, ts + soap_action)
+            headers["HNAP_AUTH"] = f"{auth_hash} {ts}"
         r = self._session.post(url, json=payload, headers=headers, timeout=15)
         r.raise_for_status()
         return r.json()
@@ -106,8 +115,9 @@ class MB8611Driver(ModemDriver):
             if result2.upper() != "OK":
                 raise RuntimeError(f"MB8611: HNAP login failed — LoginResult={result2!r}")
 
-            # Persist the session cookie so subsequent requests stay authenticated
+            # Persist the session cookie and private key for subsequent authenticated requests
             self._session.cookies.set("uid", cookie_val, domain=parsed.netloc)
+            self._private_key = private_key
             log.info("MB8611: HNAP login succeeded")
 
         except requests.RequestException as e:
