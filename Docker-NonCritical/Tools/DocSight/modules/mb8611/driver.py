@@ -58,35 +58,43 @@ class MB8611Driver(ModemDriver):
 
     def _find_status_url(self) -> str | None:
         """Try known paths, then scrape root page links as fallback."""
+        found_paths = []
         for path in self._STATUS_PATHS:
             try:
                 resp = self._session.get(f"{self._real_base}{path}", timeout=10)
+                found_paths.append(f"{path}={resp.status_code}")
                 if resp.status_code == 200 and "<table" in resp.text.lower():
                     log.debug("MB8611: status page found at %s", path)
                     return f"{self._real_base}{path}"
-                log.debug("MB8611: %s -> %s", path, resp.status_code)
-            except requests.RequestException:
+            except requests.RequestException as e:
+                found_paths.append(f"{path}=ERR({e})")
                 continue
-        # scrape the root page for a link to a status/connection/docsis page
+
+        # scrape root page — check both <a href> and JS strings for page references
         try:
             root = self._session.get(f"{self._real_base}/", timeout=10)
-            soup = BeautifulSoup(root.text, "html.parser")
-            keywords = ("status", "docsis", "connection", "connect")
-            for a in soup.find_all("a", href=True):
-                href = a["href"].lower()
-                if any(kw in href for kw in keywords):
-                    url = a["href"] if a["href"].startswith("http") else f"{self._real_base}/{a['href'].lstrip('/')}"
-                    log.info("MB8611: discovered status page from root nav: %s", url)
-                    return url
+            # extract all href attrs and any quoted .html/.htm/.asp strings from JS
+            import re
+            all_refs = re.findall(r'["\']([^"\']*\.(?:html?|asp))["\']', root.text, re.IGNORECASE)
+            log.warning("MB8611: all page refs found on root: %s", sorted(set(all_refs)))
+            keywords = ("status", "docsis", "connection", "connect", "channel")
+            for ref in all_refs:
+                if any(kw in ref.lower() for kw in keywords):
+                    url = ref if ref.startswith("http") else f"{self._real_base}/{ref.lstrip('/')}"
+                    log.info("MB8611: trying discovered ref: %s", url)
+                    resp = self._session.get(url, timeout=10)
+                    if resp.status_code == 200 and "<table" in resp.text.lower():
+                        return url
         except requests.RequestException:
             pass
 
+        log.error("MB8611: path probe results: %s", found_paths)
         return None
 
     def get_docsis_data(self) -> dict:
         status_url = self._find_status_url()
         if status_url is None:
-            raise RuntimeError("MB8611: could not find status page — enable debug logging to see which paths were tried")
+            raise RuntimeError("MB8611: could not find status page — check DOCSight logs for 'path probe results' and 'page refs found on root' to identify the correct path")
         try:
             r = self._session.get(status_url, timeout=15)
             r.raise_for_status()
