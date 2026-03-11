@@ -64,10 +64,15 @@ class MB8611Driver(ModemDriver):
                     fields[user_key] = self._user
                 if pass_key:
                     fields[pass_key] = actual_password
+                # loginText is a visible plain-text password input (value="Password" is a placeholder);
+                # set it to the actual password in case the modem reads this field instead of loginPassword
+                if "loginText" in fields:
+                    fields["loginText"] = actual_password
                 if not user_key or not pass_key:
                     log.warning("MB8611: could not detect credential fields; found: %s", list(fields.keys()))
                     fields["loginUsername"] = self._user
                     fields["loginPassword"] = actual_password
+                    fields["loginText"] = actual_password
             else:
                 log.warning("MB8611: no form found on login page (url=%s), page length=%d", r.url, len(r.text))
                 post_url = f"{self._real_base}/cgi-bin/moto/goform/MotoLogin"
