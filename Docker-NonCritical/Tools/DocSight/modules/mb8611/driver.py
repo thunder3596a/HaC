@@ -46,7 +46,7 @@ class MB8611Driver(ModemDriver):
                 action = form.get("action", "/")
                 post_url = action if action.startswith("http") else f"{self._real_base}/{action.lstrip('/')}"
                 fields = {inp.get("name"): inp.get("value", "") for inp in form.find_all("input") if inp.get("name")}
-                log.warning("MB8611: login form action=%s fields=%s", post_url, list(fields.keys()))
+                log.warning("MB8611: login form action=%s fields=%s", post_url, {k: ("***" if "pass" in k.lower() else v) for k, v in fields.items()})
                 # Fill in credentials — try common field name pairs
                 user_key = next((k for k in fields if "user" in k.lower() or k.lower() == "username"), None)
                 pass_key = next((k for k in fields if "pass" in k.lower() or k.lower() == "password"), None)
@@ -59,21 +59,19 @@ class MB8611Driver(ModemDriver):
                     fields["loginUsername"] = self._user
                     fields["loginPassword"] = self._password
             else:
-                log.warning("MB8611: no form found on login page, falling back to default POST")
-                post_url = f"{self._real_base}/Login.html"
+                log.warning("MB8611: no form found on login page (url=%s), page length=%d", r.url, len(r.text))
+                post_url = f"{self._real_base}/cgi-bin/moto/goform/MotoLogin"
                 fields = {"loginUsername": self._user, "loginPassword": self._password}
 
             r2 = self._session.post(post_url, data=fields, timeout=15, allow_redirects=True)
-            r2.raise_for_status()
-            if "login" in r2.url.lower():
-                # Some MB8611 firmware doesn't redirect after POST — verify by fetching MotoHome
-                check = self._session.get(f"{self._real_base}/MotoHome.html", timeout=10)
-                if check.status_code == 200 and "login" not in check.url.lower():
-                    log.info("MB8611: login successful (confirmed via MotoHome.html)")
-                else:
-                    log.warning("MB8611: login may have failed — still on login page after POST (url=%s)", r2.url)
+            log.warning("MB8611: login POST -> status=%s url=%s", r2.status_code, r2.url)
+            # Verify by fetching MotoHome regardless of redirect behaviour
+            check = self._session.get(f"{self._real_base}/MotoHome.html", timeout=10)
+            log.warning("MB8611: MotoHome check -> status=%s url=%s authenticated=%s", check.status_code, check.url, "logout" in check.text.lower())
+            if check.status_code == 200 and "logout" in check.text.lower():
+                log.info("MB8611: login confirmed")
             else:
-                log.info("MB8611: login successful, landed on %s", r2.url)
+                log.warning("MB8611: login failed — credentials may be wrong or modem requires different auth")
         except requests.RequestException as e:
             raise RuntimeError(f"MB8611: login failed: {e}")
 
