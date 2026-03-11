@@ -28,32 +28,22 @@ class MB8611Driver(ModemDriver):
         self._session.headers.update({"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"})
         self._real_base = url.rstrip("/")
 
-    # HNAP1 SOAP envelope template
+    # HNAP1 — MB8611 firmware uses JSON-HNAP (not SOAP XML)
     _HNAP_URL = "/HNAP1/"
-    _HNAP_NS = "http://purenetworks.com/HNAP1/"
-    _SOAP_ENVELOPE = (
-        '<?xml version="1.0" encoding="utf-8"?>'
-        '<soap:Envelope '
-        'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" '
-        'xmlns:xsd="http://www.w3.org/2001/XMLSchema" '
-        'xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">'
-        '<soap:Body>{body}</soap:Body>'
-        '</soap:Envelope>'
-    )
+    _HNAP_BASE = "http://purenetworks.com/HNAP1/"
 
-    def _hnap_request(self, action: str, body_xml: str, cookie: str = "") -> str:
-        """POST a HNAP1 SOAP request and return the response text."""
+    def _hnap_request(self, action: str, payload: dict, cookie: str = "") -> dict:
+        """POST a JSON HNAP1 request and return the parsed response dict."""
         url = f"{self._real_base}{self._HNAP_URL}"
         headers = {
-            "Content-Type": "text/xml; charset=utf-8",
-            "SOAPAction": f'"http://purenetworks.com/HNAP1/{action}"',
+            "Content-Type": "application/json",
+            "SOAPAction": f'"{self._HNAP_BASE}{action}"',
         }
         if cookie:
             headers["Cookie"] = f"uid={cookie}"
-        payload = self._SOAP_ENVELOPE.format(body=body_xml)
-        r = self._session.post(url, data=payload, headers=headers, timeout=15)
+        r = self._session.post(url, json=payload, headers=headers, timeout=15)
         r.raise_for_status()
-        return r.text
+        return r.json()
 
     @staticmethod
     def _hmac_md5(key: str, msg: str) -> str:
@@ -74,25 +64,20 @@ class MB8611Driver(ModemDriver):
                 return  # already authenticated
 
             # Step 1 — request challenge
-            step1_body = (
-                f'<Login xmlns="{self._HNAP_NS}">'
-                '<Action>request</Action>'
-                f'<Username>{self._user}</Username>'
-                '<LoginPassword></LoginPassword>'
-                '<Captcha></Captcha>'
-                '</Login>'
-            )
-            xml1 = self._hnap_request("Login", step1_body)
-            log.debug("MB8611: HNAP challenge response: %s", xml1[:500])
+            resp1 = self._hnap_request("Login", {"Login": {
+                "Action": "request",
+                "Username": self._user,
+                "LoginPassword": "",
+                "Captcha": "",
+                "PrivateLogin": "LoginPassword",
+            }})
+            login_resp = resp1.get("LoginResponse", resp1)
+            log.debug("MB8611: HNAP challenge response: %s", login_resp)
 
-            def _xml_val(text: str, tag: str) -> str:
-                m = re.search(rf'<{tag}>(.*?)</{tag}>', text)
-                return m.group(1) if m else ""
-
-            challenge = _xml_val(xml1, "Challenge")
-            public_key = _xml_val(xml1, "PublicKey")
-            cookie_val = _xml_val(xml1, "Cookie")
-            result1 = _xml_val(xml1, "LoginResult")
+            challenge = login_resp.get("Challenge", "")
+            public_key = login_resp.get("PublicKey", "")
+            cookie_val = login_resp.get("Cookie", "")
+            result1 = login_resp.get("LoginResult", "")
 
             log.debug("MB8611: HNAP challenge -> result=%r challenge_len=%d pubkey_len=%d cookie_len=%d",
                       result1, len(challenge), len(public_key), len(cookie_val))
@@ -101,23 +86,21 @@ class MB8611Driver(ModemDriver):
                 raise RuntimeError(
                     f"MB8611: HNAP challenge missing fields "
                     f"(challenge={bool(challenge)} pubkey={bool(public_key)} cookie={bool(cookie_val)}); "
-                    f"response: {xml1[:300]}"
+                    f"response: {login_resp}"
                 )
 
             # Step 2 — compute HMAC-MD5 keys and login
             private_key = self._hmac_md5(public_key + self._password, challenge)
             login_password = self._hmac_md5(private_key, challenge)
 
-            step2_body = (
-                f'<Login xmlns="{self._HNAP_NS}">'
-                '<Action>login</Action>'
-                f'<Username>{self._user}</Username>'
-                f'<LoginPassword>{login_password}</LoginPassword>'
-                '<Captcha></Captcha>'
-                '</Login>'
-            )
-            xml2 = self._hnap_request("Login", step2_body, cookie=cookie_val)
-            result2 = _xml_val(xml2, "LoginResult")
+            resp2 = self._hnap_request("Login", {"Login": {
+                "Action": "login",
+                "Username": self._user,
+                "LoginPassword": login_password,
+                "Captcha": "",
+                "PrivateLogin": "LoginPassword",
+            }}, cookie=cookie_val)
+            result2 = resp2.get("LoginResponse", resp2).get("LoginResult", "")
             log.debug("MB8611: HNAP login result: %r", result2)
 
             if result2.upper() != "OK":
