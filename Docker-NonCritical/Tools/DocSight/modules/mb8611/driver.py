@@ -170,31 +170,30 @@ class MB8611Driver(ModemDriver):
         return None
 
     def get_docsis_data(self) -> dict:
-        status_url = self._find_status_url()
-        if status_url is None:
-            raise RuntimeError("MB8611: could not find status page — check DOCSight logs for 'path probe results' and 'page refs found on root' to identify the correct path")
-        try:
-            r = self._session.get(status_url, timeout=15)
-            r.raise_for_status()
-        except requests.RequestException as e:
-            raise RuntimeError(f"MB8611: failed to fetch status page: {e}")
+        # MB8611 loads channel data via HNAP JSON calls from JavaScript — the HTML
+        # tables are empty placeholders.  Fetch directly using the same HNAP session.
+        resp_ds = self._hnap_request(
+            "GetMotoStatusDownstreamChannelInfo",
+            {"GetMotoStatusDownstreamChannelInfo": ""},
+        )
+        resp_us = self._hnap_request(
+            "GetMotoStatusUpstreamChannelInfo",
+            {"GetMotoStatusUpstreamChannelInfo": ""},
+        )
+        log.warning("MB8611: HNAP DS raw: %r", str(resp_ds)[:600])
+        log.warning("MB8611: HNAP US raw: %r", str(resp_us)[:600])
 
-        soup = BeautifulSoup(r.text, "html.parser")
-        tables = soup.find_all("table")
+        ds_body = resp_ds.get("GetMotoStatusDownstreamChannelInfoResponse", resp_ds)
+        us_body = resp_us.get("GetMotoStatusUpstreamChannelInfoResponse", resp_us)
 
-        log.warning("MB8611: status_url=%s tables=%d", status_url, len(tables))
-        for i, t in enumerate(tables):
-            rows = t.find_all("tr")
-            first_row_text = rows[0].get_text(" | ", strip=True) if rows else "(empty)"
-            log.warning("MB8611: table[%d] rows=%d first_row=%r", i, len(rows), first_row_text[:120])
-
-        if len(tables) < 3:
-            raise RuntimeError(
-                f"MB8611: expected ≥3 tables, found {len(tables)}"
-            )
-
-        downstream = self._parse_downstream(tables[1])
-        upstream = self._parse_upstream(tables[2])
+        downstream = self._parse_hnap_downstream(
+            ds_body.get("MotoConnDownstreamChannel", ""),
+            ds_body.get("MotoConnOfdmChannel", ""),
+        )
+        upstream = self._parse_hnap_upstream(
+            us_body.get("MotoConnUpstreamChannel", ""),
+            us_body.get("MotoConnOfdmaChannel", ""),
+        )
         log.warning("MB8611: parsed DS=%d US=%d", len(downstream), len(upstream))
 
         return {
@@ -202,6 +201,82 @@ class MB8611Driver(ModemDriver):
             "downstream": downstream,
             "upstream": upstream,
         }
+
+    def _parse_hnap_downstream(self, sc_qam_raw: str, ofdm_raw: str = "") -> list:
+        """Parse caret-delimited SC-QAM and OFDM downstream channel strings.
+
+        SC-QAM field order: index^lockStatus^modulation^channelId^freqHz^powerDbmv^snrDb^corrected^uncorrected^
+        OFDM field order:   index^lockStatus^modulation^channelId^freqHz^powerDbmv^snrDb^corrected^uncorrected^...
+        Channels are pipe-separated.
+        """
+        result = []
+        for raw, ch_kind in ((sc_qam_raw, "qam"), (ofdm_raw, "ofdm")):
+            if not raw:
+                continue
+            for entry in raw.strip("|").split("|"):
+                parts = [p.strip() for p in entry.split("^")]
+                log.warning("MB8611: DS %s parts(%d): %s", ch_kind, len(parts), parts[:10])
+                if len(parts) < 9:
+                    continue
+                if parts[1].lower() != "locked":
+                    continue
+                try:
+                    mod = parts[2].upper()
+                    is_ofdm = ch_kind == "ofdm" or "OFDM" in mod
+                    freq_hz = float(parts[4]) if parts[4] else 0.0
+                    freq_mhz = freq_hz / 1_000_000 if freq_hz > 1_000 else freq_hz
+                    power = float(parts[5]) if parts[5] else None
+                    snr = float(parts[6]) if parts[6] else None
+                    corr = int(float(parts[7])) if parts[7] else 0
+                    uncorr = int(float(parts[8])) if parts[8] else 0
+                    result.append({
+                        "channelID": parts[3],
+                        "type": "ofdm" if is_ofdm else _normalize_modulation(parts[2]) or "qam",
+                        "frequency": f"{freq_mhz:.1f} MHz" if freq_mhz else "",
+                        "powerLevel": power,
+                        "mse": None if is_ofdm else (-snr if snr is not None else None),
+                        "mer": snr,
+                        "latency": 0,
+                        "corrError": corr,
+                        "nonCorrError": uncorr,
+                    })
+                except (ValueError, TypeError, IndexError) as e:
+                    log.warning("MB8611: DS parse error %s for parts=%s", e, parts)
+        return result
+
+    def _parse_hnap_upstream(self, sc_qam_raw: str, ofdma_raw: str = "") -> list:
+        """Parse caret-delimited SC-QAM and OFDMA upstream channel strings.
+
+        SC-QAM field order: index^lockStatus^channelType^channelId^symbolRate^freqHz^powerDbmv^
+        OFDMA field order may vary; treat similarly.
+        Channels are pipe-separated.
+        """
+        result = []
+        for raw, ch_kind in ((sc_qam_raw, "sc-qam"), (ofdma_raw, "ofdma")):
+            if not raw:
+                continue
+            for entry in raw.strip("|").split("|"):
+                parts = [p.strip() for p in entry.split("^")]
+                log.warning("MB8611: US %s parts(%d): %s", ch_kind, len(parts), parts[:10])
+                if len(parts) < 7:
+                    continue
+                if parts[1].lower() != "locked":
+                    continue
+                try:
+                    freq_hz = float(parts[5]) if parts[5] else 0.0
+                    freq_mhz = freq_hz / 1_000_000 if freq_hz > 1_000 else freq_hz
+                    power = float(parts[6]) if parts[6] else None
+                    ch_type = parts[2].upper()
+                    result.append({
+                        "channelID": parts[3],
+                        "type": "ofdma" if ("OFDM" in ch_type or ch_kind == "ofdma") else "sc-qam",
+                        "frequency": f"{freq_mhz:.1f} MHz" if freq_mhz else "",
+                        "powerLevel": power,
+                        "multiplex": "",
+                    })
+                except (ValueError, TypeError, IndexError) as e:
+                    log.warning("MB8611: US parse error %s for parts=%s", e, parts)
+        return result
 
     def get_device_info(self) -> dict:
         return {
