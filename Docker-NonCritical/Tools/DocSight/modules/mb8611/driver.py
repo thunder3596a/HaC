@@ -77,9 +77,15 @@ class MB8611Driver(ModemDriver):
                     except requests.RequestException as je:
                         log.warning("MB8611: could not fetch JS(%s): %s", js_src, je)
 
-                # Look for inline JS password transformation
-                js_snippets = re.findall(r'(?:loginPassword|password).*?(?:sha256|md5|base64|hash|encode)[^\n;]{0,200}', r.text, re.IGNORECASE)
-                log.warning("MB8611: inline JS password patterns: %s", js_snippets[:5])
+                # Extract the full OnClickLogin function from inline HTML script
+                onclick_m = re.search(r'function\s+OnClickLogin\s*\(\s*\)(.*?)(?=\nfunction\s|\n</script>)', r.text, re.DOTALL | re.IGNORECASE)
+                if onclick_m:
+                    log.warning("MB8611: OnClickLogin body: %r", onclick_m.group(0)[:3000])
+                else:
+                    log.warning("MB8611: OnClickLogin not found in inline HTML")
+                    # Fallback broader inline search
+                    js_snippets = re.findall(r'(?:loginPassword|password).{0,400}', r.text, re.IGNORECASE | re.DOTALL)
+                    log.warning("MB8611: inline loginPassword snippets: %s", js_snippets[:3])
 
                 sn_token = fields.get("SnToken", "")
                 actual_password = hashlib.sha256((self._password + sn_token).encode()).hexdigest() if sn_token else self._password
