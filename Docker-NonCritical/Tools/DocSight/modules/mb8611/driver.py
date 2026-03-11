@@ -48,10 +48,10 @@ class MB8611Driver(ModemDriver):
                 post_url = action if action.startswith("http") else f"{self._real_base}/{action.lstrip('/')}"
                 fields = {inp.get("name"): inp.get("value", "") for inp in form.find_all("input") if inp.get("name")}
 
-                # MB8611 firmware hashes the password with the SnToken before POST.
-                # Replicate the JS: sha256(password + snToken)
+                # MB8611 firmware may hash the password with SnToken: sha256(password + snToken).
+                # Only apply hashing if a token is present; otherwise send plain text.
                 sn_token = fields.get("SnToken", "")
-                hashed_pw = hashlib.sha256((self._password + sn_token).encode()).hexdigest()
+                actual_password = hashlib.sha256((self._password + sn_token).encode()).hexdigest() if sn_token else self._password
                 log.warning("MB8611: login form action=%s fields=%s sntoken_present=%s", post_url, {k: ("***" if "pass" in k.lower() else v) for k, v in fields.items()}, bool(sn_token))
 
                 user_key = next((k for k in fields if "user" in k.lower() or k.lower() == "username"), None)
@@ -59,11 +59,11 @@ class MB8611Driver(ModemDriver):
                 if user_key:
                     fields[user_key] = self._user
                 if pass_key:
-                    fields[pass_key] = hashed_pw
+                    fields[pass_key] = actual_password
                 if not user_key or not pass_key:
                     log.warning("MB8611: could not detect credential fields; found: %s", list(fields.keys()))
                     fields["loginUsername"] = self._user
-                    fields["loginPassword"] = hashed_pw
+                    fields["loginPassword"] = actual_password
             else:
                 log.warning("MB8611: no form found on login page (url=%s), page length=%d", r.url, len(r.text))
                 post_url = f"{self._real_base}/cgi-bin/moto/goform/MotoLogin"
