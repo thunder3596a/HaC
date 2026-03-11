@@ -21,20 +21,21 @@ class MB8611Driver(ModemDriver):
         super().__init__(url, user, password)
         self._session = requests.Session()
         self._session.verify = False  # MB8611 uses a self-signed certificate
+        self._real_base = url.rstrip("/")
 
     def login(self) -> None:
         """Authenticate via the MB8611 login form."""
         if not self._user and not self._password:
             return
         try:
-            # GET root to follow http→https redirect and find the real base URL
+            # Follow http→https redirect and store the real base URL
             r = self._session.get(f"{self._url}/", timeout=15, allow_redirects=True)
             r.raise_for_status()
+            self._real_base = r.url.rstrip("/")
             if "logout" in r.text.lower():
                 return  # already authenticated
-            base = r.url.rstrip("/")
             r2 = self._session.post(
-                f"{base}/",
+                f"{self._real_base}/",
                 data={"loginUsername": self._user, "loginPassword": self._password},
                 timeout=15,
                 allow_redirects=True,
@@ -45,15 +46,22 @@ class MB8611Driver(ModemDriver):
         except requests.RequestException as e:
             raise RuntimeError(f"MB8611: login failed: {e}")
 
+    # Known status page paths across MB8611 firmware versions
+    _STATUS_PATHS = ["/cmconnectionstatus.html", "/DocsisStatus.htm", "/RgConnect.asp"]
+
     def get_docsis_data(self) -> dict:
-        try:
-            r = self._session.get(
-                f"{self._url}/cmconnectionstatus.html",
-                timeout=15,
-            )
-            r.raise_for_status()
-        except requests.RequestException as e:
-            raise RuntimeError(f"MB8611: failed to fetch status page: {e}")
+        r = None
+        for path in self._STATUS_PATHS:
+            try:
+                resp = self._session.get(f"{self._real_base}{path}", timeout=15)
+                if resp.status_code == 200:
+                    r = resp
+                    break
+                log.debug("MB8611: %s returned %s, trying next", path, resp.status_code)
+            except requests.RequestException:
+                continue
+        if r is None:
+            raise RuntimeError("MB8611: could not find status page (tried all known paths)")
 
         soup = BeautifulSoup(r.text, "html.parser")
         tables = soup.find_all("table")
