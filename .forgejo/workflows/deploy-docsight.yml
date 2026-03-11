@@ -55,28 +55,14 @@ jobs:
             fi
           done
 
-          defined_image=$(grep -m1 'image:' docsight.yml | awk '{print $2}')
-          running_image=$(docker inspect -f '{{.Config.Image}}' docsight 2>/dev/null || echo "none")
-          checksum=$( (cat docsight.yml; find ./modules -type f 2>/dev/null | sort | xargs cat 2>/dev/null) | sha256sum | awk '{print $1}')
-          old=$(cat ~/.hac-noncritical/.docsight_checksum 2>/dev/null || echo "")
+          env DOMAIN_NAME=$DOMAIN_NAME CERTRESOLVER=$CERTRESOLVER TZ=$TZ \
+            MQTT_HOST=${MQTT_HOST:-} MQTT_PORT=${MQTT_PORT:-1883} MQTT_USER=${MQTT_USER:-} MQTT_PASSWORD=${MQTT_PASSWORD:-} \
+            DOCSIGHT_PUBLIC_URL=${DOCSIGHT_PUBLIC_URL:-} DOCSIGHT_LOG_LEVEL=${DOCSIGHT_LOG_LEVEL:-INFO} DOCSIGHT_AUDIT_JSON=${DOCSIGHT_AUDIT_JSON:-1} \
+            DOCSIGHT_MQTT_TOPIC_PREFIX=${DOCSIGHT_MQTT_TOPIC_PREFIX:-docsight} DOCSIGHT_MQTT_DISCOVERY_PREFIX=${DOCSIGHT_MQTT_DISCOVERY_PREFIX:-homeassistant} \
+            docker compose -p docsight -f docsight.yml down --remove-orphans || true
 
-          if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
-            echo "Redeploying DocSight..."
-            mkdir -p ~/.hac-noncritical
-
-            env DOMAIN_NAME=$DOMAIN_NAME CERTRESOLVER=$CERTRESOLVER TZ=$TZ \
-              MQTT_HOST=${MQTT_HOST:-} MQTT_PORT=${MQTT_PORT:-1883} MQTT_USER=${MQTT_USER:-} MQTT_PASSWORD=${MQTT_PASSWORD:-} \
-              DOCSIGHT_PUBLIC_URL=${DOCSIGHT_PUBLIC_URL:-} DOCSIGHT_LOG_LEVEL=${DOCSIGHT_LOG_LEVEL:-INFO} DOCSIGHT_AUDIT_JSON=${DOCSIGHT_AUDIT_JSON:-1} \
-              DOCSIGHT_MQTT_TOPIC_PREFIX=${DOCSIGHT_MQTT_TOPIC_PREFIX:-docsight} DOCSIGHT_MQTT_DISCOVERY_PREFIX=${DOCSIGHT_MQTT_DISCOVERY_PREFIX:-homeassistant} \
-              docker compose -p docsight -f docsight.yml down --remove-orphans || true
-
-            env DOMAIN_NAME=$DOMAIN_NAME CERTRESOLVER=$CERTRESOLVER TZ=$TZ \
-              MQTT_HOST=${MQTT_HOST:-} MQTT_PORT=${MQTT_PORT:-1883} MQTT_USER=${MQTT_USER:-} MQTT_PASSWORD=${MQTT_PASSWORD:-} \
-              DOCSIGHT_PUBLIC_URL=${DOCSIGHT_PUBLIC_URL:-} DOCSIGHT_LOG_LEVEL=${DOCSIGHT_LOG_LEVEL:-INFO} DOCSIGHT_AUDIT_JSON=${DOCSIGHT_AUDIT_JSON:-1} \
-              DOCSIGHT_MQTT_TOPIC_PREFIX=${DOCSIGHT_MQTT_TOPIC_PREFIX:-docsight} DOCSIGHT_MQTT_DISCOVERY_PREFIX=${DOCSIGHT_MQTT_DISCOVERY_PREFIX:-homeassistant} \
-              docker compose -p docsight -f docsight.yml up -d --force-recreate
-
-            echo "$checksum" > ~/.hac-noncritical/.docsight_checksum
-          else
-            echo "No changes detected; skipping redeploy"
-          fi
+          env DOMAIN_NAME=$DOMAIN_NAME CERTRESOLVER=$CERTRESOLVER TZ=$TZ \
+            MQTT_HOST=${MQTT_HOST:-} MQTT_PORT=${MQTT_PORT:-1883} MQTT_USER=${MQTT_USER:-} MQTT_PASSWORD=${MQTT_PASSWORD:-} \
+            DOCSIGHT_PUBLIC_URL=${DOCSIGHT_PUBLIC_URL:-} DOCSIGHT_LOG_LEVEL=${DOCSIGHT_LOG_LEVEL:-INFO} DOCSIGHT_AUDIT_JSON=${DOCSIGHT_AUDIT_JSON:-1} \
+            DOCSIGHT_MQTT_TOPIC_PREFIX=${DOCSIGHT_MQTT_TOPIC_PREFIX:-docsight} DOCSIGHT_MQTT_DISCOVERY_PREFIX=${DOCSIGHT_MQTT_DISCOVERY_PREFIX:-homeassistant} \
+            docker compose -p docsight -f docsight.yml up -d --force-recreate
