@@ -69,8 +69,11 @@ class MB8611Driver(ModemDriver):
                 post_url = f"{self._real_base}/cgi-bin/moto/goform/MotoLogin"
                 fields = {"loginUsername": self._user, "loginPassword": self._password}
 
-            r2 = self._session.post(post_url, data=fields, timeout=15, allow_redirects=True)
-            log.warning("MB8611: login POST -> status=%s url=%s", r2.status_code, r2.url)
+            r2 = self._session.post(
+                post_url, data=fields, timeout=15, allow_redirects=True,
+                headers={"Referer": r.url},
+            )
+            log.warning("MB8611: login POST -> status=%s url=%s body_snippet=%s", r2.status_code, r2.url, r2.text[:300].replace("\n", " "))
             # Verify by fetching MotoHome regardless of redirect behaviour
             check = self._session.get(f"{self._real_base}/MotoHome.html", timeout=10)
             log.warning("MB8611: MotoHome check -> status=%s url=%s authenticated=%s", check.status_code, check.url, "logout" in check.text.lower())
