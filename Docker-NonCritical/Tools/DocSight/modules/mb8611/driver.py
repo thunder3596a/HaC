@@ -49,10 +49,29 @@ class MB8611Driver(ModemDriver):
                 post_url = action if action.startswith("http") else f"{self._real_base}/{action.lstrip('/')}"
                 fields = {inp.get("name"): inp.get("value", "") for inp in form.find_all("input") if inp.get("name")}
 
-                # Look for JS password transformation (common in Motorola firmware)
-                # Patterns: sha256/md5/base64 applied to password or password+salt
+                # Log raw HTML values BEFORE overwriting (critical: loginPassword may carry a server nonce)
+                raw_pass_val = fields.get("loginPassword", "")
+                log.warning("MB8611: raw HTML loginPassword -> len=%d repr=%r", len(raw_pass_val), raw_pass_val[:32])
+                log.warning("MB8611: raw HTML loginText -> %r", fields.get("loginText", ""))
+
+                # Fetch and search external JS files for password transformation code
+                js_srcs = re.findall(r'<script[^>]+src=["\']([^"\']+)["\']', r.text, re.IGNORECASE)
+                log.warning("MB8611: external JS files on login page: %s", js_srcs)
+                for js_src in js_srcs:
+                    try:
+                        js_url = js_src if js_src.startswith("http") else f"{self._real_base}/{js_src.lstrip('/')}"
+                        js_resp = self._session.get(js_url, timeout=5)
+                        hits = re.findall(r'(?:loginPassword|loginText|MotoLogin|sha256|md5|hash).{0,300}', js_resp.text, re.IGNORECASE)
+                        if hits:
+                            log.warning("MB8611: JS(%s) relevant snippets: %s", js_src, hits[:3])
+                        else:
+                            log.warning("MB8611: JS(%s) -> len=%d, no relevant patterns", js_src, len(js_resp.text))
+                    except requests.RequestException as je:
+                        log.warning("MB8611: could not fetch JS(%s): %s", js_src, je)
+
+                # Look for inline JS password transformation
                 js_snippets = re.findall(r'(?:loginPassword|password).*?(?:sha256|md5|base64|hash|encode)[^\n;]{0,200}', r.text, re.IGNORECASE)
-                log.warning("MB8611: JS password patterns found: %s", js_snippets[:5])
+                log.warning("MB8611: inline JS password patterns: %s", js_snippets[:5])
 
                 sn_token = fields.get("SnToken", "")
                 actual_password = hashlib.sha256((self._password + sn_token).encode()).hexdigest() if sn_token else self._password
@@ -82,7 +101,7 @@ class MB8611Driver(ModemDriver):
                 post_url, data=fields, timeout=15, allow_redirects=True,
                 headers={"Referer": r.url},
             )
-            log.warning("MB8611: login POST -> status=%s url=%s body_snippet=%s", r2.status_code, r2.url, r2.text[:300].replace("\n", " "))
+            log.warning("MB8611: submitted -> username=%r post_url=%s result=%s", fields.get("loginUsername"), post_url, r2.text[:200].replace("\n", " "))
             # Verify by fetching MotoHome regardless of redirect behaviour
             check = self._session.get(f"{self._real_base}/MotoHome.html", timeout=10)
             log.warning("MB8611: MotoHome check -> status=%s url=%s authenticated=%s", check.status_code, check.url, "logout" in check.text.lower())
