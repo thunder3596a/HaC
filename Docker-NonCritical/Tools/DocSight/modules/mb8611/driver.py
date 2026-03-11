@@ -47,21 +47,52 @@ class MB8611Driver(ModemDriver):
             raise RuntimeError(f"MB8611: login failed: {e}")
 
     # Known status page paths across MB8611 firmware versions
-    _STATUS_PATHS = ["/cmconnectionstatus.html", "/DocsisStatus.htm", "/RgConnect.asp"]
+    _STATUS_PATHS = [
+        "/cmconnectionstatus.html",
+        "/DocsisStatus.htm",
+        "/RgConnect.asp",
+        "/motoconnectionstatus.html",
+        "/connection_status.html",
+        "/status_docsis.asp",
+    ]
 
-    def get_docsis_data(self) -> dict:
-        r = None
+    def _find_status_url(self) -> str | None:
+        """Try known paths, then scrape root page links as fallback."""
         for path in self._STATUS_PATHS:
             try:
-                resp = self._session.get(f"{self._real_base}{path}", timeout=15)
-                if resp.status_code == 200:
-                    r = resp
-                    break
-                log.debug("MB8611: %s returned %s, trying next", path, resp.status_code)
+                resp = self._session.get(f"{self._real_base}{path}", timeout=10)
+                if resp.status_code == 200 and "<table" in resp.text.lower():
+                    log.debug("MB8611: status page found at %s", path)
+                    return f"{self._real_base}{path}"
+                log.debug("MB8611: %s -> %s", path, resp.status_code)
             except requests.RequestException:
                 continue
-        if r is None:
-            raise RuntimeError("MB8611: could not find status page (tried all known paths)")
+
+        # scrape the root page for a link to a status/connection/docsis page
+        try:
+            root = self._session.get(f"{self._real_base}/", timeout=10)
+            soup = BeautifulSoup(root.text, "html.parser")
+            keywords = ("status", "docsis", "connection", "connect")
+            for a in soup.find_all("a", href=True):
+                href = a["href"].lower()
+                if any(kw in href for kw in keywords):
+                    url = a["href"] if a["href"].startswith("http") else f"{self._real_base}/{a['href'].lstrip('/')}"
+                    log.info("MB8611: discovered status page from root nav: %s", url)
+                    return url
+        except requests.RequestException:
+            pass
+
+        return None
+
+    def get_docsis_data(self) -> dict:
+        status_url = self._find_status_url()
+        if status_url is None:
+            raise RuntimeError("MB8611: could not find status page — enable debug logging to see which paths were tried")
+        try:
+            r = self._session.get(status_url, timeout=15)
+            r.raise_for_status()
+        except requests.RequestException as e:
+            raise RuntimeError(f"MB8611: failed to fetch status page: {e}")
 
         soup = BeautifulSoup(r.text, "html.parser")
         tables = soup.find_all("table")
