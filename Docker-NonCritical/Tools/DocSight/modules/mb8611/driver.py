@@ -46,7 +46,7 @@ class MB8611Driver(ModemDriver):
                 action = form.get("action", "/")
                 post_url = action if action.startswith("http") else f"{self._real_base}/{action.lstrip('/')}"
                 fields = {inp.get("name"): inp.get("value", "") for inp in form.find_all("input") if inp.get("name")}
-                log.debug("MB8611: login form action=%s fields=%s", post_url, list(fields.keys()))
+                log.warning("MB8611: login form action=%s fields=%s", post_url, list(fields.keys()))
                 # Fill in credentials — try common field name pairs
                 user_key = next((k for k in fields if "user" in k.lower() or k.lower() == "username"), None)
                 pass_key = next((k for k in fields if "pass" in k.lower() or k.lower() == "password"), None)
