@@ -42,3 +42,4 @@ services:
 
     volumes:
       - /srv/docsight/data:/data
+      - /srv/docsight/modules:/modules

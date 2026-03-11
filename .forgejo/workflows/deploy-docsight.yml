@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - "Docker-NonCritical/Tools/DocSight/docsight.yml"
+      - "Docker-NonCritical/Tools/DocSight/modules/**"
       - ".forgejo/workflows/deploy-docsight.yml"
   workflow_dispatch:
 
@@ -22,6 +23,12 @@ jobs:
 
       - name: Verify compose file exists
         run: ls -l "./Docker-NonCritical/Tools/DocSight/docsight.yml"
+
+      - name: Sync community modules
+        run: |
+          sudo mkdir -p /srv/docsight/modules
+          sudo cp -r "./Docker-NonCritical/Tools/DocSight/modules/." /srv/docsight/modules/
+          sudo chown -R nicholas:nicholas /srv/docsight/modules
 
       - name: Deploy DocSight
         working-directory: "./Docker-NonCritical/Tools/DocSight"
