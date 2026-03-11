@@ -24,6 +24,7 @@ class MB8611Driver(ModemDriver):
         super().__init__(url, user, password)
         self._session = requests.Session()
         self._session.verify = False  # MB8611 uses a self-signed certificate
+        self._session.headers.update({"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"})
         self._real_base = url.rstrip("/")
 
     def login(self) -> None:
@@ -48,8 +49,11 @@ class MB8611Driver(ModemDriver):
                 post_url = action if action.startswith("http") else f"{self._real_base}/{action.lstrip('/')}"
                 fields = {inp.get("name"): inp.get("value", "") for inp in form.find_all("input") if inp.get("name")}
 
-                # MB8611 firmware may hash the password with SnToken: sha256(password + snToken).
-                # Only apply hashing if a token is present; otherwise send plain text.
+                # Look for JS password transformation (common in Motorola firmware)
+                # Patterns: sha256/md5/base64 applied to password or password+salt
+                js_snippets = re.findall(r'(?:loginPassword|password).*?(?:sha256|md5|base64|hash|encode)[^\n;]{0,200}', r.text, re.IGNORECASE)
+                log.warning("MB8611: JS password patterns found: %s", js_snippets[:5])
+
                 sn_token = fields.get("SnToken", "")
                 actual_password = hashlib.sha256((self._password + sn_token).encode()).hexdigest() if sn_token else self._password
                 log.warning("MB8611: login form action=%s fields=%s sntoken_present=%s", post_url, {k: ("***" if "pass" in k.lower() else v) for k, v in fields.items()}, bool(sn_token))
