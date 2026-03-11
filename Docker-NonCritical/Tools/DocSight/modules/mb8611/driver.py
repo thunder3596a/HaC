@@ -1,6 +1,7 @@
 """Motorola MB8611 driver for DOCSight."""
 
 import hashlib
+import hmac
 import logging
 import re
 from urllib.parse import urlparse
@@ -27,94 +28,105 @@ class MB8611Driver(ModemDriver):
         self._session.headers.update({"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"})
         self._real_base = url.rstrip("/")
 
+    # HNAP1 SOAP envelope template
+    _HNAP_URL = "/HNAP1/"
+    _HNAP_NS = "http://purenetworks.com/HNAP1/"
+    _SOAP_ENVELOPE = (
+        '<?xml version="1.0" encoding="utf-8"?>'
+        '<soap:Envelope '
+        'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" '
+        'xmlns:xsd="http://www.w3.org/2001/XMLSchema" '
+        'xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">'
+        '<soap:Body>{body}</soap:Body>'
+        '</soap:Envelope>'
+    )
+
+    def _hnap_request(self, action: str, body_xml: str, cookie: str = "") -> str:
+        """POST a HNAP1 SOAP request and return the response text."""
+        url = f"{self._real_base}{self._HNAP_URL}"
+        headers = {
+            "Content-Type": "text/xml; charset=utf-8",
+            "SOAPAction": f'"http://purenetworks.com/HNAP1/{action}"',
+        }
+        if cookie:
+            headers["Cookie"] = f"uid={cookie}"
+        payload = self._SOAP_ENVELOPE.format(body=body_xml)
+        r = self._session.post(url, data=payload, headers=headers, timeout=15)
+        r.raise_for_status()
+        return r.text
+
+    @staticmethod
+    def _hmac_md5(key: str, msg: str) -> str:
+        return hmac.new(key.encode(), msg.encode(), hashlib.md5).hexdigest().upper()
+
     def login(self) -> None:
-        """Authenticate via the MB8611 login form."""
+        """Authenticate via HNAP1 challenge-response (used by all MB8611 firmware)."""
         if not self._user and not self._password:
             return
         try:
-            # Follow http→https redirect; store only scheme+host as real base
-            r = self._session.get(f"{self._url}/", timeout=15, allow_redirects=True)
-            r.raise_for_status()
-            parsed = urlparse(r.url)
+            # Resolve http→https redirect to get the real base URL
+            r0 = self._session.get(f"{self._url}/", timeout=15, allow_redirects=True)
+            r0.raise_for_status()
+            parsed = urlparse(r0.url)
             self._real_base = f"{parsed.scheme}://{parsed.netloc}"
 
-            if "logout" in r.text.lower() and "login" not in r.url.lower():
+            if "logout" in r0.text.lower() and "login" not in r0.url.lower():
                 return  # already authenticated
 
-            # Parse the login form to find the real action URL and field names
-            soup = BeautifulSoup(r.text, "html.parser")
-            form = soup.find("form")
-            if form:
-                action = form.get("action", "/")
-                post_url = action if action.startswith("http") else f"{self._real_base}/{action.lstrip('/')}"
-                fields = {inp.get("name"): inp.get("value", "") for inp in form.find_all("input") if inp.get("name")}
-
-                # Log raw HTML values BEFORE overwriting (critical: loginPassword may carry a server nonce)
-                raw_pass_val = fields.get("loginPassword", "")
-                log.warning("MB8611: raw HTML loginPassword -> len=%d repr=%r", len(raw_pass_val), raw_pass_val[:32])
-                log.warning("MB8611: raw HTML loginText -> %r", fields.get("loginText", ""))
-
-                # Extract all inline script content and search for doLogin definition
-                inline_scripts = soup.find_all("script", src=False)
-                full_inline_js = "\n".join(s.get_text() for s in inline_scripts)
-                dologin_m = re.search(r'(function\s+doLogin\s*\(.*?\{.*?\})(?=\s*function|\s*$|\s*//)', full_inline_js, re.DOTALL)
-                if dologin_m:
-                    log.warning("MB8611: doLogin found inline: %r", dologin_m.group(0)[:3000])
-                else:
-                    log.warning("MB8611: doLogin NOT in inline scripts (total inline JS=%d chars)", len(full_inline_js))
-                    log.warning("MB8611: full inline JS: %r", full_inline_js[:5000])
-
-                # Try SOAPAction.js without the ?V=M2 version suffix (modem auth-gates it with suffix)
-                for soap_path in ["js/SOAP/SOAPAction.js", "js/SOAPAction.js"]:
-                    try:
-                        soap_resp = self._session.get(f"{self._real_base}/{soap_path}", timeout=5)
-                        soap_len = len(soap_resp.text)
-                        if soap_resp.status_code == 200 and soap_len > 100:
-                            dologin_in_soap = re.search(r'function\s+doLogin.{0,3000}', soap_resp.text, re.DOTALL)
-                            log.warning("MB8611: %s [%d bytes]: doLogin=%r", soap_path, soap_len,
-                                        dologin_in_soap.group(0)[:2000] if dologin_in_soap else "(not found)")
-                            break
-                        else:
-                            log.warning("MB8611: %s status=%d len=%d", soap_path, soap_resp.status_code, soap_len)
-                    except requests.RequestException as se:
-                        log.warning("MB8611: could not fetch %s: %s", soap_path, se)
-
-                sn_token = fields.get("SnToken", "")
-                actual_password = hashlib.sha256((self._password + sn_token).encode()).hexdigest() if sn_token else self._password
-                log.warning("MB8611: login form action=%s fields=%s sntoken_present=%s", post_url, {k: ("***" if "pass" in k.lower() else v) for k, v in fields.items()}, bool(sn_token))
-
-                user_key = next((k for k in fields if "user" in k.lower() or k.lower() == "username"), None)
-                pass_key = next((k for k in fields if "pass" in k.lower() or k.lower() == "password"), None)
-                if user_key:
-                    fields[user_key] = self._user
-                if pass_key:
-                    fields[pass_key] = actual_password
-                # loginText is a visible plain-text password input (value="Password" is a placeholder);
-                # set it to the actual password in case the modem reads this field instead of loginPassword
-                if "loginText" in fields:
-                    fields["loginText"] = actual_password
-                if not user_key or not pass_key:
-                    log.warning("MB8611: could not detect credential fields; found: %s", list(fields.keys()))
-                    fields["loginUsername"] = self._user
-                    fields["loginPassword"] = actual_password
-                    fields["loginText"] = actual_password
-            else:
-                log.warning("MB8611: no form found on login page (url=%s), page length=%d", r.url, len(r.text))
-                post_url = f"{self._real_base}/cgi-bin/moto/goform/MotoLogin"
-                fields = {"loginUsername": self._user, "loginPassword": self._password}
-
-            r2 = self._session.post(
-                post_url, data=fields, timeout=15, allow_redirects=True,
-                headers={"Referer": r.url},
+            # Step 1 — request challenge
+            step1_body = (
+                f'<Login xmlns="{self._HNAP_NS}">'
+                '<Action>request</Action>'
+                f'<Username>{self._user}</Username>'
+                '<LoginPassword></LoginPassword>'
+                '<Captcha></Captcha>'
+                '</Login>'
             )
-            log.warning("MB8611: submitted -> username=%r post_url=%s result=%s", fields.get("loginUsername"), post_url, r2.text[:200].replace("\n", " "))
-            # Verify by fetching MotoHome regardless of redirect behaviour
-            check = self._session.get(f"{self._real_base}/MotoHome.html", timeout=10)
-            log.warning("MB8611: MotoHome check -> status=%s url=%s authenticated=%s", check.status_code, check.url, "logout" in check.text.lower())
-            if check.status_code == 200 and "logout" in check.text.lower():
-                log.info("MB8611: login confirmed")
-            else:
-                log.warning("MB8611: login failed — credentials may be wrong or modem requires different auth")
+            xml1 = self._hnap_request("Login", step1_body)
+            log.debug("MB8611: HNAP challenge response: %s", xml1[:500])
+
+            def _xml_val(text: str, tag: str) -> str:
+                m = re.search(rf'<{tag}>(.*?)</{tag}>', text)
+                return m.group(1) if m else ""
+
+            challenge = _xml_val(xml1, "Challenge")
+            public_key = _xml_val(xml1, "PublicKey")
+            cookie_val = _xml_val(xml1, "Cookie")
+            result1 = _xml_val(xml1, "LoginResult")
+
+            log.debug("MB8611: HNAP challenge -> result=%r challenge_len=%d pubkey_len=%d cookie_len=%d",
+                      result1, len(challenge), len(public_key), len(cookie_val))
+
+            if not challenge or not public_key or not cookie_val:
+                raise RuntimeError(
+                    f"MB8611: HNAP challenge missing fields "
+                    f"(challenge={bool(challenge)} pubkey={bool(public_key)} cookie={bool(cookie_val)}); "
+                    f"response: {xml1[:300]}"
+                )
+
+            # Step 2 — compute HMAC-MD5 keys and login
+            private_key = self._hmac_md5(public_key + self._password, challenge)
+            login_password = self._hmac_md5(private_key, challenge)
+
+            step2_body = (
+                f'<Login xmlns="{self._HNAP_NS}">'
+                '<Action>login</Action>'
+                f'<Username>{self._user}</Username>'
+                f'<LoginPassword>{login_password}</LoginPassword>'
+                '<Captcha></Captcha>'
+                '</Login>'
+            )
+            xml2 = self._hnap_request("Login", step2_body, cookie=cookie_val)
+            result2 = _xml_val(xml2, "LoginResult")
+            log.debug("MB8611: HNAP login result: %r", result2)
+
+            if result2.upper() != "OK":
+                raise RuntimeError(f"MB8611: HNAP login failed — LoginResult={result2!r}")
+
+            # Persist the session cookie so subsequent requests stay authenticated
+            self._session.cookies.set("uid", cookie_val, domain=parsed.netloc)
+            log.info("MB8611: HNAP login succeeded")
+
         except requests.RequestException as e:
             raise RuntimeError(f"MB8611: login failed: {e}")
 
