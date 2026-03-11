@@ -27,14 +27,20 @@ class MB8611Driver(ModemDriver):
         if not self._user and not self._password:
             return
         try:
-            r = self._session.post(
-                f"{self._url}/login.asp",
+            # GET root to follow http→https redirect and find the real base URL
+            r = self._session.get(f"{self._url}/", timeout=15, allow_redirects=True)
+            r.raise_for_status()
+            if "logout" in r.text.lower():
+                return  # already authenticated
+            base = r.url.rstrip("/")
+            r2 = self._session.post(
+                f"{base}/",
                 data={"loginUsername": self._user, "loginPassword": self._password},
                 timeout=15,
                 allow_redirects=True,
             )
-            r.raise_for_status()
-            if "logout" not in r.text.lower() and "connection status" not in r.text.lower():
+            r2.raise_for_status()
+            if "logout" not in r2.text.lower():
                 log.warning("MB8611: login may have failed — check credentials")
         except requests.RequestException as e:
             raise RuntimeError(f"MB8611: login failed: {e}")
