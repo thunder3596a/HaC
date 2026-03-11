@@ -9,8 +9,11 @@ Default URL: http://192.168.100.1
 
 import logging
 
+import urllib3
 import requests
 from bs4 import BeautifulSoup
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 from app.drivers.base import ModemDriver
 
@@ -25,6 +28,7 @@ class MB8611Driver(ModemDriver):
     def __init__(self, url: str, user: str, password: str):
         super().__init__(url, user, password)
         self._session = requests.Session()
+        self._session.verify = False  # MB8611 uses a self-signed certificate
 
     def login(self) -> None:
         """Authenticate via the MB8611 login form."""
