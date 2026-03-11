@@ -1,6 +1,8 @@
 """Motorola MB8611 driver for DOCSight."""
 
 import logging
+import re
+from urllib.parse import urlparse
 
 import urllib3
 import requests
@@ -28,21 +30,26 @@ class MB8611Driver(ModemDriver):
         if not self._user and not self._password:
             return
         try:
-            # Follow http→https redirect and store the real base URL
+            # Follow http→https redirect; store only scheme+host as real base
             r = self._session.get(f"{self._url}/", timeout=15, allow_redirects=True)
             r.raise_for_status()
-            self._real_base = r.url.rstrip("/")
-            if "logout" in r.text.lower():
+            parsed = urlparse(r.url)
+            self._real_base = f"{parsed.scheme}://{parsed.netloc}"
+            login_url = f"{self._real_base}/Login.html"
+            if "login" not in r.url.lower() and "logout" in r.text.lower():
                 return  # already authenticated
             r2 = self._session.post(
-                f"{self._real_base}/",
+                login_url,
                 data={"loginUsername": self._user, "loginPassword": self._password},
                 timeout=15,
                 allow_redirects=True,
             )
             r2.raise_for_status()
-            if "logout" not in r2.text.lower():
-                log.warning("MB8611: login may have failed — check credentials")
+            # Success: modem redirects to MotoHome.html; failure: stays on Login.html
+            if "login" in r2.url.lower():
+                log.warning("MB8611: login may have failed — check credentials (still on login page after POST)")
+            else:
+                log.debug("MB8611: login successful, landed on %s", r2.url)
         except requests.RequestException as e:
             raise RuntimeError(f"MB8611: login failed: {e}")
 
@@ -74,7 +81,6 @@ class MB8611Driver(ModemDriver):
         try:
             root = self._session.get(f"{self._real_base}/", timeout=10)
             # extract all href attrs and any quoted .html/.htm/.asp strings from JS
-            import re
             all_refs = re.findall(r'["\']([^"\']*\.(?:html?|asp))["\']', root.text, re.IGNORECASE)
             log.warning("MB8611: all page refs found on root: %s", sorted(set(all_refs)))
             keywords = ("status", "docsis", "connection", "connect", "channel")
