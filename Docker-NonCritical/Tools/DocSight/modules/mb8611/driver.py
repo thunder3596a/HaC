@@ -54,38 +54,30 @@ class MB8611Driver(ModemDriver):
                 log.warning("MB8611: raw HTML loginPassword -> len=%d repr=%r", len(raw_pass_val), raw_pass_val[:32])
                 log.warning("MB8611: raw HTML loginText -> %r", fields.get("loginText", ""))
 
-                # Fetch and search external JS files for password transformation code
-                js_srcs = re.findall(r'<script[^>]+src=["\']([^"\']+)["\']', r.text, re.IGNORECASE)
-                log.warning("MB8611: external JS files on login page: %s", js_srcs)
-                for js_src in js_srcs:
-                    try:
-                        js_url = js_src if js_src.startswith("http") else f"{self._real_base}/{js_src.lstrip('/')}"
-                        js_resp = self._session.get(js_url, timeout=5)
-                        js_len = len(js_resp.text)
-                        # Always dump small files so we can read them verbatim
-                        if js_len <= 200:
-                            log.warning("MB8611: JS(%s) raw [%d bytes status=%s ct=%s]: %r",
-                                        js_src, js_len, js_resp.status_code,
-                                        js_resp.headers.get("Content-Type", "?"), js_resp.text)
-                        else:
-                            hits = re.findall(r'(?:loginPassword|loginText|MotoLogin|sha256|md5|hash).{0,300}',
-                                              js_resp.text, re.IGNORECASE | re.DOTALL)
-                            if hits:
-                                log.warning("MB8611: JS(%s) relevant snippets: %s", js_src, hits[:3])
-                            else:
-                                log.warning("MB8611: JS(%s) -> len=%d, no relevant patterns", js_src, js_len)
-                    except requests.RequestException as je:
-                        log.warning("MB8611: could not fetch JS(%s): %s", js_src, je)
-
-                # Extract the full OnClickLogin function from inline HTML script
-                onclick_m = re.search(r'function\s+OnClickLogin\s*\(\s*\)(.*?)(?=\nfunction\s|\n</script>)', r.text, re.DOTALL | re.IGNORECASE)
-                if onclick_m:
-                    log.warning("MB8611: OnClickLogin body: %r", onclick_m.group(0)[:3000])
+                # Extract all inline script content and search for doLogin definition
+                inline_scripts = soup.find_all("script", src=False)
+                full_inline_js = "\n".join(s.get_text() for s in inline_scripts)
+                dologin_m = re.search(r'(function\s+doLogin\s*\(.*?\{.*?\})(?=\s*function|\s*$|\s*//)', full_inline_js, re.DOTALL)
+                if dologin_m:
+                    log.warning("MB8611: doLogin found inline: %r", dologin_m.group(0)[:3000])
                 else:
-                    log.warning("MB8611: OnClickLogin not found in inline HTML")
-                    # Fallback broader inline search
-                    js_snippets = re.findall(r'(?:loginPassword|password).{0,400}', r.text, re.IGNORECASE | re.DOTALL)
-                    log.warning("MB8611: inline loginPassword snippets: %s", js_snippets[:3])
+                    log.warning("MB8611: doLogin NOT in inline scripts (total inline JS=%d chars)", len(full_inline_js))
+                    log.warning("MB8611: full inline JS: %r", full_inline_js[:5000])
+
+                # Try SOAPAction.js without the ?V=M2 version suffix (modem auth-gates it with suffix)
+                for soap_path in ["js/SOAP/SOAPAction.js", "js/SOAPAction.js"]:
+                    try:
+                        soap_resp = self._session.get(f"{self._real_base}/{soap_path}", timeout=5)
+                        soap_len = len(soap_resp.text)
+                        if soap_resp.status_code == 200 and soap_len > 100:
+                            dologin_in_soap = re.search(r'function\s+doLogin.{0,3000}', soap_resp.text, re.DOTALL)
+                            log.warning("MB8611: %s [%d bytes]: doLogin=%r", soap_path, soap_len,
+                                        dologin_in_soap.group(0)[:2000] if dologin_in_soap else "(not found)")
+                            break
+                        else:
+                            log.warning("MB8611: %s status=%d len=%d", soap_path, soap_resp.status_code, soap_len)
+                    except requests.RequestException as se:
+                        log.warning("MB8611: could not fetch %s: %s", soap_path, se)
 
                 sn_token = fields.get("SnToken", "")
                 actual_password = hashlib.sha256((self._password + sn_token).encode()).hexdigest() if sn_token else self._password
