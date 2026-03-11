@@ -61,11 +61,19 @@ class MB8611Driver(ModemDriver):
                     try:
                         js_url = js_src if js_src.startswith("http") else f"{self._real_base}/{js_src.lstrip('/')}"
                         js_resp = self._session.get(js_url, timeout=5)
-                        hits = re.findall(r'(?:loginPassword|loginText|MotoLogin|sha256|md5|hash).{0,300}', js_resp.text, re.IGNORECASE)
-                        if hits:
-                            log.warning("MB8611: JS(%s) relevant snippets: %s", js_src, hits[:3])
+                        js_len = len(js_resp.text)
+                        # Always dump small files so we can read them verbatim
+                        if js_len <= 200:
+                            log.warning("MB8611: JS(%s) raw [%d bytes status=%s ct=%s]: %r",
+                                        js_src, js_len, js_resp.status_code,
+                                        js_resp.headers.get("Content-Type", "?"), js_resp.text)
                         else:
-                            log.warning("MB8611: JS(%s) -> len=%d, no relevant patterns", js_src, len(js_resp.text))
+                            hits = re.findall(r'(?:loginPassword|loginText|MotoLogin|sha256|md5|hash).{0,300}',
+                                              js_resp.text, re.IGNORECASE | re.DOTALL)
+                            if hits:
+                                log.warning("MB8611: JS(%s) relevant snippets: %s", js_src, hits[:3])
+                            else:
+                                log.warning("MB8611: JS(%s) -> len=%d, no relevant patterns", js_src, js_len)
                     except requests.RequestException as je:
                         log.warning("MB8611: could not fetch JS(%s): %s", js_src, je)
 
