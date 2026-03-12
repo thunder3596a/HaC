@@ -57,6 +57,8 @@ jobs:
           SERVICE_MAP["traefik"]="traefik"
           COMPOSE_MAP["flaresolverr"]="Docker-NonCritical/Media/flaresolverr/flaresolverr.yml"
           SERVICE_MAP["flaresolverr"]="flaresolverr"
+          COMPOSE_MAP["speedtest"]="Docker-NonCritical/Tools/Speedtest/speedtest.yml"
+          SERVICE_MAP["speedtest"]="speedtest"
 
           updated=""
           containers_to_update=""

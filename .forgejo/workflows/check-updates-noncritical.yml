@@ -25,7 +25,7 @@ jobs:
         id: check
         env:
           # Containers to check on docker-noncritical
-          CONTAINERS: "plex sonarr radarr lidarr readarr prowlarr overseerr qbittorrent sabnzbd traefik flaresolverr"
+          CONTAINERS: "plex sonarr radarr lidarr readarr prowlarr overseerr qbittorrent sabnzbd traefik flaresolverr speedtest"
         run: |
           set +e  # Don't exit on errors - we handle them ourselves
           chmod +x ./scripts/check-docker-updates.sh
