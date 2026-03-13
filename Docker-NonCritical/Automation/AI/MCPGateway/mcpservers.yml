@@ -81,23 +81,23 @@ services:
   #     - "ha.compose-file=Docker-NonCritical/Automation/AI/MCPGateway/mcpservers.yml"
   #     - "ha.service-name=netbox-mcp"
 
-  # n8n MCP Server — disabled: needs testing before enabling
-  # n8n-mcp:
-  #   build:
-  #     context: ./mcp-servers/n8n
-  #     dockerfile: Dockerfile
-  #   container_name: mcp-n8n
-  #   restart: unless-stopped
-  #   networks:
-  #     - mcpnet
-  #   working_dir: /app
-  #   command: sh -c "npx -y supergateway --port 3000 --outputTransport streamableHttp --stdio 'node index.js'"
-  #   labels:
-  #     - com.centurylinklabs.watchtower.enable=false
-  #     - "ha.monitor=true"
-  #     - "ha.category=tools"
-  #     - "ha.compose-file=Docker-NonCritical/Automation/AI/MCPGateway/mcpservers.yml"
-  #     - "ha.service-name=n8n-mcp"
+  # n8n MCP Server — allows AI to list/create/manage N8N workflows
+  n8n-mcp:
+    image: ghcr.io/czlonkowski/n8n-mcp:latest
+    container_name: n8n-mcp
+    restart: unless-stopped
+    networks:
+      - mcpnet
+    command: sh -c "npx -y supergateway --port 3000 --outputTransport streamableHttp --stdio 'node /app/dist/index.js'"
+    environment:
+      - N8N_API_URL=${N8N_URL}/api/v1
+      - N8N_API_KEY=${N8N_API_KEY}
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+      - "ha.monitor=true"
+      - "ha.category=tools"
+      - "ha.compose-file=Docker-NonCritical/Automation/AI/MCPGateway/mcpservers.yml"
+      - "ha.service-name=n8n-mcp"
 
   # Omada MCP Server — disabled: needs testing before enabling
   # omada-mcp:

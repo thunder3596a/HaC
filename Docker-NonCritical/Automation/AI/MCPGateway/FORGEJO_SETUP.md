@@ -20,7 +20,8 @@ Add these to **Settings → Secrets**:
 | `OPNSENSE_API_KEY` | OPNsense API key | `XZt8D3kL9mN...` |
 | `OPNSENSE_API_SECRET` | OPNsense API secret | `pQw7rS2vT8y...` |
 | `NETBOX_API_TOKEN` | NetBox API token | `0123456789abcdef0123456789abcdef01234567` |
-| `N8N_API_KEY` | n8n API key | `n8n_api_abc123xyz...` |
+| `N8N_API_KEY` | n8n API key (Settings → API → Create Key) | `n8n_api_abc123xyz...` |
+| `VIKUNJA_API_TOKEN` | Vikunja API token (Settings → API Tokens) | `vikunja_tok_abc123...` |
 | `OMADA_USERNAME` | TP-Link Omada controller username | `admin` |
 | `OMADA_PASSWORD` | TP-Link Omada controller password | `your_omada_password` |
 | `HOMEBOX_TOKEN` | HomeBox API token | `hb_token_xyz789...` |
@@ -36,7 +37,8 @@ Add these to **Settings → Variables**:
 | `HOMEASSISTANT_URL` | Home Assistant URL | `http://homeassistant:8123` |
 | `OPNSENSE_URL` | OPNsense firewall URL | `https://opnsense.example.com` |
 | `NETBOX_URL` | NetBox URL | `http://netbox:8080` |
-| `N8N_URL` | n8n workflow automation URL | `http://n8n:5678` |
+| `N8N_URL` | n8n workflow automation URL | `https://n8n.u-acres.com` |
+| `VIKUNJA_URL` | Vikunja task manager URL | `https://tasks.u-acres.com` |
 | `OMADA_URL` | TP-Link Omada controller URL | `https://omada.example.com:8043` |
 | `OMADA_SITE_ID` | Omada site ID | `Default` |
 | `HOMEBOX_URL` | HomeBox inventory URL | `http://homebox:7745` |
@@ -90,6 +92,33 @@ The Forgejo workflow (`.forgejo/workflows/deploy-mcpgateway.yml`) will automatic
 4. Deploy the stack using docker compose
 5. Only redeploy if the image or configuration has changed
 
+## Registering MCP Servers with the Gateway
+
+After the containers are running, register each server via the ContextForge admin API.
+The gateway uses email/password auth at `/auth/login`.
+
+```bash
+# 1. Get an access token (use your gateway admin email/password)
+GW_TOKEN=$(curl -s -X POST "https://mcp.u-acres.com/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{"username":"YOUR_EMAIL","password":"YOUR_PASSWORD"}' \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
+
+# 2. Register vikunja-mcp
+curl -s -X POST "https://mcp.u-acres.com/gateways" \
+  -H "Authorization: Bearer $GW_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"vikunja","url":"http://mcp-vikunja:3000/mcp","description":"Vikunja task management"}'
+
+# 3. Register n8n-mcp
+curl -s -X POST "https://mcp.u-acres.com/gateways" \
+  -H "Authorization: Bearer $GW_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"n8n","url":"http://n8n-mcp:3000/mcp","description":"N8N workflow automation"}'
+```
+
+Alternatively, register via the admin UI at https://mcp.u-acres.com.
+
 ## Testing the Setup
 
 After configuring all secrets and variables:
@@ -108,8 +137,7 @@ After configuring all secrets and variables:
    ```
 
 4. Access the MCP Gateway admin UI:
-   - Local: http://your-server:3000
-   - External: https://mcp.example.com (or your domain)
+   - External: https://mcp.u-acres.com
 
 ## Security Notes
 
