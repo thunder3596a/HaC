@@ -21,6 +21,7 @@ Add these to **Settings → Secrets**:
 | `OPNSENSE_API_SECRET` | OPNsense API secret | `pQw7rS2vT8y...` |
 | `NETBOX_API_TOKEN` | NetBox API token | `0123456789abcdef0123456789abcdef01234567` |
 | `N8N_API_KEY` | n8n API key (Settings → API → Create Key) | `n8n_api_abc123xyz...` |
+| `N8N_MCP_AUTH_TOKEN` | Bearer token for n8n-mcp HTTP server (any strong random string) | `$(openssl rand -hex 32)` |
 | `VIKUNJA_API_TOKEN` | Vikunja API token (Settings → API Tokens) | `vikunja_tok_abc123...` |
 | `OMADA_USERNAME` | TP-Link Omada controller username | `admin` |
 | `OMADA_PASSWORD` | TP-Link Omada controller password | `your_omada_password` |

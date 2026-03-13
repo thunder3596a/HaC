@@ -94,6 +94,7 @@ services:
       - MCP_MODE=http
       - PORT=3000
       - HOST=0.0.0.0
+      - AUTH_TOKEN=${N8N_MCP_AUTH_TOKEN}
     labels:
       - com.centurylinklabs.watchtower.enable=true
       - "ha.monitor=true"

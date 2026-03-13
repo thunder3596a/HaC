@@ -33,12 +33,13 @@ jobs:
           VIKUNJA_API_TOKEN: ${{ secrets.VIKUNJA_API_TOKEN }}
           N8N_URL: ${{ vars.N8N_URL }}
           N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+          N8N_MCP_AUTH_TOKEN: ${{ secrets.N8N_MCP_AUTH_TOKEN }}
           HOMEBOX_URL: ${{ vars.HOMEBOX_URL }}
           HOMEBOX_EMAIL: ${{ secrets.HOMEBOX_EMAIL }}
           HOMEBOX_PASSWORD: ${{ secrets.HOMEBOX_PASSWORD }}
         run: |
           # Validate required secrets
-          for var in VIKUNJA_API_TOKEN N8N_API_KEY HOMEBOX_EMAIL HOMEBOX_PASSWORD; do
+          for var in VIKUNJA_API_TOKEN N8N_API_KEY N8N_MCP_AUTH_TOKEN HOMEBOX_EMAIL HOMEBOX_PASSWORD; do
             eval val=\$$var
             if [ -z "$val" ]; then
               echo "Missing required secret: $var" >&2
