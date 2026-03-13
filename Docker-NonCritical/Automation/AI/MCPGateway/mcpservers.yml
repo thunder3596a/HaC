@@ -88,10 +88,12 @@ services:
     restart: unless-stopped
     networks:
       - mcpnet
-    command: sh -c "npx -y supergateway --port 3000 --outputTransport streamableHttp --stdio 'node /app/dist/index.js'"
     environment:
       - N8N_API_URL=${N8N_URL}/api/v1
       - N8N_API_KEY=${N8N_API_KEY}
+      - MCP_MODE=http
+      - PORT=3000
+      - HOST=0.0.0.0
     labels:
       - com.centurylinklabs.watchtower.enable=true
       - "ha.monitor=true"
