@@ -33,6 +33,7 @@ services:
       - PORT=3000
       # Database — URL pre-encoded by deploy workflow (avoids special-char issues)
       - DATABASE_URL=${OUTLINE_DATABASE_URL}
+      - PGSSLMODE=disable
       # Redis
       - REDIS_URL=redis://redis-outline:6379
       # S3 / MinIO file storage
