@@ -19,7 +19,7 @@ services:
           cpus: '0.2'
 
     environment:
-      - SEARXNG_SECRET_KEY=${SEARX_SECRET_KEY}
+      - TZ=${TZ}
 
     labels:
       # Home Assistant monitoring
