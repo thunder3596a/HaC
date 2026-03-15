@@ -31,7 +31,7 @@ jobs:
           CERTRESOLVER: ${{ vars.CERTRESOLVER }}
           SEARX_SECRET_KEY: ${{ secrets.SEARX_SECRET_KEY }}
         run: |
-          for var in DOMAIN_NAME CERTRESOLVER SEARX_SECRET_KEY; do
+          for var in DOMAIN_NAME CERTRESOLVER; do
             eval val=\$$var
             if [ -z "$val" ]; then
               echo "Missing required variable: $var" >&2
@@ -39,10 +39,16 @@ jobs:
             fi
           done
 
-          # Push settings.yml — substitute domain
+          # Generate a random secret key if not provided via Forgejo secrets
+          if [ -z "${SEARX_SECRET_KEY}" ]; then
+            SEARX_SECRET_KEY=$(openssl rand -hex 32)
+          fi
+
+          # Push settings.yml — substitute base_url domain and secret key
           sudo mkdir -p /srv/searx/config
           sed \
             -e "s|\${DOMAIN_NAME}|${DOMAIN_NAME}|g" \
+            -e "s|\${SEARX_SECRET_KEY}|${SEARX_SECRET_KEY}|g" \
             settings.yml | sudo tee /srv/searx/config/settings.yml > /dev/null
 
           defined_image=$(grep -m1 'image:' searx.yml | awk '{print $2}')
