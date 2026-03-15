@@ -43,39 +43,39 @@ jobs:
 
           # Write settings.yml inline — not tracked in git to avoid accidental secret exposure
           sudo mkdir -p /srv/searx/config
-          sudo tee /srv/searx/config/settings.yml > /dev/null <<EOF
-use_default_settings: true
-
-general:
-  debug: false
-  instance_name: "search"
-  enable_metrics: false
-
-search:
-  safe_search: 0
-  default_lang: "en"
-  formats:
-    - html
-    - json
-
-server:
-  port: 8080
-  bind_address: "0.0.0.0"
-  secret_key: "${SECRET_KEY}"
-  limiter: false
-  public_instance: false
-
-ui:
-  default_theme: simple
-  theme_args:
-    simple_style: dark
-  results_on_new_tab: true
-
-outgoing:
-  request_timeout: 6.0
-  max_request_timeout: 15.0
-  enable_http2: true
-EOF
+          {
+            printf '%s\n' 'use_default_settings: true'
+            printf '%s\n' ''
+            printf '%s\n' 'general:'
+            printf '%s\n' '  debug: false'
+            printf '%s\n' '  instance_name: "search"'
+            printf '%s\n' '  enable_metrics: false'
+            printf '%s\n' ''
+            printf '%s\n' 'search:'
+            printf '%s\n' '  safe_search: 0'
+            printf '%s\n' '  default_lang: "en"'
+            printf '%s\n' '  formats:'
+            printf '%s\n' '    - html'
+            printf '%s\n' '    - json'
+            printf '%s\n' ''
+            printf '%s\n' 'server:'
+            printf '%s\n' '  port: 8080'
+            printf '%s\n' '  bind_address: "0.0.0.0"'
+            printf "  secret_key: \"%s\"\n" "${SECRET_KEY}"
+            printf '%s\n' '  limiter: false'
+            printf '%s\n' '  public_instance: false'
+            printf '%s\n' ''
+            printf '%s\n' 'ui:'
+            printf '%s\n' '  default_theme: simple'
+            printf '%s\n' '  theme_args:'
+            printf '%s\n' '    simple_style: dark'
+            printf '%s\n' '  results_on_new_tab: true'
+            printf '%s\n' ''
+            printf '%s\n' 'outgoing:'
+            printf '%s\n' '  request_timeout: 6.0'
+            printf '%s\n' '  max_request_timeout: 15.0'
+            printf '%s\n' '  enable_http2: true'
+          } | sudo tee /srv/searx/config/settings.yml > /dev/null
 
           defined_image=$(grep -m1 'image:' searx.yml | awk '{print $2}')
           running_image=$(docker inspect -f '{{.Config.Image}}' searx 2>/dev/null || echo "none")
