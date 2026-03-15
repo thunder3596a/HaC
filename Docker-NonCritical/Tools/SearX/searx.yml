@@ -38,4 +38,4 @@ services:
       - toolsproxy
 
     volumes:
-      - /srv/searx/config:/etc/searx
+      - /srv/searx/config:/etc/searxng

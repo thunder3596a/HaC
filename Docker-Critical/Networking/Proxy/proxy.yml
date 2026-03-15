@@ -60,10 +60,10 @@ services:
 
       # Dashboard (with dedicated certificate)
       - "traefik.http.routers.dashboard.entrypoints=websecure"
-      - "traefik.http.routers.dashboard.rule=Host(`hac-critical-traefik.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.dashboard.rule=Host(`docker-critical-traefik.${DOMAIN_NAME}`)"
       - "traefik.http.routers.dashboard.service=api@internal"
       - "traefik.http.routers.dashboard.tls.certresolver=${CERTRESOLVER:-cloudflare}"
-      - "traefik.http.routers.dashboard.tls.domains[0].main=hac-critical-traefik.${DOMAIN_NAME}"
+      - "traefik.http.routers.dashboard.tls.domains[0].main=docker-critical-traefik.${DOMAIN_NAME}"
 
       #  Authentik ForwardAuth Middleware (GLOBAL)
       - "traefik.http.middlewares.authentik.forwardauth.address=http://authentik-server:9000/outpost.goauthentik.io/auth/traefik"

@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - "Docker-NonCritical/Tools/SearX/searx.yml"
+      - "Docker-NonCritical/Tools/SearX/settings.yml"
       - ".forgejo/workflows/deploy-searx.yml"
   workflow_dispatch:
 
@@ -28,8 +29,9 @@ jobs:
         env:
           DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
           CERTRESOLVER: ${{ vars.CERTRESOLVER }}
+          SEARX_SECRET_KEY: ${{ secrets.SEARX_SECRET_KEY }}
         run: |
-          for var in DOMAIN_NAME CERTRESOLVER; do
+          for var in DOMAIN_NAME CERTRESOLVER SEARX_SECRET_KEY; do
             eval val=\$$var
             if [ -z "$val" ]; then
               echo "Missing required variable: $var" >&2
@@ -37,9 +39,16 @@ jobs:
             fi
           done
 
+          # Push settings.yml — substitute secret key + domain
+          sudo mkdir -p /srv/searx/config
+          sed \
+            -e "s|\${SEARX_SECRET_KEY}|${SEARX_SECRET_KEY}|g" \
+            -e "s|\${DOMAIN_NAME}|${DOMAIN_NAME}|g" \
+            settings.yml | sudo tee /srv/searx/config/settings.yml > /dev/null
+
           defined_image=$(grep -m1 'image:' searx.yml | awk '{print $2}')
           running_image=$(docker inspect -f '{{.Config.Image}}' searx 2>/dev/null || echo "none")
-          checksum=$(sha256sum searx.yml | awk '{print $1}')
+          checksum=$(sha256sum searx.yml settings.yml | sha256sum | awk '{print $1}')
           old=$(cat ~/.hac-noncritical/.searx_checksum 2>/dev/null || echo "")
 
           if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
@@ -47,7 +56,8 @@ jobs:
             mkdir -p ~/.hac-noncritical
 
             docker compose -p searx down --remove-orphans || true
-            docker compose -p searx -f searx.yml up -d --force-recreate
+            DOMAIN_NAME=${DOMAIN_NAME} CERTRESOLVER=${CERTRESOLVER} \
+              docker compose -p searx -f searx.yml up -d --force-recreate
             echo "$checksum" > ~/.hac-noncritical/.searx_checksum
           else
             echo "No changes detected; skipping redeploy"
