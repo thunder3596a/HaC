@@ -31,8 +31,8 @@ services:
       - UTILS_SECRET=${OUTLINE_UTILS_SECRET}
       - URL=https://docs.${DOMAIN_NAME}
       - PORT=3000
-      # Database
-      - DATABASE_URL=postgres://outline:${OUTLINE_DB_PASSWORD}@postgres-outline:5432/outline
+      # Database — URL pre-encoded by deploy workflow (avoids special-char issues)
+      - DATABASE_URL=${OUTLINE_DATABASE_URL}
       # Redis
       - REDIS_URL=redis://redis-outline:6379
       # S3 / MinIO file storage

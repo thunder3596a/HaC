@@ -44,6 +44,10 @@ jobs:
             fi
           done
 
+          # URL-encode the DB password so special chars (#, @, %) don't break the connection URL
+          ENCODED_DB_PW=$(python3 -c "import urllib.parse, sys; print(urllib.parse.quote(sys.argv[1], safe=''))" "$OUTLINE_DB_PASSWORD")
+          export OUTLINE_DATABASE_URL="postgres://outline:${ENCODED_DB_PW}@postgres-outline:5432/outline"
+
           defined_image=$(grep -m1 'image:.*outline' outline.yml | awk '{print $2}')
           running_image=$(docker inspect -f '{{.Config.Image}}' outline 2>/dev/null || echo "none")
           checksum=$(sha256sum outline.yml | awk '{print $1}')
