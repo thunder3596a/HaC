@@ -33,6 +33,7 @@ services:
       - traefik.http.routers.docsight.service=docsight
       - traefik.http.services.docsight.loadbalancer.server.port=8765
       - traefik.http.routers.docsight.tls.certresolver=${CERTRESOLVER}
+      - traefik.http.routers.docsight.middlewares=authentik@docker
     networks:
       - toolsproxy
     volumes:
