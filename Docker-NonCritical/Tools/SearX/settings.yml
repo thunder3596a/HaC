@@ -24,7 +24,6 @@ search:
 server:
   port: 8080
   bind_address: "0.0.0.0"
-  secret_key: "${SEARX_SECRET_KEY}"
   base_url: "https://search.${DOMAIN_NAME}/"
   image_proxy: false
   method: "GET"

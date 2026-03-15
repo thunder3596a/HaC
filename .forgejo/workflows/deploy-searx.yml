@@ -39,10 +39,9 @@ jobs:
             fi
           done
 
-          # Push settings.yml — substitute secret key + domain
+          # Push settings.yml — substitute domain
           sudo mkdir -p /srv/searx/config
           sed \
-            -e "s|\${SEARX_SECRET_KEY}|${SEARX_SECRET_KEY}|g" \
             -e "s|\${DOMAIN_NAME}|${DOMAIN_NAME}|g" \
             settings.yml | sudo tee /srv/searx/config/settings.yml > /dev/null
 
@@ -55,8 +54,8 @@ jobs:
             echo "Redeploying SearX..."
             mkdir -p ~/.hac-noncritical
 
-            docker compose -p searx down --remove-orphans || true
-            DOMAIN_NAME=${DOMAIN_NAME} CERTRESOLVER=${CERTRESOLVER} \
+            docker compose -p searx -f searx.yml down --remove-orphans || true
+            DOMAIN_NAME=${DOMAIN_NAME} CERTRESOLVER=${CERTRESOLVER} SEARX_SECRET_KEY=${SEARX_SECRET_KEY} \
               docker compose -p searx -f searx.yml up -d --force-recreate
             echo "$checksum" > ~/.hac-noncritical/.searx_checksum
           else
