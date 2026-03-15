@@ -6,7 +6,6 @@ on:
       - main
     paths:
       - "Docker-NonCritical/Tools/SearX/searx.yml"
-      - "Docker-NonCritical/Tools/SearX/settings.yml"
       - ".forgejo/workflows/deploy-searx.yml"
   workflow_dispatch:
 
@@ -80,7 +79,7 @@ EOF
 
           defined_image=$(grep -m1 'image:' searx.yml | awk '{print $2}')
           running_image=$(docker inspect -f '{{.Config.Image}}' searx 2>/dev/null || echo "none")
-          checksum=$(sha256sum searx.yml settings.yml | sha256sum | awk '{print $1}')
+          checksum=$(sha256sum searx.yml | awk '{print $1}')
           old=$(cat ~/.hac-noncritical/.searx_checksum 2>/dev/null || echo "")
 
           if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
