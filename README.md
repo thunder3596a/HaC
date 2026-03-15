@@ -40,9 +40,11 @@ HaC/
 ├── .forgejo/workflows/          # Deployment automation (Forgejo Actions)
 ├── Docker-Critical/             # Mission-critical services (hac-critical host)
 ├── Docker-NonCritical/          # Non-essential services (hac-noncritical host)
-├── docs/                        # Supplemental documentation and guides
 ├── scripts/                     # Utility scripts
 └── README.md                    # This file
+
+> **Note:** Supplemental documentation (setup guides, variable reference, monitoring patterns) has moved to
+> `Development/docs/` and will be migrated to Outline (`docs.${DOMAIN_NAME}`) on hac-critical.
 ```
 
 ---
@@ -63,6 +65,12 @@ Services running on **hac-critical** (critical host).
   - OAuth2, OIDC, SAML, LDAP support
   - Built-in user directory (replaces LLDAP)
   - Traefik forward auth integration for protected services
+
+- **Vaultwarden** (`Auth/vaultwarden.yml`) - Self-hosted Bitwarden-compatible password manager
+  - WebSocket support for live sync
+  - Registration and password hints disabled
+  - PostgreSQL backend
+  - Dashboard at `vault.${DOMAIN_NAME}`
 
 ### Networking & Proxy
 
@@ -139,9 +147,20 @@ Services running on **hac-critical** (critical host).
   - Restricts Docker socket access for Traefik and monitoring
   - Security layer for Docker daemon
 
+- **Dockhand** (`Tools/Dockhand/dockhand.yml`) - Docker compose stack management UI
+  - Web interface for managing compose stacks
+  - OIDC authentication via Authentik
+  - Dashboard at `dockhand.${DOMAIN_NAME}`
+
+- **Outline** (`Tools/Outline/outline.yml`) - Team knowledge base / documentation wiki
+  - OIDC authentication via Authentik
+  - File attachments via bundled MinIO (S3-compatible)
+  - Dashboard at `docs.${DOMAIN_NAME}` | MinIO console at `minio-outline-console.${DOMAIN_NAME}`
+
 - **N8N** (`Tools/N8N/n8n.yml`) - Workflow automation
   - No-code automation platform
-  - Integration with external APIs and services
+  - Integration with Vikunja, MS To Do, Ollama, Home Assistant
+  - ADHD task management workflows (Vikunja ↔ MS To Do sync, AI enrichment via Ollama)
   - Dashboard at `n8n.${DOMAIN_NAME}`
 
 ### Home Services
@@ -311,12 +330,28 @@ Services running on **hac-noncritical** (non-critical host). Can restart without
   - Merge, split, compress, OCR
   - Dashboard at `pdf.${DOMAIN_NAME}`
 
+- **Hawser** (`Tools/Hawser/hawser.yml`) - Docker agent for Dockhand
+  - Remote Docker agent that exposes the Docker socket over HTTPS (port 2376)
+  - Enables Dockhand (on hac-critical) to manage stacks on hac-noncritical
+
+- **DocSight** (`Tools/DocSight/docsight.yml`) - Cable modem monitoring
+  - Polls cable modem DOCSIS stats and publishes to MQTT
+  - Home Assistant auto-discovery via MQTT
+  - Dashboard at `docsight.${DOMAIN_NAME}`
+
+- **Speedtest** (`Tools/Speedtest/speedtest.yml`) - LAN speed test server
+  - In-network speed testing via OpenSpeedTest
+  - Dashboard at `speedtest.${DOMAIN_NAME}`
+
 - **MCP Gateway** (`Automation/AI/MCPGateway/mcpgateway.yml`) - Model Context Protocol hub
   - IBM ContextForge: central gateway for all MCP servers
+  - PostgreSQL + Redis backends
   - Dashboard at `mcp.${DOMAIN_NAME}`
 
 - **MCP Servers** (`Automation/AI/MCPGateway/mcpservers.yml`) - stdio-to-HTTP MCP bridges
-  - Vikunja MCP (task management), HomeBox MCP (inventory)
+  - Vikunja MCP (task management via `@democratize-technology/vikunja-mcp`)
+  - HomeBox MCP (inventory management, custom build)
+  - N8N MCP (workflow management via `ghcr.io/czlonkowski/n8n-mcp`)
   - Uses supergateway to expose stdio servers as Streamable HTTP
   - Home Assistant MCP served natively by HA at `/api/mcp`
 
@@ -350,6 +385,7 @@ All services deploy via Forgejo CI/CD workflows in `.forgejo/workflows/`. Workfl
 | Service | Workflow | Host | Trigger |
 | --------- | ---------- | ------------- | ----------------------------------------- |
 | Authentik | `deploy-authentik.yml` | hac-critical | Push to `Docker-Critical/Auth/**` |
+| Vaultwarden | `deploy-vaultwarden.yml` | hac-critical | Push to `Docker-Critical/Auth/vaultwarden.yml` |
 | Traefik (Critical) | `deploy-traefik-critical.yml` | hac-critical | Push to `Docker-Critical/Networking/Proxy/**` |
 | Traefik (NonCritical) | `deploy-traefik-noncritical.yml` | hac-noncritical | Push to `Docker-NonCritical/Networking/Proxy/**` |
 | Home Assistant | `deploy-homeassistant.yml` | hac-critical | Push to `Docker-Critical/Home/HomeAssistant/**` |
@@ -372,6 +408,9 @@ All services deploy via Forgejo CI/CD workflows in `.forgejo/workflows/`. Workfl
 | SMTP Relay | `deploy-smtprelay.yml` | hac-critical | Push to `Docker-Critical/Networking/Mail/**` |
 | Cloudflared | `deploy-cloudflared.yml` | hac-critical | Push to `Docker-Critical/Networking/Cloudflared/**` |
 | Docker Socket Proxy (Critical) | `deploy-docker-socket-proxy-critical.yml` | hac-critical | Push to `Docker-Critical/Tools/DockerSocketProxy/**` |
+| Dockhand | `deploy-dockhand.yml` | hac-critical | Push to `Docker-Critical/Tools/Dockhand/**` |
+| Outline | `deploy-outline.yml` | hac-critical | Push to `Docker-Critical/Tools/Outline/**` |
+| Watchtower (Critical) | `deploy-watchtower-critical.yml` | hac-critical | Push to `Docker-Critical/Management/Watchtower/**` |
 | Plex | `deploy-plex.yml` | hac-noncritical | Push to `Docker-NonCritical/Media/Plex/**` |
 | Immich | `deploy-immich.yml` | hac-noncritical | Push to `Docker-NonCritical/Media/Immich/**` |
 | Radarr | `deploy-radarr.yml` | hac-noncritical | Push to `Docker-NonCritical/Media/radarr/**` |
@@ -392,8 +431,12 @@ All services deploy via Forgejo CI/CD workflows in `.forgejo/workflows/`. Workfl
 | MCP Gateway | `deploy-mcpgateway.yml` | hac-noncritical | Push to `Docker-NonCritical/Automation/AI/MCPGateway/mcpgateway.yml` |
 | MCP Servers | `deploy-mcpservers.yml` | hac-noncritical | Push to `Docker-NonCritical/Automation/AI/MCPGateway/mcpservers.yml` or `mcp-servers/**` |
 | Docker Socket Proxy (NC) | `deploy-docker-socket-proxy-noncritical.yml` | hac-noncritical | Push to `Docker-NonCritical/Tools/DockerSocketProxy/**` |
+| Hawser | `deploy-hawser.yml` | hac-noncritical | Push to `Docker-NonCritical/Tools/Hawser/**` |
+| DocSight | `deploy-docsight.yml` | hac-noncritical | Push to `Docker-NonCritical/Tools/DocSight/**` |
+| Speedtest | `deploy-speedtest.yml` | hac-noncritical | Push to `Docker-NonCritical/Tools/Speedtest/speedtest.yml` |
+| Watchtower (NonCritical) | `deploy-watchtower-noncritical.yml` | hac-noncritical | Push to `Docker-NonCritical/Management/Watchtower/**` |
 | Wazuh | `deploy-wazuh.yml` | hac-noncritical | Push to `Docker-NonCritical/Security/**` |
-| CrowdSec | (via Wazuh workflow or manual) | hac-noncritical | Push to `Docker-NonCritical/Security/Crowdsec/**` |
+| CrowdSec | `deploy-crowdsec.yml` | hac-noncritical | Push to `Docker-NonCritical/Security/Crowdsec/**` |
 
 **Maintenance workflows:**
 
@@ -407,7 +450,7 @@ All services deploy via Forgejo CI/CD workflows in `.forgejo/workflows/`. Workfl
 
 ### Required Forgejo Variables
 
-> See [docs/forgejo-variables.md](docs/forgejo-variables.md) for full details and troubleshooting.
+> See `Development/docs/forgejo-variables.md` for full details and troubleshooting.
 
 Global variables (set in repository settings):
 
@@ -420,6 +463,13 @@ Global variables (set in repository settings):
 - `OLLAMA_BASE_URL` - Ollama LLM server URL
 - `INFERENCE_*` - Model selection for KaraKeep AI features
 - `INFLUXDB_ADMIN_USER` - InfluxDB admin username (default: `admin`)
+- `VIKUNJA_URL` - Vikunja base URL (for MCP server)
+- `N8N_URL` - N8N base URL (for n8n-mcp server)
+- `HOMEBOX_URL` - HomeBox base URL (for MCP server)
+- `DOCSIGHT_LOG_LEVEL` - DocSight log level (default: `INFO`)
+- `DOCSIGHT_AUDIT_JSON` - DocSight JSON audit log (default: `1`)
+- `DOCSIGHT_MQTT_TOPIC_PREFIX` - DocSight MQTT topic prefix (default: `docsight`)
+- `DOCSIGHT_MQTT_DISCOVERY_PREFIX` - DocSight HA discovery prefix (default: `homeassistant`)
 
 ### Required Forgejo Secrets
 
@@ -443,6 +493,21 @@ Encrypted secrets (set in repository settings):
 - `VIKUNJA_DB_PASSWORD` - Vikunja PostgreSQL password
 - `VIKUNJA_JWT_SECRET` - Vikunja JWT signing secret
 - `VIKUNJA_API_TOKEN` - Vikunja API token (for MCP + N8N integrations)
+- `VAULTWARDEN_DB_PASSWORD` - Vaultwarden PostgreSQL password
+- `VAULTWARDEN_ADMIN_TOKEN` - Vaultwarden admin panel token
+- `MCP_DB_PASSWORD` - MCP Gateway PostgreSQL password
+- `N8N_API_KEY` - N8N API key (for n8n-mcp server)
+- `N8N_MCP_AUTH_TOKEN` - Auth token for n8n-mcp HTTP endpoint
+- `HOMEBOX_EMAIL` - HomeBox login email (for MCP server)
+- `HOMEBOX_PASSWORD` - HomeBox login password (for MCP server)
+- `DOCKHAND_ENCRYPTION_KEY` - Dockhand encryption key for stored credentials
+- `OUTLINE_SECRET_KEY` - Outline session encryption key (64-char hex: `openssl rand -hex 32`)
+- `OUTLINE_UTILS_SECRET` - Outline utility secret (64-char hex: `openssl rand -hex 32`)
+- `OUTLINE_DB_PASSWORD` - Outline PostgreSQL password
+- `OUTLINE_MINIO_ACCESS_KEY` - MinIO root user (access key) for Outline storage
+- `OUTLINE_MINIO_SECRET_KEY` - MinIO root password (secret key) for Outline storage
+- `OUTLINE_OIDC_CLIENT_ID` - Authentik OAuth2 client ID for Outline
+- `OUTLINE_OIDC_CLIENT_SECRET` - Authentik OAuth2 client secret for Outline
 
 ---
 
@@ -458,6 +523,12 @@ Persistent data on primary host (tiered):
 ├── traefik/               # Reverse proxy config and ACME certs
 ├── homeassistant/         # HA config and automations
 ├── avahi/                 # mDNS reflection config
+├── vaultwarden/           # Vaultwarden data + Postgres
+├── dockhand/              # Dockhand stack data
+├── outline/               # Outline wiki data
+├── postgres-outline/      # Outline PostgreSQL
+├── redis-outline/         # Outline Redis
+├── minio-outline/         # Outline MinIO (file attachments)
 ├── esphome/               # ESPHome device configs
 ├── rtl-sdr/               # RTL-SDR config and decoded data
 ├── music-assistant/       # Music Assistant data
@@ -577,7 +648,7 @@ sudo ./migrate-to-homeassistant.sh
 - Include health checks for critical services
 - Traefik labels always for HTTP services
 - Watchtower label `com.centurylinklabs.watchtower.enable=true` for auto-updates
-- HA monitoring labels (`ha.monitor`, `ha.category`, `ha.compose-file`, `ha.service-name`) for Home Assistant tracking — see [docs/docker-monitoring.md](docs/docker-monitoring.md)
+- HA monitoring labels (`ha.monitor`, `ha.category`, `ha.compose-file`, `ha.service-name`) for Home Assistant tracking — see `Development/docs/docker-monitoring.md`
 
 ---
 
