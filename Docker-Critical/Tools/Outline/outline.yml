@@ -138,11 +138,14 @@ services:
     depends_on:
       minio-outline:
         condition: service_healthy
+    environment:
+      - MINIO_ACCESS_KEY=${OUTLINE_MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${OUTLINE_MINIO_SECRET_KEY}
     entrypoint: |
       /bin/sh -c "
-        mc alias set local http://minio-outline:9000 ${OUTLINE_MINIO_ACCESS_KEY} ${OUTLINE_MINIO_SECRET_KEY};
-        mc mb --ignore-existing local/outline;
-        mc anonymous set none local/outline;
+        mc alias set minio http://minio-outline:9000 $$MINIO_ACCESS_KEY $$MINIO_SECRET_KEY;
+        mc mb --ignore-existing minio/outline;
+        mc anonymous set none minio/outline;
         exit 0;
       "
 
