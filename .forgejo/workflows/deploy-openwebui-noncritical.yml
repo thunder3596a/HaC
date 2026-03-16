@@ -28,8 +28,10 @@ jobs:
         env:
           DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
           CERTRESOLVER: ${{ vars.CERTRESOLVER }}
+          OPENWEBUI_OAUTH_CLIENT_ID: ${{ vars.OPENWEBUI_OAUTH_CLIENT_ID }}
+          OPENWEBUI_OAUTH_CLIENT_SECRET: ${{ secrets.OPENWEBUI_OAUTH_CLIENT_SECRET }}
         run: |
-          for var in DOMAIN_NAME CERTRESOLVER; do
+          for var in DOMAIN_NAME CERTRESOLVER OPENWEBUI_OAUTH_CLIENT_ID OPENWEBUI_OAUTH_CLIENT_SECRET; do
             eval val=\$$var
             if [ -z "$val" ]; then
               echo "Missing required variable: $var" >&2
