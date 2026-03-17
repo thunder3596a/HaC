@@ -95,6 +95,8 @@ services:
       - PORT=3000
       - HOST=0.0.0.0
       - AUTH_TOKEN=${N8N_MCP_AUTH_TOKEN}
+      - AUTH_RATE_LIMIT_MAX=1000
+      - AUTH_RATE_LIMIT_WINDOW=60000
     labels:
       - com.centurylinklabs.watchtower.enable=true
       - "ha.monitor=true"
