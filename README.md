@@ -4,6 +4,21 @@
 
 Complete infrastructure-as-code for a self-hosted home automation and media center, organized into critical and non-critical services with automated deployment via Forgejo CI/CD. HaC stands for "Homelab-as-Code."
 
+## Documentation
+
+Full documentation lives in **[Outline](https://docs.u-acres.com)** — the homelab wiki. This repo contains only compose files, workflows, and scripts; all setup guides, configuration references, and integration notes are in Outline.
+
+**Homelab collection:** [docs.u-acres.com](https://docs.u-acres.com)
+
+Key docs:
+- [Overview & Architecture](https://docs.u-acres.com/doc/overview-architecture-cNdSRv2VKa)
+- [Service Creation Guide](https://docs.u-acres.com/doc/service-creation-guide-4UODNqOvPN)
+- [Forgejo Variables Reference](https://docs.u-acres.com/doc/forgejo-variables-reference-nvgshbtzQK)
+- [Quick Setup Checklist](https://docs.u-acres.com/doc/quick-setup-checklist-6Rfg1ZYWuy)
+- [Docker Container Monitoring](https://docs.u-acres.com/doc/docker-container-monitoring-LGL1OrDfm8)
+
+---
+
 ## Architecture Overview
 
 ### Deployment Model
@@ -450,7 +465,7 @@ All services deploy via Forgejo CI/CD workflows in `.forgejo/workflows/`. Workfl
 
 ### Required Forgejo Variables
 
-> See `Development/docs/forgejo-variables.md` for full details and troubleshooting.
+> See [Forgejo Variables Reference](https://docs.u-acres.com/doc/forgejo-variables-reference-nvgshbtzQK) in Outline for full details and troubleshooting.
 
 Global variables (set in repository settings):
 
@@ -648,7 +663,7 @@ sudo ./migrate-to-homeassistant.sh
 - Include health checks for critical services
 - Traefik labels always for HTTP services
 - Watchtower label `com.centurylinklabs.watchtower.enable=true` for auto-updates
-- HA monitoring labels (`ha.monitor`, `ha.category`, `ha.compose-file`, `ha.service-name`) for Home Assistant tracking — see `Development/docs/docker-monitoring.md`
+- HA monitoring labels (`ha.monitor`, `ha.category`, `ha.compose-file`, `ha.service-name`) for Home Assistant tracking — see [Docker Container Monitoring](https://docs.u-acres.com/doc/docker-container-monitoring-LGL1OrDfm8)
 
 ---
 
@@ -738,5 +753,5 @@ Personal home automation infrastructure. Configuration patterns based on best pr
 
 ---
 
-**Last Updated:** March 9, 2026
+**Last Updated:** March 18, 2026
 **Maintainer:** Nicholas Underwood
