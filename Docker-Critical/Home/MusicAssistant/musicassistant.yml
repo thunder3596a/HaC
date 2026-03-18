@@ -26,6 +26,8 @@ services:
       - traefik.enable=true
       - traefik.http.routers.musicassistant.entrypoints=websecure
       - traefik.http.routers.musicassistant.rule=Host(`music.${DOMAIN_NAME}`)
+      - traefik.http.routers.musicassistant.tls=true
+      - traefik.http.routers.musicassistant.tls.certresolver=${CERTRESOLVER}
       - traefik.http.routers.musicassistant.service=musicassistant
       - traefik.http.services.musicassistant.loadbalancer.server.port=8095
       - com.centurylinklabs.watchtower.enable=true
