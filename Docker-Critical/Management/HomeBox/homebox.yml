@@ -22,6 +22,7 @@ services:
       - "ha.category=management"
       - "ha.compose-file=Docker-Critical/Management/HomeBox/homebox.yml"
       - "ha.service-name=homebox"
+    restart: unless-stopped
     volumes:
       - /srv/homebox/data:/data
 networks:

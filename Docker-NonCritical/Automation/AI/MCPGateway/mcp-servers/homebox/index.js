@@ -353,7 +353,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case 'search_items': {
-        const response = await homeboxApi.get('/items/search', {
+        const response = await homeboxApi.get('/items', {
           params: { q: args.query },
         });
         return {

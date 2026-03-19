@@ -42,8 +42,9 @@ case "$ENDPOINT" in
       -H "Authorization: ${TOKEN}" 2>/dev/null || echo '{"error": "statistics fetch failed"}'
     ;;
   maintenance)
-    curl -sf -X GET "${HOMEBOX_URL}/api/v1/maintenance" \
-      -H "Authorization: ${TOKEN}" 2>/dev/null || echo '{"error": "maintenance fetch failed"}'
+    RESULT=$(curl -sf -X GET "${HOMEBOX_URL}/api/v1/maintenance" \
+      -H "Authorization: ${TOKEN}" 2>/dev/null) || { echo '{"error": "maintenance fetch failed"}'; exit 1; }
+    echo "{\"entries\": ${RESULT}}"
     ;;
   *)
     echo '{"error": "unknown endpoint"}'

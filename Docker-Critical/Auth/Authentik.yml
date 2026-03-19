@@ -68,7 +68,6 @@ services:
       - "traefik.http.routers.authentik.tls.certresolver=${CERTRESOLVER:-cloudflare}"
       - "traefik.http.routers.authentik.tls.domains[0].main=authentik.${DOMAIN_NAME}"
       - "traefik.http.services.authentik.loadbalancer.server.port=9000"
-      - "com.centurylinklabs.watchtower.enable=true"
       - "ha.monitor=true"
       - "ha.category=auth"
       - "ha.compose-file=Docker-Critical/Auth/Authentik.yml"

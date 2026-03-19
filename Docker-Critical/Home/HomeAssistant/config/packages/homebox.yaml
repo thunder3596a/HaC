@@ -137,11 +137,13 @@ automation:
               {% set entries = state_attr('sensor.homebox_maintenance_raw', 'entries') | default([]) %}
               {% set week = (now() + timedelta(days=7)).strftime('%Y-%m-%d') %}
               {% set today = now().strftime('%Y-%m-%d') %}
+              {% set ns = namespace(found=false) %}
               {% for e in entries %}
                 {% if e.scheduledDate is defined and e.scheduledDate >= today and e.scheduledDate <= week and not e.completedDate %}
-                  {{ true }}
+                  {% set ns.found = true %}
                 {% endif %}
               {% endfor %}
+              {{ ns.found }}
     action:
       - action: persistent_notification.create
         data:
