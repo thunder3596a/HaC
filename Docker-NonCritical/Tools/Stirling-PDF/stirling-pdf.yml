@@ -34,8 +34,6 @@ services:
       - traefik.http.routers.pdf.service=pdf
       - traefik.http.services.pdf.loadbalancer.server.port=8080
       - traefik.http.routers.pdf.tls.certresolver=${CERTRESOLVER}
-      # Watchtower updates
-      - com.centurylinklabs.watchtower.enable=true
 
     networks:
       - toolsproxy

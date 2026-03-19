@@ -17,7 +17,6 @@ services:
       - traefik.http.services.readarr.loadbalancer.server.port=8787
       - traefik.http.routers.readarr.tls.certresolver=${CERTRESOLVER:-cloudflare}
       - traefik.http.routers.readarr.tls.domains[0].main=readarr.${DOMAIN_NAME}
-      - com.centurylinklabs.watchtower.enable=true
       - "ha.monitor=true"
       - "ha.category=media"
       - "ha.compose-file=Docker-NonCritical/Media/readarr/readarr.yml"

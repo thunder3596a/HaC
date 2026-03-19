@@ -23,8 +23,6 @@ services:
       - traefik.http.routers.dockhand.tls.certresolver=${CERTRESOLVER}
       - traefik.http.routers.dockhand.tls.domains[0].main=dockhand.${DOMAIN_NAME}
       - traefik.http.services.dockhand.loadbalancer.server.port=3000
-      # Watchtower auto-updates
-      - com.centurylinklabs.watchtower.enable=true
       # Home Assistant monitoring
       - ha.monitor=true
       - ha.category=tools

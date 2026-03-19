@@ -34,8 +34,6 @@ services:
       - traefik.http.routers.searx.service=searx
       - traefik.http.services.searx.loadbalancer.server.port=8080
       - traefik.http.routers.searx.tls.certresolver=${CERTRESOLVER:-cloudflare}
-      # Watchtower updates
-      - com.centurylinklabs.watchtower.enable=true
 
     networks:
       - toolsproxy

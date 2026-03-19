@@ -39,8 +39,6 @@ services:
       - traefik.http.services.vikunja.loadbalancer.server.port=3456
       - traefik.http.routers.vikunja.tls.certresolver=${CERTRESOLVER:-cloudflare}
       - traefik.http.routers.vikunja.tls.domains[0].main=tasks.${DOMAIN_NAME}
-      # Watchtower updates
-      - com.centurylinklabs.watchtower.enable=true
       # Home Assistant monitoring
       - ha.monitor=true
       - ha.category=home

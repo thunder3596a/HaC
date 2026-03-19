@@ -16,7 +16,6 @@ services:
       - traefik.http.services.homebox.loadbalancer.server.port=7745
       - traefik.http.routers.homebox.tls.certresolver=${CERTRESOLVER:-cloudflare}
       - traefik.http.routers.homebox.tls.domains[0].main=homebox.${DOMAIN_NAME}
-      - com.centurylinklabs.watchtower.enable=true
       - traefik.enable=true
       - "ha.monitor=true"
       - "ha.category=management"

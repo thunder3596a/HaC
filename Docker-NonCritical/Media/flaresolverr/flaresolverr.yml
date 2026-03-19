@@ -18,7 +18,6 @@ services:
       - traefik.http.services.flare.loadbalancer.server.port=8191
       - traefik.http.routers.flare.tls.certresolver=${CERTRESOLVER:-cloudflare}
       - traefik.http.routers.flare.tls.domains[0].main=flare.${DOMAIN_NAME}
-      - com.centurylinklabs.watchtower.enable=true
       - "ha.monitor=true"
       - "ha.category=media"
       - "ha.compose-file=Docker-NonCritical/Media/flaresolverr/flaresolverr.yml"

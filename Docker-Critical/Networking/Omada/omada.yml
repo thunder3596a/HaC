@@ -48,7 +48,6 @@ services:
       # Middleware: Host header rewrite to prevent Omada port redirect
       - "traefik.http.middlewares.omada-headers.headers.customrequestheaders.Host=omada.${DOMAIN_NAME}:8043"
       - "traefik.http.middlewares.omada-headers.headers.customresponseheaders.Host=omada.${DOMAIN_NAME}"
-      - "com.centurylinklabs.watchtower.enable=true"
       - "ha.monitor=true"
       - "ha.category=networking"
       - "ha.compose-file=Docker-Critical/Networking/Omada/omada.yml"

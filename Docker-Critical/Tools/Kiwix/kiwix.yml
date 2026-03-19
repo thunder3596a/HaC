@@ -26,5 +26,3 @@ services:
       - ha.category=tools
       - ha.compose-file=Docker-Critical/Tools/Kiwix/kiwix.yml
       - ha.service-name=kiwix
-      # Auto-update
-      - com.centurylinklabs.watchtower.enable=true

@@ -17,7 +17,6 @@ services:
       - RUST_LOG=${RUST_LOG:-govee=info}
       - TZ=${TZ:-America/Chicago}
     labels:
-      - com.centurylinklabs.watchtower.enable=true
       - "ha.monitor=true"
       - "ha.category=home"
       - "ha.compose-file=Docker-Critical/Home/Govee2MQTT/govee2mqtt.yml"

@@ -17,7 +17,6 @@ services:
       - traefik.http.services.radarr.loadbalancer.server.port=7878
       - traefik.http.routers.radarr.tls.certresolver=${CERTRESOLVER:-cloudflare}
       - traefik.http.routers.radarr.tls.domains[0].main=radarr.${DOMAIN_NAME}
-      - com.centurylinklabs.watchtower.enable=true
       - "ha.monitor=true"
       - "ha.category=media"
       - "ha.compose-file=Docker-NonCritical/Media/radarr/radarr.yml"

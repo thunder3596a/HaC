@@ -98,7 +98,6 @@ services:
       - AUTH_RATE_LIMIT_MAX=1000
       - AUTH_RATE_LIMIT_WINDOW=60000
     labels:
-      - com.centurylinklabs.watchtower.enable=true
       - "ha.monitor=true"
       - "ha.category=tools"
       - "ha.compose-file=Docker-NonCritical/Automation/AI/MCPGateway/mcpservers.yml"

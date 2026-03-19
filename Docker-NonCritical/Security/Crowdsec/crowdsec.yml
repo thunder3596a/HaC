@@ -23,8 +23,6 @@ services:
       - traefik.http.routers.crowdsec.tls.certresolver=${CERTRESOLVER:-cloudflare}
       - traefik.http.routers.crowdsec.tls.domains[0].main=crowdsec.${DOMAIN_NAME}
       - traefik.http.routers.crowdsec.middlewares=authelia@docker
-      # Watchtower
-      - com.centurylinklabs.watchtower.enable=true
       # Home Assistant monitoring
       - ha.monitor=true
       - ha.category=security

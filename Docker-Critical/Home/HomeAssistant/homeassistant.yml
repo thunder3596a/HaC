@@ -51,7 +51,6 @@ services:
       - traefik.http.routers.homeassistant.tls.certresolver=${CERTRESOLVER:-cloudflare}
       - traefik.http.routers.homeassistant.tls.domains[0].main=ha.${DOMAIN_NAME}
       - traefik.http.services.homeassistant.loadbalancer.server.url=http://${HA_HOST_IP}:8123
-      - com.centurylinklabs.watchtower.enable=true
       - ha.monitor=true
       - ha.category=home
       - ha.compose-file=Docker-Critical/Home/HomeAssistant/homeassistant.yml
@@ -174,7 +173,6 @@ services:
       - traefik.http.routers.esphome.tls.certresolver=${CERTRESOLVER:-cloudflare}
       - traefik.http.routers.esphome.tls.domains[0].main=esphome.${DOMAIN_NAME}
       - traefik.http.services.esphome.loadbalancer.server.port=6052
-      - com.centurylinklabs.watchtower.enable=true
       - ha.monitor=true
       - ha.category=home
       - ha.compose-file=Docker-Critical/Home/HomeAssistant/homeassistant.yml

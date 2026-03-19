@@ -167,6 +167,10 @@ Services running on **hac-critical** (critical host).
   - OIDC authentication via Authentik
   - Dashboard at `dockhand.${DOMAIN_NAME}`
 
+- **Uptime Kuma** (`Management/UptimeKuma/uptime-kuma.yml`) - Uptime monitoring
+  - Monitors all services across both hosts (HTTP, TCP, Docker)
+  - Dashboard at `uptime.${DOMAIN_NAME}`
+
 - **Outline** (`Tools/Outline/outline.yml`) - Team knowledge base / documentation wiki
   - OIDC authentication via Authentik
   - File attachments via bundled MinIO (S3-compatible)
@@ -425,7 +429,7 @@ All services deploy via Forgejo CI/CD workflows in `.forgejo/workflows/`. Workfl
 | Docker Socket Proxy (Critical) | `deploy-docker-socket-proxy-critical.yml` | hac-critical | Push to `Docker-Critical/Tools/DockerSocketProxy/**` |
 | Dockhand | `deploy-dockhand.yml` | hac-critical | Push to `Docker-Critical/Tools/Dockhand/**` |
 | Outline | `deploy-outline.yml` | hac-critical | Push to `Docker-Critical/Tools/Outline/**` |
-| Watchtower (Critical) | `deploy-watchtower-critical.yml` | hac-critical | Push to `Docker-Critical/Management/Watchtower/**` |
+| Uptime Kuma | `deploy-uptime-kuma.yml` | hac-critical | Push to `Docker-Critical/Management/UptimeKuma/**` |
 | Plex | `deploy-plex.yml` | hac-noncritical | Push to `Docker-NonCritical/Media/Plex/**` |
 | Immich | `deploy-immich.yml` | hac-noncritical | Push to `Docker-NonCritical/Media/Immich/**` |
 | Radarr | `deploy-radarr.yml` | hac-noncritical | Push to `Docker-NonCritical/Media/radarr/**` |
@@ -449,7 +453,6 @@ All services deploy via Forgejo CI/CD workflows in `.forgejo/workflows/`. Workfl
 | Hawser | `deploy-hawser.yml` | hac-noncritical | Push to `Docker-NonCritical/Tools/Hawser/**` |
 | DocSight | `deploy-docsight.yml` | hac-noncritical | Push to `Docker-NonCritical/Tools/DocSight/**` |
 | Speedtest | `deploy-speedtest.yml` | hac-noncritical | Push to `Docker-NonCritical/Tools/Speedtest/speedtest.yml` |
-| Watchtower (NonCritical) | `deploy-watchtower-noncritical.yml` | hac-noncritical | Push to `Docker-NonCritical/Management/Watchtower/**` |
 | Wazuh | `deploy-wazuh.yml` | hac-noncritical | Push to `Docker-NonCritical/Security/**` |
 | CrowdSec | `deploy-crowdsec.yml` | hac-noncritical | Push to `Docker-NonCritical/Security/Crowdsec/**` |
 
@@ -662,8 +665,8 @@ sudo ./migrate-to-homeassistant.sh
 - Set `restart: unless-stopped` policy
 - Include health checks for critical services
 - Traefik labels always for HTTP services
-- Watchtower label `com.centurylinklabs.watchtower.enable=true` for auto-updates
 - HA monitoring labels (`ha.monitor`, `ha.category`, `ha.compose-file`, `ha.service-name`) for Home Assistant tracking — see [Docker Container Monitoring](https://docs.u-acres.com/doc/docker-container-monitoring-LGL1OrDfm8)
+- Uptime Kuma at `uptime.${DOMAIN_NAME}` monitors all HTTP/TCP endpoints — configure monitors in the UI after adding a new service
 
 ---
 
@@ -753,5 +756,5 @@ Personal home automation infrastructure. Configuration patterns based on best pr
 
 ---
 
-**Last Updated:** March 18, 2026
+**Last Updated:** March 19, 2026
 **Maintainer:** Nicholas Underwood

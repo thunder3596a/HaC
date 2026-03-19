@@ -16,7 +16,6 @@ services:
     ports:
       - "3493:3493"
     labels:
-      - com.centurylinklabs.watchtower.enable=true
       - "ha.monitor=true"
       - "ha.category=home"
       - "ha.compose-file=Docker-Critical/Home/NUT/nut.yml"
@@ -42,7 +41,6 @@ services:
     ports:
       - "3494:3493"
     labels:
-      - com.centurylinklabs.watchtower.enable=true
       - "ha.monitor=true"
       - "ha.category=home"
       - "ha.compose-file=Docker-Critical/Home/NUT/nut.yml"

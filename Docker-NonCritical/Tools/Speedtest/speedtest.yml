@@ -21,8 +21,6 @@ services:
       - traefik.http.routers.speedtest.service=speedtest
       - traefik.http.services.speedtest.loadbalancer.server.port=3000
       - traefik.http.routers.speedtest.tls.certresolver=${CERTRESOLVER}
-      # Watchtower updates
-      - com.centurylinklabs.watchtower.enable=true
 
     networks:
       - toolsproxy

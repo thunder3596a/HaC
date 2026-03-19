@@ -15,7 +15,6 @@ services:
       - traefik.http.services.kara.loadbalancer.server.port=3000
       - traefik.http.routers.kara.tls.certresolver=${CERTRESOLVER:-cloudflare}
       - traefik.http.routers.kara.tls.domains[0].main=kara.${DOMAIN_NAME}
-      - com.centurylinklabs.watchtower.enable=true
       - "ha.monitor=true"
       - "ha.category=tools"
       - "ha.compose-file=Docker-Critical/Home/KaraKeep/karakeep.yml"

@@ -65,7 +65,6 @@ services:
       - "ha.category=home"
       - "ha.compose-file=Docker-Critical/Home/Cooking/norish.yml"
       - "ha.service-name=norish"
-      - "com.centurylinklabs.watchtower.enable=true"
 # Postgres database for Norish
   db:
     image: postgres:17-alpine

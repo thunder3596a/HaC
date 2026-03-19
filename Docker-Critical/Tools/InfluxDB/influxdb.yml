@@ -23,7 +23,6 @@ services:
       - traefik.http.routers.influxdb.rule=Host(`influx.${DOMAIN_NAME}`)
       - traefik.http.routers.influxdb.service=influxdb
       - traefik.http.services.influxdb.loadbalancer.server.port=8086
-      - com.centurylinklabs.watchtower.enable=true
       - "ha.monitor=true"
       - "ha.category=tools"
       - "ha.compose-file=Docker-Critical/Tools/InfluxDB/influxdb.yml"

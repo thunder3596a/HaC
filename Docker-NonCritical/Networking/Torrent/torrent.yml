@@ -41,8 +41,6 @@ services:
       - torrentproxy
       - mediaproxy
     labels:
-      # Watchtower
-      - com.centurylinklabs.watchtower.enable=true
       # Traefik
       - traefik.enable=true
       - traefik.docker.network=torrentproxy
@@ -94,7 +92,6 @@ services:
     security_opt:
       - no-new-privileges:true
     labels:
-      - com.centurylinklabs.watchtower.enable=true
       - "ha.monitor=true"
       - "ha.category=networking"
       - "ha.compose-file=Docker-NonCritical/Networking/Torrent/torrent.yml"
@@ -118,7 +115,6 @@ services:
     security_opt:
       - no-new-privileges:true
     labels:
-      - com.centurylinklabs.watchtower.enable=true
       - "ha.monitor=true"
       - "ha.category=networking"
       - "ha.compose-file=Docker-NonCritical/Networking/Torrent/torrent.yml"

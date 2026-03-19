@@ -21,7 +21,6 @@ services:
       - traefik.http.routers.immich.tls.certresolver=${CERTRESOLVER:-cloudflare}
       - traefik.http.routers.immich.tls.domains[0].main=media.${DOMAIN_NAME}
       - traefik.http.services.immich.loadbalancer.server.port=2283
-      - com.centurylinklabs.watchtower.enable=true
       - "ha.monitor=true"
       - "ha.category=media"
       - "ha.compose-file=Docker-NonCritical/Media/Immich/immich.yml"

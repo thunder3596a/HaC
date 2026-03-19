@@ -18,7 +18,6 @@ services:
       - traefik.http.services.profilarr.loadbalancer.server.port=6868
       - traefik.http.routers.profilarr.tls.certresolver=${CERTRESOLVER:-cloudflare}
       - traefik.http.routers.profilarr.tls.domains[0].main=profilarr.${DOMAIN_NAME}
-      - com.centurylinklabs.watchtower.enable=true
       - "ha.monitor=true"
       - "ha.category=media"
       - "ha.compose-file=Docker-NonCritical/Media/profilarr/profilarr.yml"

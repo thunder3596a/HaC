@@ -31,8 +31,6 @@ services:
       - traefik.http.routers.ittools.service=ittools
       - traefik.http.services.ittools.loadbalancer.server.port=80
       - traefik.http.routers.ittools.tls.certresolver=${CERTRESOLVER}
-      # Watchtower updates
-      - com.centurylinklabs.watchtower.enable=true
 
     networks:
       - toolsproxy

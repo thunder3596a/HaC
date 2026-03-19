@@ -15,7 +15,6 @@ services:
       - traefik.http.routers.overseerr.tls.certresolver=${CERTRESOLVER:-cloudflare}
       - traefik.http.routers.overseerr.tls.domains[0].main=request.${DOMAIN_NAME}
       - traefik.http.routers.overseerr.middlewares=authentik@docker
-      - com.centurylinklabs.watchtower.enable=true
       - "ha.monitor=true"
       - "ha.category=media"
       - "ha.compose-file=Docker-NonCritical/Media/overseerr/overseerr.yml"

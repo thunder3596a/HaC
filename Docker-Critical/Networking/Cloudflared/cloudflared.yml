@@ -8,7 +8,6 @@ services:
       - TZ=${TZ:-America/Chicago}
       - TUNNEL_TOKEN=${HA_CF_TUNNEL_TOKEN}
     labels:
-      - com.centurylinklabs.watchtower.enable=true
       - "ha.monitor=true"
       - "ha.category=networking"
       - "ha.compose-file=Docker-Critical/Networking/Cloudflared/cloudflared.yml"

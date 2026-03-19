@@ -37,8 +37,6 @@ services:
       - traefik.http.routers.vaultwarden-ws.service=vaultwarden-ws
       - traefik.http.services.vaultwarden-ws.loadbalancer.server.port=3012
       - traefik.http.routers.vaultwarden-ws.tls.certresolver=${CERTRESOLVER:-cloudflare}
-      # Watchtower
-      - com.centurylinklabs.watchtower.enable=true
       # Home Assistant monitoring
       - ha.monitor=true
       - ha.category=auth

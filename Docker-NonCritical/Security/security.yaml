@@ -42,8 +42,6 @@ services:
       - ha.category=security
       - ha.compose-file=Docker-NonCritical/Security/security.yaml
       - ha.service-name=wazuh.indexer
-      # Watchtower updates
-      - com.centurylinklabs.watchtower.enable=true
 
     environment:
       - OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g
@@ -85,8 +83,6 @@ services:
       - ha.category=security
       - ha.compose-file=Docker-NonCritical/Security/security.yaml
       - ha.service-name=wazuh.manager
-      # Watchtower updates
-      - com.centurylinklabs.watchtower.enable=true
 
     ports:
       - "1514:1514"     # Wazuh agent communication
@@ -160,8 +156,6 @@ services:
       - traefik.http.routers.wazuh.tls.domains[0].main=wazuh.${DOMAIN_NAME}
       # TODO: Add authelia@docker middleware once Authelia is deployed
       # - traefik.http.routers.wazuh.middlewares=authelia@docker
-      # Watchtower updates
-      - com.centurylinklabs.watchtower.enable=true
 
     # Remove the OpenSearch Security Dashboards plugin on startup.
     # Security plugin is disabled on the indexer (no SSL/auth needed internally).

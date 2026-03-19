@@ -28,7 +28,6 @@ services:
     volumes:
       - /srv/mcp-gateway/config:/app/config
     labels:
-      - com.centurylinklabs.watchtower.enable=true
       - traefik.enable=true
       - traefik.docker.network=aiproxy
       - traefik.http.routers.mcpgateway.entrypoints=websecure
@@ -70,7 +69,6 @@ services:
       retries: 5
       start_period: 30s
     labels:
-      - com.centurylinklabs.watchtower.enable=true
       - "ha.monitor=true"
       - "ha.category=tools"
       - "ha.compose-file=Docker-NonCritical/Automation/AI/MCPGateway/mcpgateway.yml"
@@ -86,7 +84,6 @@ services:
     volumes:
       - /srv/mcp-gateway/redis:/data
     labels:
-      - com.centurylinklabs.watchtower.enable=true
       - "ha.monitor=true"
       - "ha.category=tools"
       - "ha.compose-file=Docker-NonCritical/Automation/AI/MCPGateway/mcpgateway.yml"

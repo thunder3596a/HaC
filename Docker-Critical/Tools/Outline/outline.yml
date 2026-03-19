@@ -70,8 +70,6 @@ services:
       - traefik.http.routers.outline.service=outline
       - traefik.http.services.outline.loadbalancer.server.port=3000
       - traefik.http.routers.outline.tls.certresolver=${CERTRESOLVER}
-      # Watchtower updates
-      - com.centurylinklabs.watchtower.enable=true
 
     networks:
       - toolsproxy
@@ -123,8 +121,6 @@ services:
       - traefik.http.routers.minio-outline-console.service=minio-outline-console
       - traefik.http.services.minio-outline-console.loadbalancer.server.port=9001
       - traefik.http.routers.minio-outline-console.tls.certresolver=${CERTRESOLVER}
-      # Watchtower updates
-      - com.centurylinklabs.watchtower.enable=true
 
     networks:
       - toolsproxy

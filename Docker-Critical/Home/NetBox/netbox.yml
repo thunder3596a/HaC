@@ -76,7 +76,6 @@ services:
       # - traefik.http.routers.netbox.middlewares=authentik@docker
       - traefik.http.routers.netbox.tls.certresolver=${CERTRESOLVER:-cloudflare}
       - traefik.http.routers.netbox.tls.domains[0].main=netbox.${DOMAIN_NAME}
-      - com.centurylinklabs.watchtower.enable=true
       - "ha.monitor=true"
       - "ha.category=tools"
       - "ha.compose-file=Docker-Critical/Home/NetBox/netbox.yml"
