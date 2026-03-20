@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - "Docker-NonCritical/Tools/SearX/searx.yml"
+      - "Docker-NonCritical/Tools/SearX/settings.yml"
       - ".forgejo/workflows/deploy-searx.yml"
   workflow_dispatch:
 
@@ -41,7 +42,7 @@ jobs:
           # Use provided secret or generate a random one
           SECRET_KEY="${SEARX_SECRET_KEY:-$(openssl rand -hex 32)}"
 
-          # Write settings.yml inline — not tracked in git to avoid accidental secret exposure
+          # Write settings.yml — secret_key injected at deploy time
           sudo mkdir -p /srv/searx/config
           {
             printf '%s\n' 'use_default_settings: true'
@@ -54,6 +55,8 @@ jobs:
             printf '%s\n' 'search:'
             printf '%s\n' '  safe_search: 0'
             printf '%s\n' '  default_lang: "en"'
+            printf '%s\n' '  ban_time_on_fail: 2'
+            printf '%s\n' '  max_ban_time_on_fail: 30'
             printf '%s\n' '  formats:'
             printf '%s\n' '    - html'
             printf '%s\n' '    - json'
@@ -75,11 +78,33 @@ jobs:
             printf '%s\n' '  request_timeout: 6.0'
             printf '%s\n' '  max_request_timeout: 15.0'
             printf '%s\n' '  enable_http2: true'
+            printf '%s\n' '  pool_connections: 100'
+            printf '%s\n' '  pool_maxsize: 50'
           } | sudo tee /srv/searx/config/settings.yml > /dev/null
+
+          # Write uwsgi.ini — 8 workers so concurrent UserBrowser queries don't queue/timeout
+          {
+            printf '%s\n' '[uwsgi]'
+            printf '%s\n' 'module = searx.webapp:application'
+            printf '%s\n' 'http-socket = 0.0.0.0:8080'
+            printf '%s\n' 'workers = 8'
+            printf '%s\n' 'threads = 4'
+            printf '%s\n' 'enable-threads = true'
+            printf '%s\n' 'thunder-lock = true'
+            printf '%s\n' 'single-interpreter = true'
+            printf '%s\n' 'lazy-apps = true'
+            printf '%s\n' 'master = true'
+            printf '%s\n' 'pidfile = /tmp/searxng.pid'
+            printf '%s\n' 'worker-reload-mercy = 6'
+            printf '%s\n' 'disable-logging = true'
+            printf '%s\n' 'log-5xx = true'
+            printf '%s\n' 'buffer-size = 8192'
+            printf '%s\n' 'post-buffering = 4096'
+          } | sudo tee /srv/searx/config/uwsgi.ini > /dev/null
 
           defined_image=$(grep -m1 'image:' searx.yml | awk '{print $2}')
           running_image=$(docker inspect -f '{{.Config.Image}}' searx 2>/dev/null || echo "none")
-          checksum=$(sha256sum searx.yml | awk '{print $1}')
+          checksum=$(cat searx.yml settings.yml | sha256sum | awk '{print $1}')
           old=$(cat ~/.hac-noncritical/.searx_checksum 2>/dev/null || echo "")
 
           if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then

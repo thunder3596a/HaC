@@ -15,8 +15,8 @@ search:
   safe_search: 0
   autocomplete: ""
   default_lang: "en"
-  ban_time_on_fail: 5
-  max_ban_time_on_fail: 120
+  ban_time_on_fail: 2         # fast recovery; UserBrowser fires many concurrent queries
+  max_ban_time_on_fail: 30    # don't lock out engines for long under heavy load
   formats:
     - html
     - json           # required for UserBrowser API calls
@@ -41,13 +41,14 @@ ui:
   hotkeys: default
   url_formatting: pretty
 
-# Outgoing request settings — use consistent UA, respect timeouts
+# Outgoing request settings — tuned for UserBrowser concurrent OSINT searches
+# uwsgi.ini (written by deploy workflow) sets workers=8 threads=4 for concurrency
 outgoing:
   request_timeout: 6.0
   max_request_timeout: 15.0
   useragent_suffix: ""
   pool_connections: 100
-  pool_maxsize: 20
+  pool_maxsize: 50    # 50 allows ~8 workers × outgoing fan-out without starving
   enable_http2: true
 
 # Engines — enable high-value sources; disable noisy/redundant ones
