@@ -81,6 +81,27 @@ services:
   #     - "ha.compose-file=Docker-NonCritical/Automation/AI/MCPGateway/mcpservers.yml"
   #     - "ha.service-name=netbox-mcp"
 
+  # Dockhand MCP Server — Docker container and stack management via Dockhand API
+  dockhand-mcp:
+    build:
+      context: ./mcp-servers/dockhand
+      dockerfile: Dockerfile
+    container_name: mcp-dockhand
+    restart: unless-stopped
+    networks:
+      - mcpnet
+    command: sh -c "npx -y supergateway --port 3000 --outputTransport streamableHttp --stdio 'node index.js'"
+    environment:
+      - DOCKHAND_URL=${DOCKHAND_URL}
+      - DOCKHAND_USERNAME=${DOCKHAND_MCP_USERNAME}
+      - DOCKHAND_PASSWORD=${DOCKHAND_MCP_PASSWORD}
+    labels:
+      - com.centurylinklabs.watchtower.enable=false
+      - "ha.monitor=true"
+      - "ha.category=tools"
+      - "ha.compose-file=Docker-NonCritical/Automation/AI/MCPGateway/mcpservers.yml"
+      - "ha.service-name=dockhand-mcp"
+
   # n8n MCP Server — allows AI to list/create/manage N8N workflows
   n8n-mcp:
     image: ghcr.io/czlonkowski/n8n-mcp:latest
