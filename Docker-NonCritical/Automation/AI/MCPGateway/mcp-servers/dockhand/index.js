@@ -47,19 +47,46 @@ async function request(method, path, body) {
   try { return JSON.parse(text); } catch { return text; }
 }
 
+// Fetch all environments and return array of {id, name}
+async function getEnvironments() {
+  const envs = await request('GET', '/api/environments');
+  return Array.isArray(envs) ? envs : [];
+}
+
+// Query a path across all environments and aggregate results, tagging each item with envId/envName
+async function queryAllEnvs(pathFn) {
+  const envs = await getEnvironments();
+  const results = [];
+  for (const env of envs) {
+    try {
+      const data = await request('GET', pathFn(env.id));
+      if (Array.isArray(data)) {
+        for (const item of data) {
+          results.push({ ...item, _envId: env.id, _envName: env.name });
+        }
+      }
+    } catch { /* skip unavailable environments */ }
+  }
+  return results;
+}
+
+function envParam(envId) {
+  return envId ? `?env=${encodeURIComponent(envId)}` : '';
+}
+
 const TOOLS = [
   {
     name: 'list_environments',
-    description: 'List all Docker environments (hosts) managed by Dockhand',
+    description: 'List all Docker environments (hosts) managed by Dockhand, including their IDs, names, and connection status',
     inputSchema: { type: 'object', properties: {} },
   },
   {
     name: 'list_containers',
-    description: 'List all Docker containers across environments. Optionally filter by environmentId.',
+    description: 'List Docker containers. Provide envId to query a specific environment; omit to aggregate across all environments.',
     inputSchema: {
       type: 'object',
       properties: {
-        environmentId: { type: 'string', description: 'Optional environment ID to filter by' },
+        envId: { type: 'number', description: 'Environment ID from list_environments. Omit to query all environments.' },
       },
     },
   },
@@ -68,7 +95,10 @@ const TOOLS = [
     description: 'Get details for a specific container by ID',
     inputSchema: {
       type: 'object',
-      properties: { id: { type: 'string', description: 'Container ID' } },
+      properties: {
+        id: { type: 'string', description: 'Container ID' },
+        envId: { type: 'number', description: 'Environment ID (recommended for accuracy)' },
+      },
       required: ['id'],
     },
   },
@@ -79,6 +109,7 @@ const TOOLS = [
       type: 'object',
       properties: {
         id: { type: 'string', description: 'Container ID' },
+        envId: { type: 'number', description: 'Environment ID' },
         tail: { type: 'number', description: 'Number of log lines to return (default 100)' },
       },
       required: ['id'],
@@ -89,7 +120,10 @@ const TOOLS = [
     description: 'Restart a Docker container by ID',
     inputSchema: {
       type: 'object',
-      properties: { id: { type: 'string' } },
+      properties: {
+        id: { type: 'string' },
+        envId: { type: 'number', description: 'Environment ID' },
+      },
       required: ['id'],
     },
   },
@@ -98,7 +132,10 @@ const TOOLS = [
     description: 'Start a stopped Docker container by ID',
     inputSchema: {
       type: 'object',
-      properties: { id: { type: 'string' } },
+      properties: {
+        id: { type: 'string' },
+        envId: { type: 'number', description: 'Environment ID' },
+      },
       required: ['id'],
     },
   },
@@ -107,21 +144,32 @@ const TOOLS = [
     description: 'Stop a running Docker container by ID',
     inputSchema: {
       type: 'object',
-      properties: { id: { type: 'string' } },
+      properties: {
+        id: { type: 'string' },
+        envId: { type: 'number', description: 'Environment ID' },
+      },
       required: ['id'],
     },
   },
   {
     name: 'list_stacks',
-    description: 'List all Docker Compose stacks managed by Dockhand',
-    inputSchema: { type: 'object', properties: {} },
+    description: 'List Docker Compose stacks. Provide envId to query a specific environment; omit to aggregate across all environments.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        envId: { type: 'number', description: 'Environment ID from list_environments. Omit to query all environments.' },
+      },
+    },
   },
   {
     name: 'get_stack',
     description: 'Get details of a specific stack by name',
     inputSchema: {
       type: 'object',
-      properties: { name: { type: 'string', description: 'Stack name as shown in Dockhand' } },
+      properties: {
+        name: { type: 'string', description: 'Stack name as shown in Dockhand' },
+        envId: { type: 'number', description: 'Environment ID' },
+      },
       required: ['name'],
     },
   },
@@ -130,7 +178,10 @@ const TOOLS = [
     description: 'Get the compose file content for a stack',
     inputSchema: {
       type: 'object',
-      properties: { name: { type: 'string' } },
+      properties: {
+        name: { type: 'string' },
+        envId: { type: 'number', description: 'Environment ID' },
+      },
       required: ['name'],
     },
   },
@@ -139,7 +190,10 @@ const TOOLS = [
     description: 'Restart all containers in a Dockhand stack',
     inputSchema: {
       type: 'object',
-      properties: { name: { type: 'string' } },
+      properties: {
+        name: { type: 'string' },
+        envId: { type: 'number', description: 'Environment ID' },
+      },
       required: ['name'],
     },
   },
@@ -148,7 +202,10 @@ const TOOLS = [
     description: 'Start a stopped Dockhand stack',
     inputSchema: {
       type: 'object',
-      properties: { name: { type: 'string' } },
+      properties: {
+        name: { type: 'string' },
+        envId: { type: 'number', description: 'Environment ID' },
+      },
       required: ['name'],
     },
   },
@@ -157,14 +214,22 @@ const TOOLS = [
     description: 'Stop a running Dockhand stack (docker compose down)',
     inputSchema: {
       type: 'object',
-      properties: { name: { type: 'string' } },
+      properties: {
+        name: { type: 'string' },
+        envId: { type: 'number', description: 'Environment ID' },
+      },
       required: ['name'],
     },
   },
   {
     name: 'get_pending_updates',
-    description: 'List containers that have available image updates',
-    inputSchema: { type: 'object', properties: {} },
+    description: 'List containers that have available image updates. Provide envId for a specific environment or omit to check all.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        envId: { type: 'number', description: 'Environment ID. Omit to check all environments.' },
+      },
+    },
   },
 ];
 
@@ -172,34 +237,49 @@ async function callTool(name, args) {
   switch (name) {
     case 'list_environments':
       return request('GET', '/api/environments');
+
     case 'list_containers':
-      return request('GET', args?.environmentId
-        ? `/api/containers?environmentId=${encodeURIComponent(args.environmentId)}`
-        : '/api/containers');
+      if (args?.envId) return request('GET', `/api/containers?env=${args.envId}`);
+      return queryAllEnvs((id) => `/api/containers?env=${id}`);
+
     case 'get_container':
-      return request('GET', `/api/containers/${encodeURIComponent(args.id)}`);
+      return request('GET', `/api/containers/${encodeURIComponent(args.id)}${envParam(args?.envId)}`);
+
     case 'get_container_logs':
-      return request('GET', `/api/containers/${encodeURIComponent(args.id)}/logs?tail=${args.tail ?? 100}`);
+      return request('GET', `/api/containers/${encodeURIComponent(args.id)}/logs?tail=${args.tail ?? 100}${args?.envId ? `&env=${args.envId}` : ''}`);
+
     case 'restart_container':
-      return request('POST', `/api/containers/${encodeURIComponent(args.id)}/restart`);
+      return request('POST', `/api/containers/${encodeURIComponent(args.id)}/restart${envParam(args?.envId)}`);
+
     case 'start_container':
-      return request('POST', `/api/containers/${encodeURIComponent(args.id)}/start`);
+      return request('POST', `/api/containers/${encodeURIComponent(args.id)}/start${envParam(args?.envId)}`);
+
     case 'stop_container':
-      return request('POST', `/api/containers/${encodeURIComponent(args.id)}/stop`);
+      return request('POST', `/api/containers/${encodeURIComponent(args.id)}/stop${envParam(args?.envId)}`);
+
     case 'list_stacks':
-      return request('GET', '/api/stacks');
+      if (args?.envId) return request('GET', `/api/stacks?env=${args.envId}`);
+      return queryAllEnvs((id) => `/api/stacks?env=${id}`);
+
     case 'get_stack':
-      return request('GET', `/api/stacks/${encodeURIComponent(args.name)}`);
+      return request('GET', `/api/stacks/${encodeURIComponent(args.name)}${envParam(args?.envId)}`);
+
     case 'get_stack_compose':
-      return request('GET', `/api/stacks/${encodeURIComponent(args.name)}/compose`);
+      return request('GET', `/api/stacks/${encodeURIComponent(args.name)}/compose${envParam(args?.envId)}`);
+
     case 'restart_stack':
-      return request('POST', `/api/stacks/${encodeURIComponent(args.name)}/restart`);
+      return request('POST', `/api/stacks/${encodeURIComponent(args.name)}/restart${envParam(args?.envId)}`);
+
     case 'start_stack':
-      return request('POST', `/api/stacks/${encodeURIComponent(args.name)}/start`);
+      return request('POST', `/api/stacks/${encodeURIComponent(args.name)}/start${envParam(args?.envId)}`);
+
     case 'stop_stack':
-      return request('POST', `/api/stacks/${encodeURIComponent(args.name)}/down`);
+      return request('POST', `/api/stacks/${encodeURIComponent(args.name)}/down${envParam(args?.envId)}`);
+
     case 'get_pending_updates':
-      return request('GET', '/api/containers/pending-updates');
+      if (args?.envId) return request('GET', `/api/containers/pending-updates?env=${args.envId}`);
+      return queryAllEnvs((id) => `/api/containers/pending-updates?env=${id}`);
+
     default:
       throw new Error(`Unknown tool: ${name}`);
   }
