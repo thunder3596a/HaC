@@ -93,8 +93,8 @@ services:
     command: sh -c "npx -y supergateway --port 3000 --outputTransport streamableHttp --stdio 'node index.js'"
     environment:
       - DOCKHAND_URL=${DOCKHAND_URL}
-      - DOCKHAND_USERNAME=${DOCKHAND_MCP_USERNAME}
-      - DOCKHAND_PASSWORD=${DOCKHAND_MCP_PASSWORD}
+      - DOCKHAND_USERNAME=${DOCKHAND_USERNAME}
+      - DOCKHAND_PASSWORD=${DOCKHAND_PASSWORD}
     labels:
       - com.centurylinklabs.watchtower.enable=false
       - "ha.monitor=true"
