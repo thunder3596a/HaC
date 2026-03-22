@@ -25,7 +25,8 @@ services:
       - OPENVPN_USER=${OPENVPN_USER}
       - OPENVPN_PASSWORD=${OPENVPN_PASSWORD}
       - SERVER_COUNTRIES=${VPN_SERVER_COUNTRIES}
-      - HTTPPROXY=off
+      - HTTPPROXY=on
+      - HTTPPROXY_LOG=off
       - SHADOWSOCKS=off
       - FIREWALL_OUTBOUND_SUBNETS=172.20.0.0/16,${LAN_SUBNET}
       #      - FIREWALL_VPN_INPUT_PORTS=12345 #uncomment or remove this line based on the notes below
@@ -40,6 +41,7 @@ services:
     networks:
       - torrentproxy
       - mediaproxy
+      - toolsproxy
     labels:
       # Traefik
       - traefik.enable=true
@@ -124,4 +126,6 @@ networks:
   torrentproxy:
     external: true
   mediaproxy:
+    external: true
+  toolsproxy:
     external: true

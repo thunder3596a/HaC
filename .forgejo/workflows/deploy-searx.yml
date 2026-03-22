@@ -80,6 +80,11 @@ jobs:
             printf '%s\n' '  enable_http2: true'
             printf '%s\n' '  pool_connections: 100'
             printf '%s\n' '  pool_maxsize: 50'
+            printf '%s\n' '  proxies:'
+            printf '%s\n' '    http:'
+            printf '%s\n' '      - http://gluetun:8888'
+            printf '%s\n' '    https:'
+            printf '%s\n' '      - http://gluetun:8888'
           } | sudo tee /srv/searx/config/settings.yml > /dev/null
 
           # Write uwsgi.ini — 8 workers so concurrent UserBrowser queries don't queue/timeout

@@ -1,6 +1,8 @@
 networks:
   toolsproxy:
     external: true
+  torrentproxy:
+    external: true
 
 services:
   searx:
@@ -37,6 +39,7 @@ services:
 
     networks:
       - toolsproxy
+      - torrentproxy
 
     volumes:
       - /srv/searx/config:/etc/searxng:rw
