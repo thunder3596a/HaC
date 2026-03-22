@@ -51,14 +51,9 @@ outgoing:
   pool_connections: 100
   pool_maxsize: 50    # 50 allows ~8 workers × outgoing fan-out without starving
   enable_http2: true
-  # Tor proxy for dark web engines (used only when engine sets using_tor_proxy: true)
-  # osminogin/tor-simple sidecar container exposes SOCKS5 on port 9050
-  proxies:
-    http:
-      - socks5h://tor:9050
-    https:
-      - socks5h://tor:9050
-  extra_proxy_timeout: 30    # .onion latency is much higher than clearnet
+  # Note: outgoing.proxies is global — do NOT set it to the Tor SOCKS5 proxy here,
+  # as it would route ALL engines (wikidata, brave, etc.) through Tor and time them out.
+  # ahmia is configured below with its clearnet URL instead.
 
 # Engines — enable high-value sources; disable noisy/redundant ones
 # For OSINT use, prioritize: Google, Bing, DuckDuckGo, Brave, Startpage
@@ -129,20 +124,15 @@ engines:
   # gitlab, stackoverflow, searchcode, hacker news — all in use_default_settings;
   # avoid duplicate shortcut conflicts by not re-declaring them here
 
-  # ── Dark web / Tor engines (OSINT) ────────────────────────────
-  # Routed through osminogin/tor-simple sidecar via socks5h://tor:9050
-  # using_tor_proxy: true makes SearXNG use the configured outgoing.proxies for these engines only
+  # ── Dark web index (OSINT) ────────────────────────────────────
+  # ahmia.fi has a clearnet front-end that indexes .onion sites — no Tor needed
+  # outgoing.proxies cannot be scoped per-engine in SearXNG; global SOCKS5 breaks all clearnet engines
   - name: ahmia
     engine: ahmia
     shortcut: ah
-    using_tor_proxy: true
+    url: https://ahmia.fi/search/?q=
     disabled: false
-
-  - name: torch
-    engine: torch
-    shortcut: tch
-    using_tor_proxy: true
-    disabled: false
+  # torch: no engine file in this SearXNG release; removed to prevent load failure
 
   # ── Images ────────────────────────────────────────────────────
   - name: google images
@@ -174,10 +164,7 @@ engines:
     shortcut: al
     disabled: false
 
-  - name: dockerhub
-    engine: dockerhub
-    shortcut: dh
-    disabled: false
+  # dockerhub: no engine file in this SearXNG release; removed to prevent load failure
 
   - name: pypi
     engine: pypi
