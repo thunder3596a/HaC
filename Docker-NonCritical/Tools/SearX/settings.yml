@@ -24,9 +24,10 @@ search:
 server:
   port: 8080
   bind_address: "0.0.0.0"
-  base_url: "https://search.${DOMAIN_NAME}/"
+  base_url: "https://search.__DOMAIN_NAME__/"
   image_proxy: false
   method: "GET"
+  secret_key: "__SECRET_KEY__"
   limiter: false     # internal-only, no public rate limiting needed
   public_instance: false
 
@@ -44,8 +45,8 @@ ui:
 # Outgoing request settings — tuned for UserBrowser concurrent OSINT searches
 # uwsgi.ini (written by deploy workflow) sets workers=8 threads=4 for concurrency
 outgoing:
-  request_timeout: 6.0
-  max_request_timeout: 15.0
+  request_timeout: 8.0
+  max_request_timeout: 20.0
   useragent_suffix: ""
   pool_connections: 100
   pool_maxsize: 50    # 50 allows ~8 workers × outgoing fan-out without starving
