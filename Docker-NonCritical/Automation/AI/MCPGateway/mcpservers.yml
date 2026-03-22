@@ -91,10 +91,12 @@ services:
     networks:
       - mcpnet
     command: sh -c "npx -y supergateway --port 3000 --outputTransport streamableHttp --stdio 'node index.js'"
+    mem_limit: 512m
     environment:
       - DOCKHAND_URL=${DOCKHAND_URL}
       - DOCKHAND_USERNAME=${DOCKHAND_USERNAME}
       - DOCKHAND_PASSWORD=${DOCKHAND_PASSWORD}
+      - NODE_OPTIONS=--max-old-space-size=384
     labels:
       - com.centurylinklabs.watchtower.enable=false
       - "ha.monitor=true"
