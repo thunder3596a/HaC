@@ -49,6 +49,13 @@ jobs:
             -e "s/__DOMAIN_NAME__/${DOMAIN_NAME}/g" \
             settings.yml | sudo tee /srv/searx/config/settings.yml > /dev/null
 
+          # Deploy settings for searx-direct — non-VPN-friendly engines
+          sudo mkdir -p /srv/searx-direct/config
+          sed \
+            -e "s/__SECRET_KEY__/${SECRET_KEY}/g" \
+            -e "s/__DOMAIN_NAME__/${DOMAIN_NAME}/g" \
+            settings-direct.yml | sudo tee /srv/searx-direct/config/settings.yml > /dev/null
+
           # Write uwsgi.ini — 8 workers so concurrent UserBrowser queries don't queue/timeout
           {
             printf '%s\n' '[uwsgi]'
@@ -69,9 +76,29 @@ jobs:
             printf '%s\n' 'post-buffering = 4096'
           } | sudo tee /srv/searx/config/uwsgi.ini > /dev/null
 
+          # Write uwsgi.ini for searx-direct — 4 workers (fewer engines, less concurrency needed)
+          {
+            printf '%s\n' '[uwsgi]'
+            printf '%s\n' 'module = searx.webapp:application'
+            printf '%s\n' 'http-socket = 0.0.0.0:8080'
+            printf '%s\n' 'workers = 4'
+            printf '%s\n' 'threads = 4'
+            printf '%s\n' 'enable-threads = true'
+            printf '%s\n' 'thunder-lock = true'
+            printf '%s\n' 'single-interpreter = true'
+            printf '%s\n' 'lazy-apps = true'
+            printf '%s\n' 'master = true'
+            printf '%s\n' 'pidfile = /tmp/searxng.pid'
+            printf '%s\n' 'worker-reload-mercy = 6'
+            printf '%s\n' 'disable-logging = true'
+            printf '%s\n' 'log-5xx = true'
+            printf '%s\n' 'buffer-size = 8192'
+            printf '%s\n' 'post-buffering = 4096'
+          } | sudo tee /srv/searx-direct/config/uwsgi.ini > /dev/null
+
           defined_image=$(grep -m1 'image:' searx.yml | awk '{print $2}')
           running_image=$(docker inspect -f '{{.Config.Image}}' searx 2>/dev/null || echo "none")
-          checksum=$(cat searx.yml settings.yml ../../.forgejo/workflows/deploy-searx.yml | sha256sum | awk '{print $1}')
+          checksum=$(cat searx.yml settings.yml settings-direct.yml ../../.forgejo/workflows/deploy-searx.yml | sha256sum | awk '{print $1}')
           old=$(cat ~/.hac-noncritical/.searx_checksum 2>/dev/null || echo "")
 
           if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
