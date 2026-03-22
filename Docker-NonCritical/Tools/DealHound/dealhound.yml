@@ -5,7 +5,6 @@ networks:
     external: true
 
 services:
-  # ── FastAPI integration layer ─────────────────────────────────────────────
   dealhound:
     image: git.${DOMAIN_NAME}/nicholas/dealhound:latest
     container_name: dealhound
