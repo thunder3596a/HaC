@@ -12,6 +12,7 @@ services:
     environment:
       - TZ=${TZ}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - UI_STORAGE_SECRET=${UI_STORAGE_SECRET}
       # PriceBuddy MySQL (internal)
       - PRICEBUDDY_DB_HOST=pricebuddy-db
       - PRICEBUDDY_DB_PORT=3306
@@ -70,12 +71,20 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=toolsproxy"
+      # Main router — Authentik SSO required for all traffic
       - "traefik.http.routers.dealhound.entrypoints=websecure"
       - "traefik.http.routers.dealhound.rule=Host(`deals.${DOMAIN_NAME}`)"
       - "traefik.http.routers.dealhound.service=dealhound"
-      - "traefik.http.services.dealhound.loadbalancer.server.port=8080"
+      - "traefik.http.routers.dealhound.middlewares=authentik@docker"
       - "traefik.http.routers.dealhound.tls.certresolver=${CERTRESOLVER:-cloudflare}"
       - "traefik.http.routers.dealhound.tls.domains[0].main=deals.${DOMAIN_NAME}"
+      # Public router — eBay deletion endpoint must be reachable without auth
+      - "traefik.http.routers.dealhound-ebay.entrypoints=websecure"
+      - "traefik.http.routers.dealhound-ebay.rule=Host(`deals.${DOMAIN_NAME}`) && PathPrefix(`/webhooks/ebay/deletion`)"
+      - "traefik.http.routers.dealhound-ebay.service=dealhound"
+      - "traefik.http.routers.dealhound-ebay.priority=10"
+      - "traefik.http.routers.dealhound-ebay.tls.certresolver=${CERTRESOLVER:-cloudflare}"
+      - "traefik.http.services.dealhound.loadbalancer.server.port=8080"
       - "ha.monitor=true"
       - "ha.category=tools"
       - "ha.compose-file=Docker-NonCritical/Tools/DealHound/dealhound.yml"

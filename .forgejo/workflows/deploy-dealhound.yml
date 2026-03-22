@@ -31,6 +31,7 @@ jobs:
           DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
           CERTRESOLVER: ${{ vars.CERTRESOLVER }}
           LOG_LEVEL: ${{ vars.LOG_LEVEL || 'INFO' }}
+          UI_STORAGE_SECRET: ${{ secrets.UI_STORAGE_SECRET }}
           # PriceBuddy
           PRICEBUDDY_APP_KEY: ${{ secrets.PRICEBUDDY_APP_KEY }}
           PRICEBUDDY_DB_PASSWORD: ${{ secrets.PRICEBUDDY_DB_PASSWORD }}
@@ -68,7 +69,7 @@ jobs:
         run: |
           for var in TZ DOMAIN_NAME CERTRESOLVER PRICEBUDDY_APP_KEY PRICEBUDDY_DB_PASSWORD \
                      PRICEBUDDY_DB_ROOT_PASSWORD PRICEBUDDY_ADMIN_EMAIL PRICEBUDDY_ADMIN_PASSWORD \
-                     EBAY_VERIFICATION_TOKEN; do
+                     EBAY_VERIFICATION_TOKEN UI_STORAGE_SECRET; do
             eval val=\$$var
             if [ -z "$val" ]; then
               echo "Missing required variable: $var" >&2

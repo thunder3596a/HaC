@@ -144,6 +144,8 @@ jobs:
           # Generate dashboard wazuh.yml with actual API credentials
           # (bind-mounted into the container alongside the named volume)
           sudo mkdir -p /srv/wazuh/dashboard
+          # wazuh.yml may exist as a directory from a failed previous deploy — remove it
+          [ -d /srv/wazuh/dashboard/wazuh.yml ] && sudo rm -rf /srv/wazuh/dashboard/wazuh.yml
           printf 'hosts:\n  - default:\n      url: https://wazuh.manager\n      port: 55000\n      username: %s\n      password: "%s"\n      run_as: false\n' \
             "${WAZUH_API_USERNAME:-wazuh-wui}" "$WAZUH_API_PASSWORD" \
             > /srv/wazuh/dashboard/wazuh.yml
