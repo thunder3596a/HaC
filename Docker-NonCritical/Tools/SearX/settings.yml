@@ -118,36 +118,8 @@ engines:
     shortcut: gh
     disabled: false
 
-  - name: gitlab
-    engine: gitlab
-    shortcut: gl
-    disabled: false
-
-  - name: stackoverflow
-    engine: stackoverflow
-    shortcut: so
-    disabled: false
-
-  - name: searchcode code
-    engine: searchcode_code
-    shortcut: sc
-    disabled: false
-
-  - name: hacker news
-    engine: hackernews
-    shortcut: hn
-    disabled: false
-
-  # ── Paste / code sharing ───────────────────────────────────────
-  - name: pastebin
-    engine: xpath
-    shortcut: pb
-    url: "https://pastebin.com/search?q={query}"
-    url_xpath: '//div[@class="search-result"]//a/@href'
-    title_xpath: '//div[@class="search-result"]//a'
-    content_xpath: '//div[@class="preview"]'
-    categories: [general]
-    disabled: false
+  # gitlab, stackoverflow, searchcode, hacker news — all in use_default_settings;
+  # avoid duplicate shortcut conflicts by not re-declaring them here
 
   # ── Images ────────────────────────────────────────────────────
   - name: google images
@@ -161,7 +133,9 @@ engines:
     disabled: false
 
   - name: brave images
-    engine: brave.images
+    engine: brave
+    brave_category: images
+    categories: images
     shortcut: brimg
     disabled: false
 
