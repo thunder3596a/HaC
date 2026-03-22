@@ -58,7 +58,7 @@ outgoing:
       - socks5h://tor:9050
     https:
       - socks5h://tor:9050
-  extra_proxy_timeout: 30.0    # .onion latency is much higher than clearnet
+  extra_proxy_timeout: 30    # .onion latency is much higher than clearnet
 
 # Engines — enable high-value sources; disable noisy/redundant ones
 # For OSINT use, prioritize: Google, Bing, DuckDuckGo, Brave, Startpage
