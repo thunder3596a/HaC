@@ -65,7 +65,7 @@ jobs:
         run: |
           for var in TZ DOMAIN_NAME CERTRESOLVER PRICEBUDDY_APP_KEY PRICEBUDDY_DB_PASSWORD \
                      PRICEBUDDY_DB_ROOT_PASSWORD PRICEBUDDY_ADMIN_EMAIL PRICEBUDDY_ADMIN_PASSWORD \
-                     EBAY_CLIENT_ID EBAY_CLIENT_SECRET EBAY_VERIFICATION_TOKEN; do
+                     EBAY_VERIFICATION_TOKEN; do
             eval val=\$$var
             if [ -z "$val" ]; then
               echo "Missing required variable: $var" >&2
