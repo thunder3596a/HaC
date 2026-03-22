@@ -1,6 +1,8 @@
 networks:
   toolsproxy:
     external: true
+  mediaproxy:
+    external: true
 
 services:
   # ── FastAPI integration layer ─────────────────────────────────────────────
@@ -20,7 +22,7 @@ services:
       # ChangeDetection.io
       - CHANGEDETECTION_BASE_URL=http://changedetection:5000
       - CHANGEDETECTION_API_KEY=${CHANGEDETECTION_API_KEY}
-      # ntfy
+      # ntfy (standalone service on toolsproxy)
       - NTFY_BASE_URL=http://ntfy:80
       - NTFY_TOPIC=${NTFY_TOPIC:-dealhound-alerts}
       # eBay Browse API + account deletion compliance
@@ -31,15 +33,14 @@ services:
       # Vikunja (optional — configure once project is set up)
       - VIKUNJA_BASE_URL=${VIKUNJA_BASE_URL:-}
       - VIKUNJA_API_TOKEN=${VIKUNJA_API_TOKEN:-}
-      - VIKUNJA_SHOPPING_PROJECT_ID=${VIKUNJA_SHOPPING_PROJECT_ID:-}
+      - VIKUNJA_SHOPPING_PROJECT_ID=${VIKUNJA_SHOPPING_PROJECT_ID:-0}
       - VIKUNJA_WEBHOOK_SECRET=${VIKUNJA_WEBHOOK_SECRET:-}
       # Mealie (optional)
       - MEALIE_BASE_URL=${MEALIE_BASE_URL:-}
       - MEALIE_API_TOKEN=${MEALIE_API_TOKEN:-}
-      # Craigslist
+      # Craigslist (via existing flaresolverr on mediaproxy)
       - CRAIGSLIST_SITES=${CRAIGSLIST_SITES:-minneapolis}
       - CRAIGSLIST_SEARCH_DISTANCE=${CRAIGSLIST_SEARCH_DISTANCE:-50}
-      # FlareSolverr
       - FLARESOLVERR_URL=http://flaresolverr:8191
       # Facebook Marketplace (off by default — fragile, best-effort)
       - FACEBOOK_ENABLED=${FACEBOOK_ENABLED:-false}
@@ -52,12 +53,11 @@ services:
     networks:
       - default
       - toolsproxy
+      - mediaproxy
     depends_on:
       pricebuddy:
         condition: service_healthy
       changedetection:
-        condition: service_started
-      ntfy:
         condition: service_started
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
@@ -67,6 +67,7 @@ services:
       start_period: 20s
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=toolsproxy"
       - "traefik.http.routers.dealhound.entrypoints=websecure"
       - "traefik.http.routers.dealhound.rule=Host(`deals.${DOMAIN_NAME}`)"
       - "traefik.http.routers.dealhound.service=dealhound"
@@ -93,6 +94,7 @@ services:
       - APP_USER_PASSWORD=${PRICEBUDDY_ADMIN_PASSWORD}
       - SCRAPER_BASE_URL=http://pricebuddy-scraper:3000
       - AFFILIATE_ENABLED=false
+      - TZ=${TZ}
     volumes:
       - /srv/dealhound/pricebuddy:/app/storage
     networks:
@@ -109,6 +111,7 @@ services:
       start_period: 60s
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=toolsproxy"
       - "traefik.http.routers.pricebuddy.entrypoints=websecure"
       - "traefik.http.routers.pricebuddy.rule=Host(`pricebuddy.${DOMAIN_NAME}`)"
       - "traefik.http.routers.pricebuddy.service=pricebuddy"
@@ -140,6 +143,11 @@ services:
       timeout: 5s
       retries: 5
       start_period: 60s
+    labels:
+      - "ha.monitor=true"
+      - "ha.category=tools"
+      - "ha.compose-file=Docker-NonCritical/Tools/DealHound/dealhound.yml"
+      - "ha.service-name=pricebuddy-db"
 
   pricebuddy-scraper:
     image: jez500/seleniumbase-scrapper:latest
@@ -147,6 +155,11 @@ services:
     restart: unless-stopped
     networks:
       - default
+    labels:
+      - "ha.monitor=true"
+      - "ha.category=tools"
+      - "ha.compose-file=Docker-NonCritical/Tools/DealHound/dealhound.yml"
+      - "ha.service-name=pricebuddy-scraper"
 
   # ── ChangeDetection.io overflow scraper ──────────────────────────────────
   changedetection:
@@ -163,6 +176,7 @@ services:
       - toolsproxy
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=toolsproxy"
       - "traefik.http.routers.changedetection.entrypoints=websecure"
       - "traefik.http.routers.changedetection.rule=Host(`changedetection.${DOMAIN_NAME}`)"
       - "traefik.http.routers.changedetection.service=changedetection"
@@ -186,50 +200,8 @@ services:
       - CONNECTION_TIMEOUT=300000
     networks:
       - default
-
-  # ── ntfy push notifications ───────────────────────────────────────────────
-  ntfy:
-    image: binwiederhier/ntfy:latest
-    container_name: ntfy-dealhound
-    restart: unless-stopped
-    command: serve
-    environment:
-      - TZ=${TZ}
-      - NTFY_BASE_URL=https://ntfy.${DOMAIN_NAME}
-      - NTFY_CACHE_FILE=/var/lib/ntfy/cache.db
-      - NTFY_AUTH_FILE=/var/lib/ntfy/auth.db
-      - NTFY_AUTH_DEFAULT_ACCESS=deny-all
-    volumes:
-      - /srv/dealhound/ntfy:/var/lib/ntfy
-    networks:
-      - default
-      - toolsproxy
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:80/v1/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 15s
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.ntfy-dealhound.entrypoints=websecure"
-      - "traefik.http.routers.ntfy-dealhound.rule=Host(`ntfy.${DOMAIN_NAME}`)"
-      - "traefik.http.routers.ntfy-dealhound.service=ntfy-dealhound"
-      - "traefik.http.services.ntfy-dealhound.loadbalancer.server.port=80"
-      - "traefik.http.routers.ntfy-dealhound.tls.certresolver=${CERTRESOLVER:-cloudflare}"
-      - "traefik.http.routers.ntfy-dealhound.tls.domains[0].main=ntfy.${DOMAIN_NAME}"
       - "ha.monitor=true"
       - "ha.category=tools"
       - "ha.compose-file=Docker-NonCritical/Tools/DealHound/dealhound.yml"
-      - "ha.service-name=ntfy-dealhound"
-
-  # ── FlareSolverr (Cloudflare bypass for Craigslist) ───────────────────────
-  flaresolverr:
-    image: ghcr.io/flaresolverr/flaresolverr:latest
-    container_name: flaresolverr-dealhound
-    restart: unless-stopped
-    environment:
-      - LOG_LEVEL=${LOG_LEVEL:-info}
-      - TZ=${TZ}
-    networks:
-      - default
+      - "ha.service-name=playwright-chrome"
