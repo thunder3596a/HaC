@@ -51,6 +51,14 @@ outgoing:
   pool_connections: 100
   pool_maxsize: 50    # 50 allows ~8 workers × outgoing fan-out without starving
   enable_http2: true
+  # Tor proxy for dark web engines (used only when engine sets using_tor_proxy: true)
+  # osminogin/tor-simple sidecar container exposes SOCKS5 on port 9050
+  proxies:
+    http:
+      - socks5h://tor:9050
+    https:
+      - socks5h://tor:9050
+  extra_proxy_timeout: 30.0    # .onion latency is much higher than clearnet
 
 # Engines — enable high-value sources; disable noisy/redundant ones
 # For OSINT use, prioritize: Google, Bing, DuckDuckGo, Brave, Startpage
@@ -121,6 +129,21 @@ engines:
   # gitlab, stackoverflow, searchcode, hacker news — all in use_default_settings;
   # avoid duplicate shortcut conflicts by not re-declaring them here
 
+  # ── Dark web / Tor engines (OSINT) ────────────────────────────
+  # Routed through osminogin/tor-simple sidecar via socks5h://tor:9050
+  # using_tor_proxy: true makes SearXNG use the configured outgoing.proxies for these engines only
+  - name: ahmia
+    engine: ahmia
+    shortcut: ah
+    using_tor_proxy: true
+    disabled: false
+
+  - name: torch
+    engine: torch
+    shortcut: tch
+    using_tor_proxy: true
+    disabled: false
+
   # ── Images ────────────────────────────────────────────────────
   - name: google images
     engine: google_images
@@ -132,12 +155,7 @@ engines:
     shortcut: bimg
     disabled: false
 
-  - name: brave images
-    engine: brave
-    brave_category: images
-    categories: images
-    shortcut: brimg
-    disabled: false
+  # brave images — already in use_default_settings with shortcut brimg; duplicate causes crash
 
   # ── Video ─────────────────────────────────────────────────────
   - name: youtube
