@@ -27,6 +27,7 @@ services:
       - http_proxy=http://gluetun:8888
       - https_proxy=http://gluetun:8888
       - NO_PROXY=localhost,127.0.0.1,::1
+      - no_proxy=localhost,127.0.0.1,::1
 
     labels:
       # Home Assistant monitoring

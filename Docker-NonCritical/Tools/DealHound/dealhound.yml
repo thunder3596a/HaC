@@ -41,8 +41,11 @@ services:
       - CRAIGSLIST_SITES=${CRAIGSLIST_SITES:-minneapolis}
       - CRAIGSLIST_SEARCH_DISTANCE=${CRAIGSLIST_SEARCH_DISTANCE:-50}
       - FLARESOLVERR_URL=http://flaresolverr:8191
-      # Facebook Marketplace (off by default — fragile, best-effort)
+      # Facebook Marketplace
       - FACEBOOK_ENABLED=${FACEBOOK_ENABLED:-false}
+      - FB_EMAIL=${FB_EMAIL:-}
+      - FB_PASSWORD=${FB_PASSWORD:-}
+      - FB_LOCATION=${FB_LOCATION:-minneapolis}
       # Home Assistant fallback notifications (optional)
       - HA_BASE_URL=${HA_BASE_URL:-}
       - HA_WEBHOOK_ID=${HA_WEBHOOK_ID:-}

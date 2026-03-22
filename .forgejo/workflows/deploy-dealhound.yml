@@ -57,8 +57,11 @@ jobs:
           # Craigslist
           CRAIGSLIST_SITES: ${{ vars.CRAIGSLIST_SITES || 'minneapolis' }}
           CRAIGSLIST_SEARCH_DISTANCE: ${{ vars.CRAIGSLIST_SEARCH_DISTANCE || '50' }}
-          # Facebook (off by default)
+          # Facebook Marketplace
           FACEBOOK_ENABLED: ${{ vars.FACEBOOK_ENABLED || 'false' }}
+          FB_EMAIL: ${{ secrets.FB_EMAIL }}
+          FB_PASSWORD: ${{ secrets.FB_PASSWORD }}
+          FB_LOCATION: ${{ vars.FB_LOCATION || 'minneapolis' }}
           # HA fallback (optional)
           HA_BASE_URL: ${{ vars.HA_BASE_URL }}
           HA_WEBHOOK_ID: ${{ vars.HA_WEBHOOK_ID }}
