@@ -87,24 +87,30 @@ jobs:
           sudo chown -R nicholas:nicholas /srv/dealhound
 
           defined_image=$(grep -m1 'image: git\.' dealhound.yml | awk '{print $2}' | sed "s|\${DOMAIN_NAME}|$DOMAIN_NAME|g")
-          running_image=$(docker inspect -f '{{.Config.Image}}' dealhound 2>/dev/null || echo "none")
           checksum=$(sha256sum dealhound.yml | awk '{print $1}')
           old=$(cat ~/.hac-noncritical/.dealhound_checksum 2>/dev/null || echo "")
 
           echo "Defined image: $defined_image"
-          echo "Running image: $running_image"
           echo "Checksum: $checksum vs $old"
 
-          if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
-            echo "Redeploying DealHound..."
+          # Always login and pull so we can detect image digest changes
+          echo "${{ secrets.FORGEJO_REGISTRY_PASSWORD }}" | \
+            docker login git.${DOMAIN_NAME} -u ${{ vars.FORGEJO_REGISTRY_USER }} --password-stdin
+
+          docker pull "$defined_image"
+
+          # Compare digest of freshly-pulled image vs. digest of running container's image
+          new_digest=$(docker inspect --format='{{.Id}}' "$defined_image" 2>/dev/null || echo "new")
+          running_digest=$(docker inspect -f '{{.Image}}' dealhound 2>/dev/null || echo "none")
+
+          echo "New digest:     $new_digest"
+          echo "Running digest: $running_digest"
+
+          if [ "$new_digest" != "$running_digest" ] || [ "$checksum" != "$old" ]; then
+            echo "Redeploying DealHound (image or compose changed)..."
             mkdir -p ~/.hac-noncritical
 
-            # Login to Forgejo registry to pull dealhound image
-            echo "${{ secrets.FORGEJO_REGISTRY_PASSWORD }}" | \
-              docker login git.${DOMAIN_NAME} -u ${{ vars.FORGEJO_REGISTRY_USER }} --password-stdin
-
             docker compose -p dealhound -f dealhound.yml down --remove-orphans || true
-            docker compose -p dealhound -f dealhound.yml pull
             docker compose -p dealhound -f dealhound.yml up -d --force-recreate
 
             echo "$checksum" > ~/.hac-noncritical/.dealhound_checksum
