@@ -1,0 +1,56 @@
+networks:
+  toolsproxy:
+    external: true
+
+volumes:
+  userbrowser_db:
+    driver: local
+
+services:
+  userbrowser:
+    image: git.${DOMAIN_NAME}/nicholas/userbrowser:latest
+    container_name: userbrowser
+    restart: unless-stopped
+
+    environment:
+      - SEARX_URL=${SEARX_INTERNAL_URL}
+      - PROWLARR_URL=${PROWLARR_URL}
+      - PROWLARR_KEY=${PROWLARR_KEY}
+      - DB_PATH=/app/db/userbrowser.db
+
+    volumes:
+      - userbrowser_db:/app/db
+
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+          cpus: '1.0'
+        reservations:
+          memory: 96M
+          cpus: '0.1'
+
+    labels:
+      # Home Assistant monitoring
+      - ha.monitor=true
+      - ha.category=tools
+      - ha.compose-file=Docker-NonCritical/Tools/UserBrowser/userbrowser.yml
+      - ha.service-name=userbrowser
+      # Traefik routing
+      - traefik.enable=true
+      - traefik.http.routers.userbrowser.entrypoints=websecure
+      - traefik.http.routers.userbrowser.rule=Host(`userbrowser.${DOMAIN_NAME}`)
+      - traefik.http.routers.userbrowser.service=userbrowser
+      - traefik.http.services.userbrowser.loadbalancer.server.port=8000
+      - traefik.http.routers.userbrowser.tls.certresolver=${CERTRESOLVER}
+      # Auth — Authentik forward auth (internal tool, keep behind SSO)
+      - traefik.http.routers.userbrowser.middlewares=authentik@docker
+
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+    networks:
+      - toolsproxy

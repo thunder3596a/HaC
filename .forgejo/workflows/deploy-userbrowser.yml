@@ -1,0 +1,67 @@
+name: Deploy UserBrowser
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "Docker-NonCritical/Tools/UserBrowser/**"
+      - ".forgejo/workflows/deploy-userbrowser.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: docker-noncritical
+
+    defaults:
+      run:
+        shell: sh
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify compose file exists
+        run: ls -l "./Docker-NonCritical/Tools/UserBrowser/userbrowser.yml"
+
+      - name: Deploy UserBrowser
+        working-directory: "./Docker-NonCritical/Tools/UserBrowser"
+        env:
+          DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
+          CERTRESOLVER: ${{ vars.CERTRESOLVER }}
+          SEARX_INTERNAL_URL: ${{ vars.SEARX_INTERNAL_URL }}
+          PROWLARR_URL: ${{ vars.PROWLARR_URL }}
+          PROWLARR_KEY: ${{ secrets.PROWLARR_KEY }}
+        run: |
+          for var in DOMAIN_NAME CERTRESOLVER SEARX_INTERNAL_URL; do
+            eval val=\$$var
+            if [ -z "$val" ]; then
+              echo "Missing required variable: $var" >&2
+              exit 1
+            fi
+          done
+
+          defined_image=$(grep -m1 'image:' userbrowser.yml | awk '{print $2}' | sed "s|\${DOMAIN_NAME}|$DOMAIN_NAME|g")
+          running_image=$(docker inspect -f '{{.Config.Image}}' userbrowser 2>/dev/null || echo "none")
+          checksum=$(sha256sum userbrowser.yml | awk '{print $1}')
+          old=$(cat ~/.hac-noncritical/.userbrowser_checksum 2>/dev/null || echo "")
+
+          echo "Defined image: $defined_image"
+          echo "Running image: $running_image"
+          echo "Checksum: $checksum vs $old"
+
+          if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
+            echo "Redeploying UserBrowser..."
+            mkdir -p ~/.hac-noncritical
+
+            echo "${{ secrets.FORGEJO_REGISTRY_PASSWORD }}" | \
+              docker login git.${DOMAIN_NAME} -u ${{ vars.FORGEJO_REGISTRY_USER }} --password-stdin
+
+            docker compose -p userbrowser -f userbrowser.yml down --remove-orphans || true
+            docker compose -p userbrowser -f userbrowser.yml pull
+            docker compose -p userbrowser -f userbrowser.yml up -d --force-recreate
+
+            echo "$checksum" > ~/.hac-noncritical/.userbrowser_checksum
+          else
+            echo "No changes detected; skipping redeploy"
+          fi

@@ -1,0 +1,32 @@
+networks:
+  toolsproxy:
+    external: true
+
+services:
+  gardenplanner:
+    image: git.${DOMAIN_NAME}/nicholas/gardenplanner:latest
+    container_name: gardenplanner
+    restart: unless-stopped
+
+    labels:
+      # Home Assistant monitoring
+      - ha.monitor=true
+      - ha.category=tools
+      - ha.compose-file=Docker-NonCritical/Tools/GardenPlanner/gardenplanner.yml
+      - ha.service-name=gardenplanner
+      # Traefik routing
+      - traefik.enable=true
+      - traefik.http.routers.gardenplanner.entrypoints=websecure
+      - traefik.http.routers.gardenplanner.rule=Host(`garden.${DOMAIN_NAME}`)
+      - traefik.http.routers.gardenplanner.service=gardenplanner
+      - traefik.http.services.gardenplanner.loadbalancer.server.port=80
+      - traefik.http.routers.gardenplanner.tls.certresolver=${CERTRESOLVER}
+
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+    networks:
+      - toolsproxy
