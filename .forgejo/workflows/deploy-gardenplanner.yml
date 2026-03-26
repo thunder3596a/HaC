@@ -24,13 +24,18 @@ jobs:
       - name: Verify compose file exists
         run: ls -l "./Docker-NonCritical/Tools/GardenPlanner/gardenplanner.yml"
 
+      - name: Ensure data directory exists
+        run: sudo mkdir -p /srv/gardenplanner/data && sudo chown -R nicholas:nicholas /srv/gardenplanner
+
       - name: Deploy Garden Planner
         working-directory: "./Docker-NonCritical/Tools/GardenPlanner"
         env:
           DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
           CERTRESOLVER: ${{ vars.CERTRESOLVER }}
+          TZ: ${{ vars.TZ }}
+          GARDEN_API_KEY: ${{ secrets.GARDEN_API_KEY }}
         run: |
-          for var in DOMAIN_NAME CERTRESOLVER; do
+          for var in DOMAIN_NAME CERTRESOLVER TZ; do
             eval val=\$$var
             if [ -z "$val" ]; then
               echo "Missing required variable: $var" >&2
@@ -38,18 +43,21 @@ jobs:
             fi
           done
 
-          defined_image=$(grep -m1 'image:' gardenplanner.yml | awk '{print $2}' | sed "s|\${DOMAIN_NAME}|$DOMAIN_NAME|g")
-          running_image=$(docker inspect -f '{{.Config.Image}}' gardenplanner 2>/dev/null || echo "none")
           checksum=$(sha256sum gardenplanner.yml | awk '{print $1}')
-          old=$(cat ~/.hac-noncritical/.gardenplanner_checksum 2>/dev/null || echo "")
+          old=$(cat /srv/gardenplanner/.gardenplanner_checksum 2>/dev/null || echo "")
 
-          echo "Defined image: $defined_image"
-          echo "Running image: $running_image"
-          echo "Checksum: $checksum vs $old"
+          # Check both container images are up to date
+          api_image="git.${DOMAIN_NAME}/nicholas/garden-api:latest"
+          web_image="git.${DOMAIN_NAME}/nicholas/garden-web:latest"
+          running_api=$(docker inspect -f '{{.Config.Image}}' gardenplanner-api 2>/dev/null || echo "none")
+          running_web=$(docker inspect -f '{{.Config.Image}}' gardenplanner 2>/dev/null || echo "none")
 
-          if [ "$defined_image" != "$running_image" ] || [ "$checksum" != "$old" ]; then
+          echo "API image:  defined=${api_image}  running=${running_api}"
+          echo "Web image:  defined=${web_image}  running=${running_web}"
+          echo "Checksum:   ${checksum} vs ${old}"
+
+          if [ "$running_api" != "$api_image" ] || [ "$running_web" != "$web_image" ] || [ "$checksum" != "$old" ]; then
             echo "Redeploying Garden Planner..."
-            mkdir -p ~/.hac-noncritical
 
             echo "${{ secrets.FORGEJO_REGISTRY_PASSWORD }}" | \
               docker login git.${DOMAIN_NAME} -u ${{ vars.FORGEJO_REGISTRY_USER }} --password-stdin
@@ -58,7 +66,7 @@ jobs:
             docker compose -p gardenplanner -f gardenplanner.yml pull
             docker compose -p gardenplanner -f gardenplanner.yml up -d --force-recreate
 
-            echo "$checksum" > ~/.hac-noncritical/.gardenplanner_checksum
+            echo "$checksum" | sudo tee /srv/gardenplanner/.gardenplanner_checksum > /dev/null
           else
             echo "No changes detected; skipping redeploy"
           fi

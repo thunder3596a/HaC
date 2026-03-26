@@ -1,12 +1,58 @@
 networks:
   toolsproxy:
     external: true
+  gardeninternal:
+    driver: bridge
+    internal: true
+
+volumes:
+  gardenplanner_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /srv/gardenplanner/data
 
 services:
+  gardenplanner-api:
+    image: git.${DOMAIN_NAME}/nicholas/garden-api:latest
+    container_name: gardenplanner-api
+    restart: unless-stopped
+
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_PATH: /data/garden.db
+      API_KEY: ${GARDEN_API_KEY}
+      TZ: ${TZ}
+
+    volumes:
+      - gardenplanner_data:/data
+
+    labels:
+      - ha.monitor=true
+      - ha.category=tools
+      - ha.compose-file=Docker-NonCritical/Tools/GardenPlanner/gardenplanner.yml
+      - ha.service-name=gardenplanner-api
+
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+
+    networks:
+      - gardeninternal
+
   gardenplanner:
-    image: git.${DOMAIN_NAME}/nicholas/gardenplanner:latest
+    image: git.${DOMAIN_NAME}/nicholas/garden-web:latest
     container_name: gardenplanner
     restart: unless-stopped
+
+    depends_on:
+      gardenplanner-api:
+        condition: service_healthy
 
     labels:
       # Home Assistant monitoring
@@ -23,10 +69,12 @@ services:
       - traefik.http.routers.gardenplanner.tls.certresolver=${CERTRESOLVER}
 
     healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost/"]
+      test: ["CMD", "wget", "-qO-", "http://localhost/index.html"]
       interval: 30s
       timeout: 5s
+      start_period: 10s
       retries: 3
 
     networks:
       - toolsproxy
+      - gardeninternal
