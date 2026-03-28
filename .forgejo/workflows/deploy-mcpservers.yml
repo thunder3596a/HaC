@@ -38,13 +38,13 @@ jobs:
           HOMEBOX_EMAIL: ${{ secrets.HOMEBOX_EMAIL }}
           HOMEBOX_PASSWORD: ${{ secrets.HOMEBOX_PASSWORD }}
           FORGEJO_URL: ${{ vars.FORGEJO_URL }}
-          FORGEJO_ACCESS_TOKEN: ${{ secrets.FORGEJO_ACCESS_TOKEN }}
+          FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
           DOCKHAND_URL: ${{ vars.DOCKHAND_URL }}
           DOCKHAND_USERNAME: ${{ secrets.DOCKHAND_MCP_USERNAME }}
           DOCKHAND_PASSWORD: ${{ secrets.DOCKHAND_MCP_PASSWORD }}
         run: |
           # Validate required secrets
-          for var in VIKUNJA_API_TOKEN N8N_API_KEY N8N_MCP_AUTH_TOKEN HOMEBOX_EMAIL HOMEBOX_PASSWORD DOCKHAND_USERNAME DOCKHAND_PASSWORD FORGEJO_ACCESS_TOKEN; do
+          for var in VIKUNJA_API_TOKEN N8N_API_KEY N8N_MCP_AUTH_TOKEN HOMEBOX_EMAIL HOMEBOX_PASSWORD DOCKHAND_USERNAME DOCKHAND_PASSWORD FORGEJO_TOKEN; do
             eval val=\$$var
             if [ -z "$val" ]; then
               echo "Missing required secret: $var" >&2
