@@ -81,6 +81,25 @@ services:
   #     - "ha.compose-file=Docker-NonCritical/Automation/AI/MCPGateway/mcpservers.yml"
   #     - "ha.service-name=netbox-mcp"
 
+  # Forgejo MCP Server — issues, PRs, files, branches, actions, notifications
+  forgejo-mcp:
+    build:
+      context: ./mcp-servers/forgejo
+      dockerfile: Dockerfile
+    container_name: mcp-forgejo
+    restart: unless-stopped
+    networks:
+      - mcpnet
+    environment:
+      - FORGEJO_URL=${FORGEJO_URL}
+      - FORGEJO_ACCESS_TOKEN=${FORGEJO_ACCESS_TOKEN}
+      - FORGEJO_USER_AGENT=forgejo-mcp/2.17.0
+    labels:
+      - "ha.monitor=true"
+      - "ha.category=tools"
+      - "ha.compose-file=Docker-NonCritical/Automation/AI/MCPGateway/mcpservers.yml"
+      - "ha.service-name=forgejo-mcp"
+
   # Dockhand MCP Server — Docker container and stack management via Dockhand API
   dockhand-mcp:
     build:

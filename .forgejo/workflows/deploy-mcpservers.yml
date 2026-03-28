@@ -37,12 +37,14 @@ jobs:
           HOMEBOX_URL: ${{ vars.HOMEBOX_URL }}
           HOMEBOX_EMAIL: ${{ secrets.HOMEBOX_EMAIL }}
           HOMEBOX_PASSWORD: ${{ secrets.HOMEBOX_PASSWORD }}
+          FORGEJO_URL: ${{ vars.FORGEJO_URL }}
+          FORGEJO_ACCESS_TOKEN: ${{ secrets.FORGEJO_ACCESS_TOKEN }}
           DOCKHAND_URL: ${{ vars.DOCKHAND_URL }}
           DOCKHAND_USERNAME: ${{ secrets.DOCKHAND_MCP_USERNAME }}
           DOCKHAND_PASSWORD: ${{ secrets.DOCKHAND_MCP_PASSWORD }}
         run: |
           # Validate required secrets
-          for var in VIKUNJA_API_TOKEN N8N_API_KEY N8N_MCP_AUTH_TOKEN HOMEBOX_EMAIL HOMEBOX_PASSWORD DOCKHAND_USERNAME DOCKHAND_PASSWORD; do
+          for var in VIKUNJA_API_TOKEN N8N_API_KEY N8N_MCP_AUTH_TOKEN HOMEBOX_EMAIL HOMEBOX_PASSWORD DOCKHAND_USERNAME DOCKHAND_PASSWORD FORGEJO_ACCESS_TOKEN; do
             eval val=\$$var
             if [ -z "$val" ]; then
               echo "Missing required secret: $var" >&2
@@ -51,7 +53,7 @@ jobs:
           done
 
           # Validate required vars
-          for var in VIKUNJA_URL N8N_URL HOMEBOX_URL DOCKHAND_URL; do
+          for var in VIKUNJA_URL N8N_URL HOMEBOX_URL DOCKHAND_URL FORGEJO_URL; do
             eval val=\$$var
             if [ -z "$val" ]; then
               echo "Missing required variable: $var" >&2
@@ -67,6 +69,7 @@ jobs:
             mcp-servers/dockhand/Dockerfile \
             mcp-servers/dockhand/index.js \
             mcp-servers/dockhand/package.json \
+            mcp-servers/forgejo/Dockerfile \
             | sha256sum | awk '{print $1}')
           old=$(cat .mcpservers_checksum 2>/dev/null || echo "")
 
