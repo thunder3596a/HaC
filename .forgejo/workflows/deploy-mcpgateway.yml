@@ -38,9 +38,13 @@ jobs:
           DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
           CERTRESOLVER: ${{ vars.CERTRESOLVER }}
           MCP_DB_PASSWORD: ${{ secrets.MCP_DB_PASSWORD }}
+          MCP_JWT_SECRET_KEY: ${{ secrets.MCP_JWT_SECRET_KEY }}
+          MCP_AUTH_ENCRYPTION_SECRET: ${{ secrets.MCP_AUTH_ENCRYPTION_SECRET }}
+          MCP_OIDC_CLIENT_ID: ${{ vars.MCP_OIDC_CLIENT_ID }}
+          MCP_OIDC_CLIENT_SECRET: ${{ secrets.MCP_OIDC_CLIENT_SECRET }}
         run: |
           # Validate required secrets
-          for var in MCP_DB_PASSWORD; do
+          for var in MCP_DB_PASSWORD MCP_JWT_SECRET_KEY MCP_AUTH_ENCRYPTION_SECRET MCP_OIDC_CLIENT_SECRET; do
             eval val=\$$var
             if [ -z "$val" ]; then
               echo "Missing required secret: $var" >&2
@@ -49,7 +53,7 @@ jobs:
           done
 
           # Validate required vars
-          for var in DOMAIN_NAME CERTRESOLVER; do
+          for var in DOMAIN_NAME CERTRESOLVER MCP_OIDC_CLIENT_ID; do
             eval val=\$$var
             if [ -z "$val" ]; then
               echo "Missing required variable: $var" >&2
