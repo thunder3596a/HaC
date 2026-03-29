@@ -20,6 +20,24 @@ services:
       - GUNICORN_CMD_ARGS=--bind 0.0.0.0:4444
       - SSRF_PROTECTION_ENABLED=false
       - SSRF_DNS_FAIL_CLOSED=false
+      # Token security
+      - JWT_SECRET_KEY=${MCP_JWT_SECRET_KEY}
+      - AUTH_ENCRYPTION_SECRET=${MCP_AUTH_ENCRYPTION_SECRET}
+      # Authentik OIDC SSO
+      - SSO_ENABLED=true
+      - SSO_AUTO_CREATE_USERS=true
+      - SSO_PRESERVE_ADMIN_AUTH=true
+      - SSO_GENERIC_ENABLED=true
+      - SSO_GENERIC_PROVIDER_ID=authentik
+      - SSO_GENERIC_DISPLAY_NAME=Authentik
+      - SSO_GENERIC_CLIENT_ID=${MCP_OIDC_CLIENT_ID}
+      - SSO_GENERIC_CLIENT_SECRET=${MCP_OIDC_CLIENT_SECRET}
+      - SSO_GENERIC_AUTHORIZATION_URL=https://authentik.${DOMAIN_NAME}/application/o/mcp-gateway/authorize/
+      - SSO_GENERIC_TOKEN_URL=https://authentik.${DOMAIN_NAME}/application/o/mcp-gateway/token/
+      - SSO_GENERIC_USERINFO_URL=https://authentik.${DOMAIN_NAME}/application/o/userinfo/
+      - SSO_GENERIC_ISSUER=https://authentik.${DOMAIN_NAME}/application/o/mcp-gateway/
+      - SSO_GENERIC_JWKS_URI=https://authentik.${DOMAIN_NAME}/application/o/mcp-gateway/jwks/
+      - SSO_GENERIC_SCOPE=openid profile email
     depends_on:
       mcp-postgres:
         condition: service_healthy
@@ -51,12 +69,12 @@ services:
       - traefik.http.routers.mcpgateway-api.tls.certresolver=${CERTRESOLVER}
       - traefik.http.routers.mcpgateway-api.tls.domains[0].main=mcp.${DOMAIN_NAME}
 
-      # UI router (priority 1, catch-all) — admin web UI, IP-restricted + Authentik
+      # UI router (priority 1, catch-all) — admin web UI, IP-restricted; OIDC handled natively by the app
       - traefik.http.routers.mcpgateway.entrypoints=websecure
       - traefik.http.routers.mcpgateway.rule=Host(`mcp.${DOMAIN_NAME}`)
       - traefik.http.routers.mcpgateway.priority=1
       - traefik.http.routers.mcpgateway.service=mcpgateway
-      - traefik.http.routers.mcpgateway.middlewares=mcpgateway-headers,mcpgateway-cors,lan-only,authentik@docker
+      - traefik.http.routers.mcpgateway.middlewares=mcpgateway-headers,mcpgateway-cors,lan-only
       - traefik.http.routers.mcpgateway.tls.certresolver=${CERTRESOLVER}
       - traefik.http.routers.mcpgateway.tls.domains[0].main=mcp.${DOMAIN_NAME}
       - "ha.monitor=true"
