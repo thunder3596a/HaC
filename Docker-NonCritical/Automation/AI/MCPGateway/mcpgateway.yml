@@ -30,13 +30,9 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=aiproxy
-      - traefik.http.routers.mcpgateway.entrypoints=websecure
-      - traefik.http.routers.mcpgateway.rule=Host(`mcp.${DOMAIN_NAME}`)
-      - traefik.http.routers.mcpgateway.service=mcpgateway
-      - traefik.http.routers.mcpgateway.middlewares=mcpgateway-headers,mcpgateway-cors
       - traefik.http.services.mcpgateway.loadbalancer.server.port=4444
-      - traefik.http.routers.mcpgateway.tls.certresolver=${CERTRESOLVER}
-      - traefik.http.routers.mcpgateway.tls.domains[0].main=mcp.${DOMAIN_NAME}
+
+      # Shared middleware definitions
       - traefik.http.middlewares.mcpgateway-headers.headers.customrequestheaders.X-Forwarded-Proto=https
       - traefik.http.middlewares.mcpgateway-headers.headers.customrequestheaders.X-Forwarded-Scheme=https
       - traefik.http.middlewares.mcpgateway-headers.headers.customrequestheaders.X-Forwarded-Port=443
@@ -44,6 +40,25 @@ services:
       - traefik.http.middlewares.mcpgateway-cors.headers.accesscontrolallowmethods=GET,POST,PUT,DELETE,OPTIONS
       - traefik.http.middlewares.mcpgateway-cors.headers.accesscontrolallowheaders=Authorization,Content-Type,Accept
       - traefik.http.middlewares.mcpgateway-cors.headers.accesscontrolmaxage=86400
+
+      # API router (priority 10) — MCP protocol paths, no Authentik, IP-restricted only
+      # Claude Desktop and other API clients connect here via Bearer token
+      - traefik.http.routers.mcpgateway-api.entrypoints=websecure
+      - traefik.http.routers.mcpgateway-api.rule=Host(`mcp.${DOMAIN_NAME}`) && PathPrefix(`/mcp`)
+      - traefik.http.routers.mcpgateway-api.priority=10
+      - traefik.http.routers.mcpgateway-api.service=mcpgateway
+      - traefik.http.routers.mcpgateway-api.middlewares=mcpgateway-headers,lan-only
+      - traefik.http.routers.mcpgateway-api.tls.certresolver=${CERTRESOLVER}
+      - traefik.http.routers.mcpgateway-api.tls.domains[0].main=mcp.${DOMAIN_NAME}
+
+      # UI router (priority 1, catch-all) — admin web UI, IP-restricted + Authentik
+      - traefik.http.routers.mcpgateway.entrypoints=websecure
+      - traefik.http.routers.mcpgateway.rule=Host(`mcp.${DOMAIN_NAME}`)
+      - traefik.http.routers.mcpgateway.priority=1
+      - traefik.http.routers.mcpgateway.service=mcpgateway
+      - traefik.http.routers.mcpgateway.middlewares=mcpgateway-headers,mcpgateway-cors,lan-only,authentik@docker
+      - traefik.http.routers.mcpgateway.tls.certresolver=${CERTRESOLVER}
+      - traefik.http.routers.mcpgateway.tls.domains[0].main=mcp.${DOMAIN_NAME}
       - "ha.monitor=true"
       - "ha.category=tools"
       - "ha.compose-file=Docker-NonCritical/Automation/AI/MCPGateway/mcpgateway.yml"
