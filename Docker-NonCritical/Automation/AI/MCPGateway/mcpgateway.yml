@@ -32,8 +32,8 @@ services:
       - SSO_GENERIC_DISPLAY_NAME=Authentik
       - SSO_GENERIC_CLIENT_ID=${MCP_OIDC_CLIENT_ID}
       - SSO_GENERIC_CLIENT_SECRET=${MCP_OIDC_CLIENT_SECRET}
-      - SSO_GENERIC_AUTHORIZATION_URL=https://authentik.${DOMAIN_NAME}/application/o/mcp-gateway/authorize/
-      - SSO_GENERIC_TOKEN_URL=https://authentik.${DOMAIN_NAME}/application/o/mcp-gateway/token/
+      - SSO_GENERIC_AUTHORIZATION_URL=https://authentik.${DOMAIN_NAME}/application/o/authorize/
+      - SSO_GENERIC_TOKEN_URL=https://authentik.${DOMAIN_NAME}/application/o/token/
       - SSO_GENERIC_USERINFO_URL=https://authentik.${DOMAIN_NAME}/application/o/userinfo/
       - SSO_GENERIC_ISSUER=https://authentik.${DOMAIN_NAME}/application/o/mcp-gateway/
       - SSO_GENERIC_JWKS_URI=https://authentik.${DOMAIN_NAME}/application/o/mcp-gateway/jwks/
