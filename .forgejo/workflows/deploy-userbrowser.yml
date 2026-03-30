@@ -24,36 +24,6 @@ jobs:
       - name: Verify compose file exists
         run: ls -l "./Docker-NonCritical/Tools/UserBrowser/userbrowser.yml"
 
-      - name: Build and push image
-        env:
-          DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
-        run: |
-          IMAGE="git.${DOMAIN_NAME}/nicholas/userbrowser"
-
-          echo "${{ secrets.FORGEJO_REGISTRY_PASSWORD }}" | \
-            docker login "git.${DOMAIN_NAME}" -u "${{ vars.FORGEJO_REGISTRY_USER }}" --password-stdin
-
-          # Clone source at the pinned SHA referenced by this workflow's triggering commit
-          REPO_URL="https://git.${DOMAIN_NAME}/nicholas/userbrowser.git"
-          rm -rf /tmp/userbrowser-src
-          git clone --depth 1 "$REPO_URL" /tmp/userbrowser-src
-
-          cd /tmp/userbrowser-src
-          SHORT_SHA=$(git rev-parse --short HEAD)
-
-          docker build \
-            --provenance=false \
-            --tag "${IMAGE}:latest" \
-            --tag "${IMAGE}:${SHORT_SHA}" \
-            .
-
-          docker push "${IMAGE}:latest"
-          docker push "${IMAGE}:${SHORT_SHA}"
-
-          echo "Pushed ${IMAGE}:latest (${SHORT_SHA})"
-          cd -
-          rm -rf /tmp/userbrowser-src
-
       - name: Deploy UserBrowser
         working-directory: "./Docker-NonCritical/Tools/UserBrowser"
         env:
@@ -71,15 +41,25 @@ jobs:
             fi
           done
 
-          mkdir -p ~/.hac-noncritical
-
-          echo "${{ secrets.FORGEJO_REGISTRY_PASSWORD }}" | \
-            docker login "git.${DOMAIN_NAME}" -u "${{ vars.FORGEJO_REGISTRY_USER }}" --password-stdin
-
-          docker compose -p userbrowser -f userbrowser.yml down --remove-orphans || true
-          docker compose -p userbrowser -f userbrowser.yml pull
-          docker compose -p userbrowser -f userbrowser.yml up -d --force-recreate
-
+          defined_image=$(grep -m1 'image:' userbrowser.yml | awk '{print $2}' | sed "s|\${DOMAIN_NAME}|$DOMAIN_NAME|g")
           checksum=$(sha256sum userbrowser.yml | awk '{print $1}')
-          echo "$checksum" > ~/.hac-noncritical/.userbrowser_checksum
-          echo "Deploy complete"
+          old=$(cat ~/.hac-noncritical/.userbrowser_checksum 2>/dev/null || echo "")
+
+          echo "Defined image: $defined_image"
+          echo "Checksum: $checksum vs $old"
+
+          if [ "$checksum" != "$old" ]; then
+            echo "Redeploying UserBrowser..."
+            mkdir -p ~/.hac-noncritical
+
+            echo "${{ secrets.FORGEJO_REGISTRY_PASSWORD }}" | \
+              docker login "git.${DOMAIN_NAME}" -u "${{ vars.FORGEJO_REGISTRY_USER }}" --password-stdin
+
+            docker compose -p userbrowser -f userbrowser.yml down --remove-orphans || true
+            docker compose -p userbrowser -f userbrowser.yml pull
+            docker compose -p userbrowser -f userbrowser.yml up -d --force-recreate
+
+            echo "$checksum" > ~/.hac-noncritical/.userbrowser_checksum
+          else
+            echo "No changes detected; skipping redeploy"
+          fi
