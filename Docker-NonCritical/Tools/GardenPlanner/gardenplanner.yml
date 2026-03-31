@@ -22,7 +22,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
-      DB_PATH: /data/garden.db
+      DATABASE_PATH: /data/garden.db
       API_KEY: ${GARDEN_API_KEY}
       TZ: ${TZ}
 
