@@ -64,7 +64,13 @@ jobs:
 
             docker compose -p gardenplanner -f gardenplanner.yml down --remove-orphans || true
             docker compose -p gardenplanner -f gardenplanner.yml pull
-            docker compose -p gardenplanner -f gardenplanner.yml up -d --force-recreate
+            docker compose -p gardenplanner -f gardenplanner.yml up -d --force-recreate || {
+              echo "=== gardenplanner-api logs ==="
+              docker logs gardenplanner-api 2>&1 || true
+              echo "=== gardenplanner logs ==="
+              docker logs gardenplanner 2>&1 || true
+              exit 1
+            }
 
             echo "$checksum" | sudo tee /srv/gardenplanner/.gardenplanner_checksum > /dev/null
           else
