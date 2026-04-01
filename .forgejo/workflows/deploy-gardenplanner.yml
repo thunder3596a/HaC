@@ -46,21 +46,26 @@ jobs:
           checksum=$(sha256sum gardenplanner.yml | awk '{print $1}')
           old=$(cat /srv/gardenplanner/.gardenplanner_checksum 2>/dev/null || echo "")
 
-          # Check both container images are up to date
           api_image="git.${DOMAIN_NAME}/nicholas/garden-api:latest"
           web_image="git.${DOMAIN_NAME}/nicholas/garden-web:latest"
-          running_api=$(docker inspect -f '{{.Config.Image}}' gardenplanner-api 2>/dev/null || echo "none")
-          running_web=$(docker inspect -f '{{.Config.Image}}' gardenplanner 2>/dev/null || echo "none")
 
-          echo "API image:  defined=${api_image}  running=${running_api}"
-          echo "Web image:  defined=${web_image}  running=${running_web}"
-          echo "Checksum:   ${checksum} vs ${old}"
+          echo "${{ secrets.FORGEJO_REGISTRY_PASSWORD }}" | \
+            docker login git.${DOMAIN_NAME} -u ${{ vars.FORGEJO_REGISTRY_USER }} --password-stdin
 
-          if [ "$running_api" != "$api_image" ] || [ "$running_web" != "$web_image" ] || [ "$checksum" != "$old" ]; then
+          # Pull manifests to get remote digests (no image download yet)
+          remote_api=$(docker manifest inspect "${api_image}" 2>/dev/null | sha256sum | awk '{print $1}')
+          remote_web=$(docker manifest inspect "${web_image}" 2>/dev/null | sha256sum | awk '{print $1}')
+
+          # Get digest of currently running image layers
+          running_api=$(docker inspect -f '{{.Image}}' gardenplanner-api 2>/dev/null || echo "none")
+          running_web=$(docker inspect -f '{{.Image}}' gardenplanner 2>/dev/null || echo "none")
+
+          echo "API:     remote=${remote_api}  running=${running_api}"
+          echo "Web:     remote=${remote_web}  running=${running_web}"
+          echo "Compose: ${checksum} vs ${old}"
+
+          if [ "${remote_api}${remote_web}${checksum}" != "$(cat /srv/gardenplanner/.gardenplanner_imgsum 2>/dev/null || echo '')${old}" ] || [ "$checksum" != "$old" ]; then
             echo "Redeploying Garden Planner..."
-
-            echo "${{ secrets.FORGEJO_REGISTRY_PASSWORD }}" | \
-              docker login git.${DOMAIN_NAME} -u ${{ vars.FORGEJO_REGISTRY_USER }} --password-stdin
 
             docker compose -p gardenplanner -f gardenplanner.yml down --remove-orphans || true
             docker compose -p gardenplanner -f gardenplanner.yml pull
@@ -73,6 +78,7 @@ jobs:
             }
 
             echo "$checksum" | sudo tee /srv/gardenplanner/.gardenplanner_checksum > /dev/null
+            echo "${remote_api}${remote_web}${checksum}" | sudo tee /srv/gardenplanner/.gardenplanner_imgsum > /dev/null
           else
             echo "No changes detected; skipping redeploy"
           fi
