@@ -51,8 +51,7 @@ services:
     restart: unless-stopped
 
     depends_on:
-      gardenplanner-api:
-        condition: service_healthy
+      - gardenplanner-api
 
     labels:
       # Home Assistant monitoring
