@@ -60,6 +60,7 @@ services:
       - ha.compose-file=Docker-NonCritical/Tools/GardenPlanner/gardenplanner.yml
       - ha.service-name=gardenplanner
       # Traefik routing
+      - traefik.docker.network=toolsproxy
       - traefik.enable=true
       - traefik.http.routers.gardenplanner.entrypoints=websecure
       - traefik.http.routers.gardenplanner.rule=Host(`garden.${DOMAIN_NAME}`)
