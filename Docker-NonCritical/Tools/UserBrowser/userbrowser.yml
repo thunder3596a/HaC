@@ -17,6 +17,7 @@ services:
       - SEARX_DIRECT_URL=${SEARX_DIRECT_INTERNAL_URL}
       - PROWLARR_URL=${PROWLARR_URL}
       - PROWLARR_KEY=${PROWLARR_KEY}
+      - FLARESOLVERR_URL=${FLARESOLVERR_URL:-}
       - DB_PATH=/app/db/userbrowser.db
 
     volumes:

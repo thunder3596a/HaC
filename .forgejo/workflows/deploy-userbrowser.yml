@@ -33,6 +33,7 @@ jobs:
           SEARX_DIRECT_INTERNAL_URL: ${{ vars.SEARX_DIRECT_INTERNAL_URL || 'http://searx:8080' }}
           PROWLARR_URL: ${{ vars.PROWLARR_URL }}
           PROWLARR_KEY: ${{ secrets.PROWLARR_KEY }}
+          FLARESOLVERR_URL: ${{ vars.FLARESOLVERR_URL }}
         run: |
           for var in DOMAIN_NAME CERTRESOLVER SEARX_INTERNAL_URL; do
             eval val=\$$var
