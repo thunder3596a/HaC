@@ -30,6 +30,7 @@ jobs:
           DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
           CERTRESOLVER: ${{ vars.CERTRESOLVER }}
           SEARX_INTERNAL_URL: ${{ vars.SEARX_INTERNAL_URL || 'http://searx:8080' }}
+          SEARX_DIRECT_INTERNAL_URL: ${{ vars.SEARX_DIRECT_INTERNAL_URL || 'http://searx:8080' }}
           PROWLARR_URL: ${{ vars.PROWLARR_URL }}
           PROWLARR_KEY: ${{ secrets.PROWLARR_KEY }}
         run: |
