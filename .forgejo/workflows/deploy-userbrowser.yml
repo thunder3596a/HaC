@@ -41,25 +41,34 @@ jobs:
             fi
           done
 
+          mkdir -p ~/.hac-noncritical
+
           defined_image=$(grep -m1 'image:' userbrowser.yml | awk '{print $2}' | sed "s|\${DOMAIN_NAME}|$DOMAIN_NAME|g")
-          checksum=$(sha256sum userbrowser.yml | awk '{print $1}')
-          old=$(cat ~/.hac-noncritical/.userbrowser_checksum 2>/dev/null || echo "")
+          compose_checksum=$(sha256sum userbrowser.yml | awk '{print $1}')
+          old_compose=$(cat ~/.hac-noncritical/.userbrowser_checksum 2>/dev/null || echo "")
 
           echo "Defined image: $defined_image"
-          echo "Checksum: $checksum vs $old"
+          echo "Compose checksum: $compose_checksum vs $old_compose"
 
-          if [ "$checksum" != "$old" ]; then
-            echo "Redeploying UserBrowser..."
-            mkdir -p ~/.hac-noncritical
+          # Always login and pull to detect new image pushes
+          echo "${{ secrets.FORGEJO_REGISTRY_PASSWORD }}" | \
+            docker login "git.${DOMAIN_NAME}" -u "${{ vars.FORGEJO_REGISTRY_USER }}" --password-stdin
 
-            echo "${{ secrets.FORGEJO_REGISTRY_PASSWORD }}" | \
-              docker login "git.${DOMAIN_NAME}" -u "${{ vars.FORGEJO_REGISTRY_USER }}" --password-stdin
+          docker pull "$defined_image"
+
+          new_digest=$(docker inspect --format='{{index .RepoDigests 0}}' "$defined_image" 2>/dev/null || docker inspect --format='{{.Id}}' "$defined_image")
+          old_digest=$(cat ~/.hac-noncritical/.userbrowser_image_digest 2>/dev/null || echo "")
+
+          echo "Image digest: $new_digest vs $old_digest"
+
+          if [ "$compose_checksum" != "$old_compose" ] || [ "$new_digest" != "$old_digest" ]; then
+            echo "Redeploying UserBrowser (compose changed: $([ "$compose_checksum" != "$old_compose" ] && echo yes || echo no), image changed: $([ "$new_digest" != "$old_digest" ] && echo yes || echo no))..."
 
             docker compose -p userbrowser -f userbrowser.yml down --remove-orphans || true
-            docker compose -p userbrowser -f userbrowser.yml pull
             docker compose -p userbrowser -f userbrowser.yml up -d --force-recreate
 
-            echo "$checksum" > ~/.hac-noncritical/.userbrowser_checksum
+            echo "$compose_checksum" > ~/.hac-noncritical/.userbrowser_checksum
+            echo "$new_digest" > ~/.hac-noncritical/.userbrowser_image_digest
           else
             echo "No changes detected; skipping redeploy"
           fi
