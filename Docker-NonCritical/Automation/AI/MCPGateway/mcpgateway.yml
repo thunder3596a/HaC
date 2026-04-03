@@ -17,7 +17,8 @@ services:
       - MCPGATEWAY_UI_ENABLED=true
       - MCPGATEWAY_ADMIN_API_ENABLED=true
       - PLUGINS_ENABLED=true
-      - GUNICORN_CMD_ARGS=--bind 0.0.0.0:4444 --workers 1 --forwarded-allow-ips=*
+      - GUNICORN_CMD_ARGS=--bind 0.0.0.0:4444 --forwarded-allow-ips=*
+      - WEB_CONCURRENCY=1
       - SECURE_COOKIES=false
       - SSRF_PROTECTION_ENABLED=false
       - SSRF_DNS_FAIL_CLOSED=false
