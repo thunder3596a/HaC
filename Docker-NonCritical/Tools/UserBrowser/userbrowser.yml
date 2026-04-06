@@ -12,6 +12,12 @@ services:
     container_name: userbrowser
     restart: unless-stopped
 
+    # Explicit DNS bypasses OPNsense Unbound blocklists so OSINT targets
+    # resolve correctly from inside the container.
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+
     environment:
       - SEARX_URL=${SEARX_INTERNAL_URL}
       - SEARX_DIRECT_URL=${SEARX_DIRECT_INTERNAL_URL}
