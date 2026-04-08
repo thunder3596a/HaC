@@ -1,6 +1,7 @@
 .ai/
 .claude/
 .continue/
+GETTING_STARTED.md
 .vscode/
 .github/copilot-instructions.md
 CLAUDE.md
