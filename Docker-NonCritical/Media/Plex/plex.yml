@@ -11,6 +11,7 @@ services:
       - TZ=${TZ:-America/Chicago}
       - VERSION=docker
       - PLEX_CLAIM=${PLEX_CLAIM}
+      - ADVERTISE_IP=https://plex.${DOMAIN_NAME}/
     labels:
       - traefik.enable=true
       - traefik.http.routers.plex.entrypoints=websecure
