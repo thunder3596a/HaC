@@ -65,11 +65,13 @@ services:
       - ha.service-name=outline
       # Traefik routing
       - traefik.enable=true
+      - traefik.docker.network=toolsproxy
       - traefik.http.routers.outline.entrypoints=websecure
       - traefik.http.routers.outline.rule=Host(`docs.${DOMAIN_NAME}`)
       - traefik.http.routers.outline.service=outline
       - traefik.http.services.outline.loadbalancer.server.port=3000
       - traefik.http.routers.outline.tls.certresolver=${CERTRESOLVER}
+      - traefik.http.routers.outline.tls.domains[0].main=docs.${DOMAIN_NAME}
 
     networks:
       - toolsproxy
@@ -110,6 +112,7 @@ services:
       - ha.service-name=minio-outline
       # Traefik routing — MinIO S3 API
       - traefik.enable=true
+      - traefik.docker.network=toolsproxy
       - traefik.http.routers.minio-outline.entrypoints=websecure
       - traefik.http.routers.minio-outline.rule=Host(`minio-outline.${DOMAIN_NAME}`)
       - traefik.http.routers.minio-outline.service=minio-outline
