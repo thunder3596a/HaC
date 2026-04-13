@@ -163,7 +163,33 @@ jobs:
 
           delete_gateway_by_name() {
             name="$1"
-            echo "Skipping stale gateway cleanup for $name"
+
+            list_code=$(curl -sS -o /tmp/gateway_list_resp.json -w "%{http_code}" \
+              -H "Authorization: Bearer $MCP_GATEWAY_TOKEN" \
+              "http://127.0.0.1:4444/gateways?include_pagination=true&limit=500")
+
+            if [ "$list_code" != "200" ]; then
+              echo "Could not list gateways to clean stale entry for $name (HTTP $list_code)"
+              return 0
+            fi
+
+            gateway_id=$(python3 -c "import json,sys; name=sys.argv[1]; data=json.load(open('/tmp/gateway_list_resp.json','r',encoding='utf-8')); gateways=data.get('gateways', data if isinstance(data, list) else []); match=next((g.get('id','') for g in gateways if isinstance(g, dict) and g.get('name')==name), ''); print(match)" "$name")
+
+            if [ -n "$gateway_id" ]; then
+              del_code=$(curl -sS -o /tmp/gateway_delete_resp.json -w "%{http_code}" \
+                -X DELETE \
+                -H "Authorization: Bearer $MCP_GATEWAY_TOKEN" \
+                "http://127.0.0.1:4444/gateways/$gateway_id")
+
+              if [ "$del_code" = "200" ] || [ "$del_code" = "204" ] || [ "$del_code" = "404" ]; then
+                echo "Removed stale gateway entry: $name ($gateway_id)"
+              else
+                echo "Warning: failed to remove stale gateway $name ($gateway_id), HTTP $del_code"
+              fi
+            else
+              echo "No stale gateway entry found for $name"
+            fi
+
             return 0
           }
 
@@ -178,14 +204,19 @@ jobs:
 
             if ! register_gateway "$name" "$url" "$description"; then
               echo "Warning: skipping unavailable gateway $name"
+              delete_gateway_by_name "$name"
               failed_gateways="$failed_gateways $name"
             fi
           }
 
-          ensure_gateway "vikunja-mcp" "http://mcp-vikunja:3000/mcp" "Vikunja MCP server"
+          # Temporarily remove broken gateways so they do not poison the /gateways API used by the UI.
+          # vikunja-mcp currently fails ContextForge initialization with a schema parsing error.
+          # n8n-mcp currently returns 401 because upstream auth is not yet configured for federation.
+          delete_gateway_by_name "vikunja-mcp"
+          delete_gateway_by_name "n8n-mcp"
+
           ensure_gateway "homebox-mcp" "http://mcp-homebox:3000/mcp" "HomeBox MCP server"
           ensure_gateway "dockhand-mcp" "http://mcp-dockhand:3000/mcp" "Dockhand MCP server"
-          ensure_gateway "n8n-mcp" "http://n8n-mcp:3000/mcp" "n8n MCP server"
           ensure_gateway "forgejo-mcp" "http://mcp-forgejo:3000/mcp" "Forgejo MCP server"
 
           if [ -n "$failed_gateways" ]; then
