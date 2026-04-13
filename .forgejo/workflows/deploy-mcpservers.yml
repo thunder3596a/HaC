@@ -42,9 +42,11 @@ jobs:
           DOCKHAND_URL: ${{ vars.DOCKHAND_URL }}
           DOCKHAND_USERNAME: ${{ secrets.DOCKHAND_MCP_USERNAME }}
           DOCKHAND_PASSWORD: ${{ secrets.DOCKHAND_MCP_PASSWORD }}
+          MCP_JWT_SECRET_KEY: ${{ secrets.MCP_JWT_SECRET_KEY }}
+          MCP_GATEWAY_BOOTSTRAP_SUB: ${{ vars.MCP_GATEWAY_BOOTSTRAP_SUB }}
         run: |
           # Validate required secrets
-          for var in VIKUNJA_API_TOKEN N8N_API_KEY N8N_MCP_AUTH_TOKEN HOMEBOX_EMAIL HOMEBOX_PASSWORD DOCKHAND_USERNAME DOCKHAND_PASSWORD FORGEJO_TOKEN; do
+          for var in VIKUNJA_API_TOKEN N8N_API_KEY N8N_MCP_AUTH_TOKEN HOMEBOX_EMAIL HOMEBOX_PASSWORD DOCKHAND_USERNAME DOCKHAND_PASSWORD FORGEJO_TOKEN MCP_JWT_SECRET_KEY; do
             eval val=\$$var
             if [ -z "$val" ]; then
               echo "Missing required secret: $var" >&2
@@ -86,3 +88,58 @@ jobs:
           else
             echo "No redeploy needed"
           fi
+
+          # Register MCP upstreams inside ContextForge so Admin UI can load server choices
+          if [ -z "$MCP_GATEWAY_BOOTSTRAP_SUB" ]; then
+            MCP_GATEWAY_BOOTSTRAP_SUB="mcp-bootstrap@u-acres.local"
+          fi
+
+          for i in 1 2 3 4 5 6 7 8 9 10; do
+            if curl -fsS http://127.0.0.1:4444/health >/dev/null 2>&1; then
+              break
+            fi
+            if [ "$i" -eq 10 ]; then
+              echo "ContextForge gateway not reachable on http://127.0.0.1:4444" >&2
+              exit 1
+            fi
+            sleep 3
+          done
+
+          MCP_GATEWAY_TOKEN=$(docker exec mcp-gateway python3 -m mcpgateway.utils.create_jwt_token \
+            --username "$MCP_GATEWAY_BOOTSTRAP_SUB" \
+            --admin \
+            --exp 10080 \
+            --secret "$MCP_JWT_SECRET_KEY" 2>/dev/null | head -1)
+
+          if [ -z "$MCP_GATEWAY_TOKEN" ]; then
+            echo "Failed to generate MCP gateway token" >&2
+            exit 1
+          fi
+
+          register_gateway() {
+            name="$1"
+            url="$2"
+            description="$3"
+
+            payload=$(printf '{"name":"%s","url":"%s","description":"%s","transport":"STREAMABLEHTTP"}' "$name" "$url" "$description")
+
+            http_code=$(curl -sS -o /tmp/gateway_register_resp.json -w "%{http_code}" \
+              -X POST "http://127.0.0.1:4444/gateways" \
+              -H "Authorization: Bearer $MCP_GATEWAY_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "$payload")
+
+            if [ "$http_code" = "200" ] || [ "$http_code" = "201" ] || [ "$http_code" = "409" ]; then
+              echo "Gateway ensured: $name ($http_code)"
+            else
+              echo "Failed to register gateway $name (HTTP $http_code)" >&2
+              cat /tmp/gateway_register_resp.json >&2 || true
+              exit 1
+            fi
+          }
+
+          register_gateway "vikunja-mcp" "http://mcp-vikunja:3000/mcp" "Vikunja MCP server"
+          register_gateway "homebox-mcp" "http://mcp-homebox:3000/mcp" "HomeBox MCP server"
+          register_gateway "dockhand-mcp" "http://mcp-dockhand:3000/mcp" "Dockhand MCP server"
+          register_gateway "n8n-mcp" "http://n8n-mcp:3000/mcp" "n8n MCP server"
+          register_gateway "forgejo-mcp" "http://mcp-forgejo:3000/mcp" "Forgejo MCP server"
