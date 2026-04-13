@@ -131,19 +131,34 @@ jobs:
             # Include both keys for compatibility across ContextForge API/UI versions
             payload=$(printf '{"name":"%s","url":"%s","description":"%s","transport":"STREAMABLEHTTP","request_type":"STREAMABLEHTTP"}' "$name" "$url" "$description")
 
-            http_code=$(curl -sS -o /tmp/gateway_register_resp.json -w "%{http_code}" \
-              -X POST "http://127.0.0.1:4444/gateways" \
-              -H "Authorization: Bearer $MCP_GATEWAY_TOKEN" \
-              -H "Content-Type: application/json" \
-              -d "$payload")
+            attempt=1
+            while [ "$attempt" -le 20 ]; do
+              http_code=$(curl -sS -o /tmp/gateway_register_resp.json -w "%{http_code}" \
+                -X POST "http://127.0.0.1:4444/gateways" \
+                -H "Authorization: Bearer $MCP_GATEWAY_TOKEN" \
+                -H "Content-Type: application/json" \
+                -d "$payload")
 
-            if [ "$http_code" = "200" ] || [ "$http_code" = "201" ] || [ "$http_code" = "409" ]; then
-              echo "Gateway ensured: $name ($http_code)"
-            else
+              if [ "$http_code" = "200" ] || [ "$http_code" = "201" ] || [ "$http_code" = "409" ]; then
+                echo "Gateway ensured: $name ($http_code)"
+                return 0
+              fi
+
+              if [ "$http_code" = "502" ] || [ "$http_code" = "503" ] || [ "$http_code" = "504" ]; then
+                echo "Gateway not ready yet for $name ($http_code), retry $attempt/20"
+                attempt=$((attempt + 1))
+                sleep 3
+                continue
+              fi
+
               echo "Failed to register gateway $name (HTTP $http_code)" >&2
               cat /tmp/gateway_register_resp.json >&2 || true
               exit 1
-            fi
+            done
+
+            echo "Failed to register gateway $name after retries" >&2
+            cat /tmp/gateway_register_resp.json >&2 || true
+            exit 1
           }
 
           register_gateway "vikunja-mcp" "http://mcp-vikunja:3000/mcp" "Vikunja MCP server"
