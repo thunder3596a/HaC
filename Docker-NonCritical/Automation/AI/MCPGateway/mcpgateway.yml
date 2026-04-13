@@ -22,6 +22,7 @@ services:
       - SECURE_COOKIES=false
       - SSRF_PROTECTION_ENABLED=false
       - SSRF_DNS_FAIL_CLOSED=false
+      - AUTO_REFRESH_SERVERS=true
       # Token security
       - JWT_SECRET_KEY=${MCP_JWT_SECRET_KEY}
       - AUTH_ENCRYPTION_SECRET=${MCP_AUTH_ENCRYPTION_SECRET}

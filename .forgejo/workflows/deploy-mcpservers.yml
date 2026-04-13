@@ -42,11 +42,10 @@ jobs:
           DOCKHAND_URL: ${{ vars.DOCKHAND_URL }}
           DOCKHAND_USERNAME: ${{ secrets.DOCKHAND_MCP_USERNAME }}
           DOCKHAND_PASSWORD: ${{ secrets.DOCKHAND_MCP_PASSWORD }}
-          MCP_JWT_SECRET_KEY: ${{ secrets.MCP_JWT_SECRET_KEY }}
           MCP_GATEWAY_BOOTSTRAP_SUB: ${{ vars.MCP_GATEWAY_BOOTSTRAP_SUB }}
         run: |
           # Validate required secrets
-          for var in VIKUNJA_API_TOKEN N8N_API_KEY N8N_MCP_AUTH_TOKEN HOMEBOX_EMAIL HOMEBOX_PASSWORD DOCKHAND_USERNAME DOCKHAND_PASSWORD FORGEJO_TOKEN MCP_JWT_SECRET_KEY; do
+          for var in VIKUNJA_API_TOKEN N8N_API_KEY N8N_MCP_AUTH_TOKEN HOMEBOX_EMAIL HOMEBOX_PASSWORD DOCKHAND_USERNAME DOCKHAND_PASSWORD FORGEJO_TOKEN; do
             eval val=\$$var
             if [ -z "$val" ]; then
               echo "Missing required secret: $var" >&2
@@ -91,7 +90,7 @@ jobs:
 
           # Register MCP upstreams inside ContextForge so Admin UI can load server choices
           if [ -z "$MCP_GATEWAY_BOOTSTRAP_SUB" ]; then
-            MCP_GATEWAY_BOOTSTRAP_SUB="mcp-bootstrap@u-acres.local"
+            MCP_GATEWAY_BOOTSTRAP_SUB="nicholas@u-acres.com"
           fi
 
           for i in 1 2 3 4 5 6 7 8 9 10; do
@@ -105,14 +104,22 @@ jobs:
             sleep 3
           done
 
-          MCP_GATEWAY_TOKEN=$(docker exec mcp-gateway python3 -m mcpgateway.utils.create_jwt_token \
-            --username "$MCP_GATEWAY_BOOTSTRAP_SUB" \
-            --admin \
-            --exp 10080 \
-            --secret "$MCP_JWT_SECRET_KEY" 2>/dev/null | head -1)
+          # Mint token using the secret from inside the running container to avoid secret drift
+          MCP_GATEWAY_TOKEN=$(docker exec mcp-gateway sh -lc "python3 -m mcpgateway.utils.create_jwt_token --username '$MCP_GATEWAY_BOOTSTRAP_SUB' --admin --exp 10080 --secret \"\$JWT_SECRET_KEY\" 2>/dev/null | head -1")
 
           if [ -z "$MCP_GATEWAY_TOKEN" ]; then
             echo "Failed to generate MCP gateway token" >&2
+            exit 1
+          fi
+
+          token_check_code=$(curl -sS -o /tmp/mcpgateway_token_check.json -w "%{http_code}" \
+            -H "Authorization: Bearer $MCP_GATEWAY_TOKEN" \
+            "http://127.0.0.1:4444/version")
+
+          if [ "$token_check_code" != "200" ]; then
+            echo "Bootstrap token rejected by ContextForge (HTTP $token_check_code) for subject '$MCP_GATEWAY_BOOTSTRAP_SUB'" >&2
+            cat /tmp/mcpgateway_token_check.json >&2 || true
+            echo "Set Forgejo variable MCP_GATEWAY_BOOTSTRAP_SUB to an existing ContextForge admin user email if needed." >&2
             exit 1
           fi
 
@@ -121,7 +128,8 @@ jobs:
             url="$2"
             description="$3"
 
-            payload=$(printf '{"name":"%s","url":"%s","description":"%s","transport":"STREAMABLEHTTP"}' "$name" "$url" "$description")
+            # Include both keys for compatibility across ContextForge API/UI versions
+            payload=$(printf '{"name":"%s","url":"%s","description":"%s","transport":"STREAMABLEHTTP","request_type":"STREAMABLEHTTP"}' "$name" "$url" "$description")
 
             http_code=$(curl -sS -o /tmp/gateway_register_resp.json -w "%{http_code}" \
               -X POST "http://127.0.0.1:4444/gateways" \
@@ -143,3 +151,22 @@ jobs:
           register_gateway "dockhand-mcp" "http://mcp-dockhand:3000/mcp" "Dockhand MCP server"
           register_gateway "n8n-mcp" "http://n8n-mcp:3000/mcp" "n8n MCP server"
           register_gateway "forgejo-mcp" "http://mcp-forgejo:3000/mcp" "Forgejo MCP server"
+
+          # Smoke-test the endpoints used by the Admin UI MCP server picker
+          check_endpoint() {
+            path="$1"
+            code=$(curl -sS -o /tmp/mcpgateway_endpoint_resp.json -w "%{http_code}" \
+              -H "Authorization: Bearer $MCP_GATEWAY_TOKEN" \
+              "http://127.0.0.1:4444$path")
+
+            if [ "$code" != "200" ]; then
+              echo "ContextForge endpoint check failed: $path (HTTP $code)" >&2
+              cat /tmp/mcpgateway_endpoint_resp.json >&2 || true
+              exit 1
+            fi
+
+            echo "Endpoint OK: $path"
+          }
+
+          check_endpoint "/gateways?include_pagination=true&limit=50"
+          check_endpoint "/admin/gateways?page=1&per_page=50"
