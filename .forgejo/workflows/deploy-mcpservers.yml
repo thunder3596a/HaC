@@ -127,14 +127,22 @@ jobs:
             name="$1"
             url="$2"
             description="$3"
+            upstream_bearer_token="$4"
 
-            # Include both keys for compatibility across ContextForge API/UI versions
-            payload=$(printf '{"name":"%s","url":"%s","description":"%s","transport":"STREAMABLEHTTP","request_type":"STREAMABLEHTTP"}' "$name" "$url" "$description")
+            # Include both keys for compatibility across ContextForge API/UI versions.
+            # When upstream auth is required, use admin gateway creation with custom auth headers.
+            register_endpoint="http://127.0.0.1:4444/gateways"
+            if [ -n "$upstream_bearer_token" ]; then
+              register_endpoint="http://127.0.0.1:4444/admin/gateways"
+              payload=$(printf '{"name":"%s","url":"%s","description":"%s","transport":"STREAMABLEHTTP","request_type":"STREAMABLEHTTP","auth_type":"authheaders","auth_header_key":"Authorization","auth_header_value":"Bearer %s"}' "$name" "$url" "$description" "$upstream_bearer_token")
+            else
+              payload=$(printf '{"name":"%s","url":"%s","description":"%s","transport":"STREAMABLEHTTP","request_type":"STREAMABLEHTTP"}' "$name" "$url" "$description")
+            fi
 
             attempt=1
             while [ "$attempt" -le 20 ]; do
               http_code=$(curl -sS -o /tmp/gateway_register_resp.json -w "%{http_code}" \
-                -X POST "http://127.0.0.1:4444/gateways" \
+                -X POST "$register_endpoint" \
                 -H "Authorization: Bearer $MCP_GATEWAY_TOKEN" \
                 -H "Content-Type: application/json" \
                 -d "$payload")
@@ -199,25 +207,22 @@ jobs:
             name="$1"
             url="$2"
             description="$3"
+            upstream_bearer_token="$4"
 
             delete_gateway_by_name "$name"
 
-            if ! register_gateway "$name" "$url" "$description"; then
+            if ! register_gateway "$name" "$url" "$description" "$upstream_bearer_token"; then
               echo "Warning: skipping unavailable gateway $name"
               delete_gateway_by_name "$name"
               failed_gateways="$failed_gateways $name"
             fi
           }
 
-          # Temporarily remove broken gateways so they do not poison the /gateways API used by the UI.
-          # vikunja-mcp currently fails ContextForge initialization with a schema parsing error.
-          # n8n-mcp currently returns 401 because upstream auth is not yet configured for federation.
-          delete_gateway_by_name "vikunja-mcp"
-          delete_gateway_by_name "n8n-mcp"
-
+          ensure_gateway "vikunja-mcp" "http://mcp-vikunja:3000/mcp" "Vikunja MCP server"
           ensure_gateway "homebox-mcp" "http://mcp-homebox:3000/mcp" "HomeBox MCP server"
           ensure_gateway "dockhand-mcp" "http://mcp-dockhand:3000/mcp" "Dockhand MCP server"
           ensure_gateway "forgejo-mcp" "http://mcp-forgejo:3000/mcp" "Forgejo MCP server"
+          ensure_gateway "n8n-mcp" "http://n8n-mcp:3000/mcp" "n8n MCP server" "$N8N_MCP_AUTH_TOKEN"
 
           if [ -n "$failed_gateways" ]; then
             echo "Gateway registration warnings:$failed_gateways"

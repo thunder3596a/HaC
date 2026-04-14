@@ -7,8 +7,12 @@ services:
     networks:
       - mcpnet
     working_dir: /app
-    command: sh -c "npx -y supergateway --port 3000 --outputTransport streamableHttp --stdio 'npx -y @democratize-technology/vikunja-mcp'"
+    # Use the lighter vikunja-mcp package here because the previous package
+    # fails ContextForge gateway initialization with schema parsing errors.
+    command: sh -c "npx -y supergateway --port 3000 --outputTransport streamableHttp --stdio 'npx -y vikunja-mcp'"
     environment:
+      # Compatibility: different Vikunja MCP packages use different env var names.
+      - VIKUNJA_API_BASE=${VIKUNJA_URL}
       - VIKUNJA_URL=${VIKUNJA_URL}
       - VIKUNJA_API_TOKEN=${VIKUNJA_API_TOKEN}
     labels:
