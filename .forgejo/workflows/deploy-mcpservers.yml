@@ -129,23 +129,44 @@ jobs:
             description="$3"
             upstream_bearer_token="$4"
 
-            # Include both keys for compatibility across ContextForge API/UI versions.
-            # When upstream auth is required, use admin gateway creation with custom auth headers.
-            register_endpoint="http://127.0.0.1:4444/gateways"
-            if [ -n "$upstream_bearer_token" ]; then
-              register_endpoint="http://127.0.0.1:4444/admin/gateways"
-              payload=$(printf '{"name":"%s","url":"%s","description":"%s","transport":"STREAMABLEHTTP","request_type":"STREAMABLEHTTP","auth_type":"authheaders","auth_header_key":"Authorization","auth_header_value":"Bearer %s"}' "$name" "$url" "$description" "$upstream_bearer_token")
-            else
-              payload=$(printf '{"name":"%s","url":"%s","description":"%s","transport":"STREAMABLEHTTP","request_type":"STREAMABLEHTTP"}' "$name" "$url" "$description")
-            fi
-
             attempt=1
             while [ "$attempt" -le 20 ]; do
-              http_code=$(curl -sS -o /tmp/gateway_register_resp.json -w "%{http_code}" \
-                -X POST "$register_endpoint" \
-                -H "Authorization: Bearer $MCP_GATEWAY_TOKEN" \
-                -H "Content-Type: application/json" \
-                -d "$payload")
+              if [ -n "$upstream_bearer_token" ]; then
+                # Compatibility fallback chain for authenticated upstreams across ContextForge versions.
+                payload1=$(printf '{"name":"%s","url":"%s","description":"%s","transport":"STREAMABLEHTTP","request_type":"STREAMABLEHTTP","auth_type":"authheaders","auth_header_key":"Authorization","auth_header_value":"Bearer %s"}' "$name" "$url" "$description" "$upstream_bearer_token")
+                payload2=$(printf '{"name":"%s","url":"%s","description":"%s","transport":"STREAMABLEHTTP","request_type":"STREAMABLEHTTP","auth_type":"authheaders","auth_headers":[{"key":"Authorization","value":"Bearer %s"}]}' "$name" "$url" "$description" "$upstream_bearer_token")
+                payload3=$(printf '{"gateway":{"name":"%s","url":"%s","description":"%s","transport":"STREAMABLEHTTP","request_type":"STREAMABLEHTTP","auth_type":"authheaders","auth_headers":[{"key":"Authorization","value":"Bearer %s"}]}}' "$name" "$url" "$description" "$upstream_bearer_token")
+
+                http_code=$(curl -sS -o /tmp/gateway_register_resp.json -w "%{http_code}" \
+                  -X POST "http://127.0.0.1:4444/admin/gateways" \
+                  -H "Authorization: Bearer $MCP_GATEWAY_TOKEN" \
+                  -H "Content-Type: application/json" \
+                  -d "$payload1")
+
+                if [ "$http_code" = "422" ]; then
+                  http_code=$(curl -sS -o /tmp/gateway_register_resp.json -w "%{http_code}" \
+                    -X POST "http://127.0.0.1:4444/admin/gateways" \
+                    -H "Authorization: Bearer $MCP_GATEWAY_TOKEN" \
+                    -H "Content-Type: application/json" \
+                    -d "$payload2")
+                fi
+
+                if [ "$http_code" = "422" ]; then
+                  http_code=$(curl -sS -o /tmp/gateway_register_resp.json -w "%{http_code}" \
+                    -X POST "http://127.0.0.1:4444/admin/gateways" \
+                    -H "Authorization: Bearer $MCP_GATEWAY_TOKEN" \
+                    -H "Content-Type: application/json" \
+                    -d "$payload3")
+                fi
+              else
+                payload=$(printf '{"name":"%s","url":"%s","description":"%s","transport":"STREAMABLEHTTP","request_type":"STREAMABLEHTTP"}' "$name" "$url" "$description")
+
+                http_code=$(curl -sS -o /tmp/gateway_register_resp.json -w "%{http_code}" \
+                  -X POST "http://127.0.0.1:4444/gateways" \
+                  -H "Authorization: Bearer $MCP_GATEWAY_TOKEN" \
+                  -H "Content-Type: application/json" \
+                  -d "$payload")
+              fi
 
               if [ "$http_code" = "200" ] || [ "$http_code" = "201" ] || [ "$http_code" = "409" ]; then
                 echo "Gateway ensured: $name ($http_code)"
@@ -172,16 +193,23 @@ jobs:
           delete_gateway_by_name() {
             name="$1"
 
+            # Prefer admin endpoint for cleanup because /gateways can be unstable when a bad record exists.
             list_code=$(curl -sS -o /tmp/gateway_list_resp.json -w "%{http_code}" \
               -H "Authorization: Bearer $MCP_GATEWAY_TOKEN" \
+              "http://127.0.0.1:4444/admin/gateways?page=1&per_page=500")
+
+            if [ "$list_code" != "200" ]; then
+              list_code=$(curl -sS -o /tmp/gateway_list_resp.json -w "%{http_code}" \
+              -H "Authorization: Bearer $MCP_GATEWAY_TOKEN" \
               "http://127.0.0.1:4444/gateways?include_pagination=true&limit=500")
+            fi
 
             if [ "$list_code" != "200" ]; then
               echo "Could not list gateways to clean stale entry for $name (HTTP $list_code)"
               return 0
             fi
 
-            gateway_id=$(python3 -c "import json,sys; name=sys.argv[1]; data=json.load(open('/tmp/gateway_list_resp.json','r',encoding='utf-8')); gateways=data.get('gateways', data if isinstance(data, list) else []); match=next((g.get('id','') for g in gateways if isinstance(g, dict) and g.get('name')==name), ''); print(match)" "$name")
+            gateway_id=$(python3 -c "import json,sys; name=sys.argv[1]; data=json.load(open('/tmp/gateway_list_resp.json','r',encoding='utf-8')); gateways=data.get('data', data.get('gateways', data if isinstance(data, list) else [])); match=next((g.get('id','') for g in gateways if isinstance(g, dict) and g.get('name')==name), ''); print(match)" "$name")
 
             if [ -n "$gateway_id" ]; then
               del_code=$(curl -sS -o /tmp/gateway_delete_resp.json -w "%{http_code}" \
