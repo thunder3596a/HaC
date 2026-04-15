@@ -6,6 +6,14 @@ GETTING_STARTED.md
 .github/copilot-instructions.md
 CLAUDE.md
 nul
+.github/agents/
+.github/prompts/
+.github/instructions/
+*.instructions.md
+*.agent.md
+*.prompt.md
+AGENTS.md
+SKILL.md
 
 # Workflow artifacts
 .*_checksum
