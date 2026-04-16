@@ -208,7 +208,7 @@ Services running on **hac-critical** (critical host).
   - Self-hosted task hub (Todoist/Trello alternative)
   - CalDAV support for iOS Reminders sync
   - PostgreSQL backend
-  - MCP server for Claude Code integration
+  - MCP server for AI assistant integration
   - Dashboard at `tasks.${DOMAIN_NAME}`
 
 - **HomeBox** (`Management/HomeBox/homebox.yml`) - Home inventory management

@@ -63,7 +63,7 @@ services:
       - traefik.http.middlewares.mcpgateway-cors.headers.accesscontrolmaxage=86400
 
       # API router (priority 10) — MCP protocol paths, no Authentik, IP-restricted only
-      # Claude Desktop and other API clients connect here via Bearer token
+      # Copilot, chat clients, and other API clients connect here via Bearer token
       - traefik.http.routers.mcpgateway-api.entrypoints=websecure
       - traefik.http.routers.mcpgateway-api.rule=Host(`mcp.${DOMAIN_NAME}`) && PathPrefix(`/mcp`)
       - traefik.http.routers.mcpgateway-api.priority=10

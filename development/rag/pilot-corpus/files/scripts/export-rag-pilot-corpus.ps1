@@ -18,7 +18,6 @@ $manifestPath = Join-Path $OutputDir "manifest.json"
 $includePatterns = @(
     "README.md",
     "GETTING_STARTED.md",
-    "CLAUDE.md",
     ".github/copilot-instructions.md",
     "Docker-Critical/**/*.yml",
     "Docker-Critical/**/*.yaml",

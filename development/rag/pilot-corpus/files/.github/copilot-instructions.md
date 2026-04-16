@@ -128,5 +128,8 @@ jobs:
 - Link all child issues/tasks to the project (or epic fallback) and execute work against those linked items.
 - Use epics with linked child issues for multi-step work.
 - Keep issue acceptance criteria and status aligned with delivered changes.
+- If an issue is fully fixed, close it in Forgejo in the same work session.
+- Before closing, add a completion note summarizing root cause, changes made, and verification results.
+- Fill relevant issue fields before close (at minimum: assignee, status/state, and any available labels/milestone that apply).
 - Do not mirror issues to GitHub or split tracking across Forgejo and GitHub.
 - For new work, always plan the task first and execute against the tracked Forgejo issue.

@@ -17,7 +17,6 @@ if (-not $BackupRoot) {
 $repoNames = @("Dealhound", "GardenPlanner", "HaC", "homeassistant", "UserBrowser")
 
 $namePatterns = @(
-    "CLAUDE.md",
     "AGENTS.md",
     "copilot-instructions.md",
     "*.instructions.md",
@@ -28,7 +27,6 @@ $namePatterns = @(
 
 $pathRegexes = @(
     "(^|\\)\.ai(\\|$)",
-    "(^|\\)\.claude(\\|$)",
     "(^|\\)\.continue(\\|$)",
     "(^|\\)\.github\\agents(\\|$)",
     "(^|\\)\.github\\prompts(\\|$)",

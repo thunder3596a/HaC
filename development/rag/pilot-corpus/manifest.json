@@ -1,12 +1,11 @@
 {
-  "generatedAtUtc": "2026-04-16T12:56:04.9028598Z",
+  "generatedAtUtc": "2026-04-16T16:33:19.9240535Z",
   "repoRoot": "C:\\Users\\Nicho\\Development\\HaC",
   "outputDir": "C:\\Users\\Nicho\\Development\\HaC\\development\\rag\\pilot-corpus",
   "policy": {
     "include": [
       "README.md",
       "GETTING_STARTED.md",
-      "CLAUDE.md",
       ".github/copilot-instructions.md",
       "Docker-Critical/**/*.yml",
       "Docker-Critical/**/*.yaml",
@@ -42,8 +41,8 @@
     ]
   },
   "totals": {
-    "files": 150,
-    "bytes": 407521.0
+    "files": 149,
+    "bytes": 402805.0
   },
   "files": [
     {
@@ -378,13 +377,8 @@
     },
     {
       "path": ".github/copilot-instructions.md",
-      "bytes": 5595,
-      "modifiedUtc": "2026-04-15T15:58:56.3851586Z"
-    },
-    {
-      "path": "CLAUDE.md",
-      "bytes": 4967,
-      "modifiedUtc": "2026-04-15T15:58:56.3861566Z"
+      "bytes": 5902,
+      "modifiedUtc": "2026-04-16T13:50:04.4260700Z"
     },
     {
       "path": "Docker-Critical/Auth/Authentik.yml",
@@ -558,8 +552,8 @@
     },
     {
       "path": "Docker-NonCritical/Automation/AI/MCPGateway/mcpgateway.yml",
-      "bytes": 5776,
-      "modifiedUtc": "2026-04-13T18:59:27.8201518Z"
+      "bytes": 5784,
+      "modifiedUtc": "2026-04-16T16:32:24.8527600Z"
     },
     {
       "path": "Docker-NonCritical/Automation/AI/MCPGateway/mcpservers.yml",
@@ -654,7 +648,7 @@
     {
       "path": "Docker-NonCritical/Networking/Torrent/torrent.yml",
       "bytes": 4577,
-      "modifiedUtc": "2026-03-22T18:51:57.7727975Z"
+      "modifiedUtc": "2026-04-16T13:46:29.6559563Z"
     },
     {
       "path": "Docker-NonCritical/Security/Crowdsec/crowdsec.yml",
@@ -748,8 +742,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 31936,
-      "modifiedUtc": "2026-03-19T18:01:02.7443569Z"
+      "bytes": 31937,
+      "modifiedUtc": "2026-04-16T16:32:24.8457627Z"
     },
     {
       "path": "scripts/add-labels-to-compose.sh",
@@ -758,8 +752,8 @@
     },
     {
       "path": "scripts/backup-ai-artifacts-to-onedrive.ps1",
-      "bytes": 2768,
-      "modifiedUtc": "2026-04-15T02:10:18.8204951Z"
+      "bytes": 2721,
+      "modifiedUtc": "2026-04-16T16:32:24.8517659Z"
     },
     {
       "path": "scripts/check-docker-updates.sh",
@@ -768,8 +762,8 @@
     },
     {
       "path": "scripts/export-rag-pilot-corpus.ps1",
-      "bytes": 4786,
-      "modifiedUtc": "2026-04-16T12:55:51.3823764Z"
+      "bytes": 4768,
+      "modifiedUtc": "2026-04-16T16:32:24.8467626Z"
     },
     {
       "path": "scripts/extract-from-hosts.sh",
