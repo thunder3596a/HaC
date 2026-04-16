@@ -1,0 +1,800 @@
+{
+  "generatedAtUtc": "2026-04-16T12:56:04.9028598Z",
+  "repoRoot": "C:\\Users\\Nicho\\Development\\HaC",
+  "outputDir": "C:\\Users\\Nicho\\Development\\HaC\\development\\rag\\pilot-corpus",
+  "policy": {
+    "include": [
+      "README.md",
+      "GETTING_STARTED.md",
+      "CLAUDE.md",
+      ".github/copilot-instructions.md",
+      "Docker-Critical/**/*.yml",
+      "Docker-Critical/**/*.yaml",
+      "Docker-Critical/**/README.md",
+      "Docker-NonCritical/**/*.yml",
+      "Docker-NonCritical/**/*.yaml",
+      "Docker-NonCritical/**/README.md",
+      ".forgejo/workflows/deploy-*.yml",
+      ".forgejo/workflows/check-updates-*.yml",
+      ".forgejo/workflows/apply-updates-*.yml",
+      ".forgejo/issue_template/*.md",
+      "scripts/*.ps1",
+      "scripts/*.sh",
+      "scripts/generate-container-sensors.py"
+    ],
+    "exclude": [
+      "**/.env",
+      "**/.env.*",
+      "scripts/required-secrets.txt",
+      "**/*secret*",
+      "**/*token*",
+      "**/*password*",
+      "**/*private*",
+      "**/acme.json",
+      ".git/**",
+      ".venv/**",
+      "node_modules/**",
+      "**/*.log",
+      "**/*.sqlite*",
+      "**/*checksum*",
+      "Docker-Critical/Home/HomeAssistant/config/**",
+      ".ai/**"
+    ]
+  },
+  "totals": {
+    "files": 150,
+    "bytes": 407521.0
+  },
+  "files": [
+    {
+      "path": ".forgejo/issue_template/automation.md",
+      "bytes": 935,
+      "modifiedUtc": "2026-03-27T01:50:26.2583135Z"
+    },
+    {
+      "path": ".forgejo/issue_template/bug.md",
+      "bytes": 1152,
+      "modifiedUtc": "2026-03-27T01:49:57.2087200Z"
+    },
+    {
+      "path": ".forgejo/issue_template/epic.md",
+      "bytes": 760,
+      "modifiedUtc": "2026-03-27T01:50:10.4768675Z"
+    },
+    {
+      "path": ".forgejo/issue_template/feature.md",
+      "bytes": 749,
+      "modifiedUtc": "2026-03-27T01:50:02.9135026Z"
+    },
+    {
+      "path": ".forgejo/issue_template/infra.md",
+      "bytes": 1289,
+      "modifiedUtc": "2026-03-27T01:50:19.0995790Z"
+    },
+    {
+      "path": ".forgejo/issue_template/security.md",
+      "bytes": 1199,
+      "modifiedUtc": "2026-03-27T01:50:34.9315410Z"
+    },
+    {
+      "path": ".forgejo/issue_template/task.md",
+      "bytes": 513,
+      "modifiedUtc": "2026-03-27T01:50:40.2361854Z"
+    },
+    {
+      "path": ".forgejo/workflows/apply-updates-critical.yml",
+      "bytes": 10116,
+      "modifiedUtc": "2026-02-24T14:50:47.2873906Z"
+    },
+    {
+      "path": ".forgejo/workflows/apply-updates-noncritical.yml",
+      "bytes": 6648,
+      "modifiedUtc": "2026-03-12T01:32:36.6609706Z"
+    },
+    {
+      "path": ".forgejo/workflows/check-updates-critical.yml",
+      "bytes": 4632,
+      "modifiedUtc": "2026-02-25T02:00:54.1005021Z"
+    },
+    {
+      "path": ".forgejo/workflows/check-updates-noncritical.yml",
+      "bytes": 4607,
+      "modifiedUtc": "2026-03-12T01:32:27.7368042Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-authentik.yml",
+      "bytes": 2309,
+      "modifiedUtc": "2026-03-02T22:55:14.6544403Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-cloudflared.yml",
+      "bytes": 1657,
+      "modifiedUtc": "2026-02-24T19:01:50.9136623Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-dealhound.yml",
+      "bytes": 5118,
+      "modifiedUtc": "2026-03-23T18:13:46.5618359Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-dispatcharr.yml",
+      "bytes": 2061,
+      "modifiedUtc": "2026-02-24T19:27:20.7564666Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-docker-socket-proxy-critical.yml",
+      "bytes": 676,
+      "modifiedUtc": "2026-02-24T14:58:22.3531662Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-docker-socket-proxy-noncritical.yml",
+      "bytes": 703,
+      "modifiedUtc": "2026-02-24T14:58:22.4818732Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-dockhand.yml",
+      "bytes": 2017,
+      "modifiedUtc": "2026-03-08T20:30:42.8834990Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-docsight.yml",
+      "bytes": 3176,
+      "modifiedUtc": "2026-03-11T15:24:39.1115188Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-ebook.yml",
+      "bytes": 2438,
+      "modifiedUtc": "2026-02-24T14:58:22.6121145Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-flaresolverr.yml",
+      "bytes": 2064,
+      "modifiedUtc": "2026-02-24T14:58:22.7292218Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-forgejo.yml",
+      "bytes": 2390,
+      "modifiedUtc": "2026-02-25T16:56:22.9442032Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-gardenplanner.yml",
+      "bytes": 3409,
+      "modifiedUtc": "2026-04-01T01:05:46.2931777Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-govee2mqtt.yml",
+      "bytes": 2284,
+      "modifiedUtc": "2026-02-24T17:55:55.0202424Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-hawser.yml",
+      "bytes": 1587,
+      "modifiedUtc": "2026-03-08T22:01:26.5508435Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-homeassistant.yml",
+      "bytes": 2568,
+      "modifiedUtc": "2026-02-24T14:58:23.1272058Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-homebox.yml",
+      "bytes": 1818,
+      "modifiedUtc": "2026-03-19T17:12:54.9342577Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-immich.yml",
+      "bytes": 2330,
+      "modifiedUtc": "2026-02-24T14:58:23.3815588Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-influxdb.yml",
+      "bytes": 1673,
+      "modifiedUtc": "2026-02-24T14:58:23.5125844Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-it-tools.yml",
+      "bytes": 1725,
+      "modifiedUtc": "2026-02-24T14:58:23.6427822Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-karakeep.yml",
+      "bytes": 3033,
+      "modifiedUtc": "2026-02-24T14:58:23.7717973Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-kiwix.yml",
+      "bytes": 1554,
+      "modifiedUtc": "2026-02-24T14:58:23.9000349Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-lidarr.yml",
+      "bytes": 1968,
+      "modifiedUtc": "2026-02-24T14:58:24.0454270Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-mcpgateway.yml",
+      "bytes": 3412,
+      "modifiedUtc": "2026-03-29T02:11:30.0309489Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-mcpservers.yml",
+      "bytes": 12516,
+      "modifiedUtc": "2026-04-16T12:52:44.2905117Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-musicassistant.yml",
+      "bytes": 1949,
+      "modifiedUtc": "2026-02-24T14:58:24.3053530Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-n8n.yml",
+      "bytes": 1879,
+      "modifiedUtc": "2026-02-24T14:58:24.4328692Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-netbox.yml",
+      "bytes": 4543,
+      "modifiedUtc": "2026-02-27T21:32:50.8934611Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-norish.yml",
+      "bytes": 2692,
+      "modifiedUtc": "2026-03-04T02:08:28.1766314Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-ntfy.yml",
+      "bytes": 1784,
+      "modifiedUtc": "2026-03-22T15:57:18.0984304Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-nut.yml",
+      "bytes": 1881,
+      "modifiedUtc": "2026-02-24T14:58:24.8527680Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-omada.yml",
+      "bytes": 1737,
+      "modifiedUtc": "2026-02-24T14:58:24.9711938Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-openwebui-noncritical.yml",
+      "bytes": 2012,
+      "modifiedUtc": "2026-03-16T15:40:29.8131966Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-outline.yml",
+      "bytes": 2865,
+      "modifiedUtc": "2026-03-15T01:50:16.0825200Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-overseerr.yml",
+      "bytes": 2011,
+      "modifiedUtc": "2026-03-01T19:45:56.5303781Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-plex.yml",
+      "bytes": 2048,
+      "modifiedUtc": "2026-02-24T14:58:25.3483188Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-profilarr.yml",
+      "bytes": 2140,
+      "modifiedUtc": "2026-02-24T14:58:25.7492907Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-prowlarr.yml",
+      "bytes": 2000,
+      "modifiedUtc": "2026-02-24T14:58:25.8762150Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-radarr.yml",
+      "bytes": 1968,
+      "modifiedUtc": "2026-03-14T02:46:36.3662152Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-readarr.yml",
+      "bytes": 1984,
+      "modifiedUtc": "2026-02-24T14:58:26.1343174Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-rtl-sdr.yml",
+      "bytes": 2150,
+      "modifiedUtc": "2026-02-24T14:58:26.2626250Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-searx.yml",
+      "bytes": 4683,
+      "modifiedUtc": "2026-03-22T20:46:28.9701953Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-smtprelay.yml",
+      "bytes": 3415,
+      "modifiedUtc": "2026-02-24T14:58:26.5150780Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-sonarr.yml",
+      "bytes": 1968,
+      "modifiedUtc": "2026-02-24T14:58:26.6430891Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-speedtest.yml",
+      "bytes": 1795,
+      "modifiedUtc": "2026-03-12T01:32:28.4682237Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-stirling-pdf.yml",
+      "bytes": 1793,
+      "modifiedUtc": "2026-02-24T14:58:26.7677741Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-torrent.yml",
+      "bytes": 3671,
+      "modifiedUtc": "2026-02-24T14:58:26.8946082Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-traefik-critical.yml",
+      "bytes": 2490,
+      "modifiedUtc": "2026-02-25T02:44:03.4347459Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-traefik-desktop1.yml",
+      "bytes": 2114,
+      "modifiedUtc": "2026-02-24T14:58:27.1730167Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-traefik-noncritical.yml",
+      "bytes": 2631,
+      "modifiedUtc": "2026-02-24T14:58:27.3041876Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-uptime-kuma.yml",
+      "bytes": 1764,
+      "modifiedUtc": "2026-03-19T18:00:21.0652486Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-userbrowser.yml",
+      "bytes": 3053,
+      "modifiedUtc": "2026-04-01T20:40:12.3326559Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-vaultwarden.yml",
+      "bytes": 2094,
+      "modifiedUtc": "2026-02-27T13:43:46.5766278Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-vikunja.yml",
+      "bytes": 2199,
+      "modifiedUtc": "2026-02-24T14:58:27.5820633Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-wazuh.yml",
+      "bytes": 11272,
+      "modifiedUtc": "2026-03-22T20:28:02.2932906Z"
+    },
+    {
+      "path": ".forgejo/workflows/deploy-whisper.yml",
+      "bytes": 1621,
+      "modifiedUtc": "2026-02-24T14:58:27.8997543Z"
+    },
+    {
+      "path": ".github/copilot-instructions.md",
+      "bytes": 5595,
+      "modifiedUtc": "2026-04-15T15:58:56.3851586Z"
+    },
+    {
+      "path": "CLAUDE.md",
+      "bytes": 4967,
+      "modifiedUtc": "2026-04-15T15:58:56.3861566Z"
+    },
+    {
+      "path": "Docker-Critical/Auth/Authentik.yml",
+      "bytes": 3764,
+      "modifiedUtc": "2026-03-19T17:56:06.3616285Z"
+    },
+    {
+      "path": "Docker-Critical/Auth/vaultwarden.yml",
+      "bytes": 2619,
+      "modifiedUtc": "2026-03-19T17:57:06.9957346Z"
+    },
+    {
+      "path": "Docker-Critical/Finance/finance.yml",
+      "bytes": 1024,
+      "modifiedUtc": "2026-02-13T22:18:51.4433202Z"
+    },
+    {
+      "path": "Docker-Critical/Home/Cooking/norish.yml",
+      "bytes": 5317,
+      "modifiedUtc": "2026-03-19T17:57:26.1727803Z"
+    },
+    {
+      "path": "Docker-Critical/Home/Doomsday/library.yml",
+      "bytes": 1121,
+      "modifiedUtc": "2026-03-19T17:58:45.5632089Z"
+    },
+    {
+      "path": "Docker-Critical/Home/Doomsday/README.md",
+      "bytes": 160,
+      "modifiedUtc": "2026-03-18T14:28:16.5318293Z"
+    },
+    {
+      "path": "Docker-Critical/Home/Govee2MQTT/govee2mqtt.yml",
+      "bytes": 856,
+      "modifiedUtc": "2026-03-19T17:58:47.1258861Z"
+    },
+    {
+      "path": "Docker-Critical/Home/HomeAssistant/homeassistant.yml",
+      "bytes": 6009,
+      "modifiedUtc": "2026-03-19T17:57:58.0822660Z"
+    },
+    {
+      "path": "Docker-Critical/Home/KaraKeep/karakeep.yml",
+      "bytes": 2130,
+      "modifiedUtc": "2026-03-19T17:58:36.2918171Z"
+    },
+    {
+      "path": "Docker-Critical/Home/MusicAssistant/musicassistant.yml",
+      "bytes": 1641,
+      "modifiedUtc": "2026-03-19T17:58:50.3608856Z"
+    },
+    {
+      "path": "Docker-Critical/Home/MusicAssistant/README.md",
+      "bytes": 144,
+      "modifiedUtc": "2026-03-18T14:29:05.6932007Z"
+    },
+    {
+      "path": "Docker-Critical/Home/NetBox/docker-compose.override.yml",
+      "bytes": 310,
+      "modifiedUtc": "2026-02-13T22:18:51.4503620Z"
+    },
+    {
+      "path": "Docker-Critical/Home/NetBox/netbox.yml",
+      "bytes": 5662,
+      "modifiedUtc": "2026-03-19T17:58:52.6951143Z"
+    },
+    {
+      "path": "Docker-Critical/Home/NetBox/scripts/README.md",
+      "bytes": 152,
+      "modifiedUtc": "2026-03-18T14:28:23.3445223Z"
+    },
+    {
+      "path": "Docker-Critical/Home/NUT/nut.yml",
+      "bytes": 1346,
+      "modifiedUtc": "2026-03-19T17:58:06.0561078Z"
+    },
+    {
+      "path": "Docker-Critical/Home/RTL-SDR/README.md",
+      "bytes": 140,
+      "modifiedUtc": "2026-03-18T14:29:09.5251618Z"
+    },
+    {
+      "path": "Docker-Critical/Home/RTL-SDR/rtl-sdr.yml",
+      "bytes": 858,
+      "modifiedUtc": "2026-03-19T17:58:40.7297960Z"
+    },
+    {
+      "path": "Docker-Critical/Home/Vikunja/vikunja.yml",
+      "bytes": 2587,
+      "modifiedUtc": "2026-03-19T17:58:33.9046572Z"
+    },
+    {
+      "path": "Docker-Critical/Home/Whisper/whisper.yml",
+      "bytes": 1033,
+      "modifiedUtc": "2026-03-19T17:58:48.6317544Z"
+    },
+    {
+      "path": "Docker-Critical/Management/Git - Forgejo/git.yml",
+      "bytes": 2700,
+      "modifiedUtc": "2026-02-25T15:11:47.9002790Z"
+    },
+    {
+      "path": "Docker-Critical/Management/HomeBox/homebox.yml",
+      "bytes": 1053,
+      "modifiedUtc": "2026-03-19T17:58:32.1838178Z"
+    },
+    {
+      "path": "Docker-Critical/Management/UptimeKuma/uptime-kuma.yml",
+      "bytes": 907,
+      "modifiedUtc": "2026-03-20T02:08:39.4715618Z"
+    },
+    {
+      "path": "Docker-Critical/Media/Plex/plex.yml",
+      "bytes": 1584,
+      "modifiedUtc": "2026-03-19T17:57:08.1990151Z"
+    },
+    {
+      "path": "Docker-Critical/Networking/Cloudflared/cloudflared.yml",
+      "bytes": 518,
+      "modifiedUtc": "2026-03-19T17:58:39.4782871Z"
+    },
+    {
+      "path": "Docker-Critical/Networking/Mail/Postfix.yml",
+      "bytes": 1483,
+      "modifiedUtc": "2026-02-13T22:18:51.4605651Z"
+    },
+    {
+      "path": "Docker-Critical/Networking/Omada/omada.yml",
+      "bytes": 2538,
+      "modifiedUtc": "2026-03-19T17:57:24.6351738Z"
+    },
+    {
+      "path": "Docker-Critical/Networking/Proxy/proxy.yml",
+      "bytes": 3662,
+      "modifiedUtc": "2026-03-19T17:57:21.5048456Z"
+    },
+    {
+      "path": "Docker-Critical/Tools/DockerSocketProxy/docker-socket-proxy.yml",
+      "bytes": 1319,
+      "modifiedUtc": "2026-02-13T22:18:51.4626066Z"
+    },
+    {
+      "path": "Docker-Critical/Tools/Dockhand/dockhand.yml",
+      "bytes": 1191,
+      "modifiedUtc": "2026-03-19T17:57:11.1093064Z"
+    },
+    {
+      "path": "Docker-Critical/Tools/InfluxDB/influxdb.yml",
+      "bytes": 1262,
+      "modifiedUtc": "2026-03-19T17:57:13.1850963Z"
+    },
+    {
+      "path": "Docker-Critical/Tools/InfluxDB/README.md",
+      "bytes": 130,
+      "modifiedUtc": "2026-03-18T14:29:12.4247556Z"
+    },
+    {
+      "path": "Docker-Critical/Tools/Kiwix/kiwix.yml",
+      "bytes": 934,
+      "modifiedUtc": "2026-03-19T17:57:12.1172519Z"
+    },
+    {
+      "path": "Docker-Critical/Tools/N8N/n8n.yml",
+      "bytes": 2876,
+      "modifiedUtc": "2026-03-19T17:57:10.1012820Z"
+    },
+    {
+      "path": "Docker-Critical/Tools/Outline/outline.yml",
+      "bytes": 6913,
+      "modifiedUtc": "2026-04-10T01:03:46.4287605Z"
+    },
+    {
+      "path": "Docker-NonCritical/Automation/AI/MCPGateway/mcpgateway.yml",
+      "bytes": 5776,
+      "modifiedUtc": "2026-04-13T18:59:27.8201518Z"
+    },
+    {
+      "path": "Docker-NonCritical/Automation/AI/MCPGateway/mcpservers.yml",
+      "bytes": 6303,
+      "modifiedUtc": "2026-04-14T01:43:29.3168860Z"
+    },
+    {
+      "path": "Docker-NonCritical/Automation/AI/MCPGateway/README.md",
+      "bytes": 148,
+      "modifiedUtc": "2026-03-18T14:29:13.7623156Z"
+    },
+    {
+      "path": "Docker-NonCritical/Automation/AI/openwebui.yml",
+      "bytes": 1659,
+      "modifiedUtc": "2026-03-16T16:19:47.4801762Z"
+    },
+    {
+      "path": "Docker-NonCritical/Automation/pricetracker.yml",
+      "bytes": 1080,
+      "modifiedUtc": "2026-02-13T22:18:51.4683901Z"
+    },
+    {
+      "path": "Docker-NonCritical/Media/Books/ebook.yml",
+      "bytes": 2109,
+      "modifiedUtc": "2026-03-19T17:58:28.6489603Z"
+    },
+    {
+      "path": "Docker-NonCritical/Media/Dispatcharr/dispatcharr.yml",
+      "bytes": 2143,
+      "modifiedUtc": "2026-03-19T17:59:14.2725395Z"
+    },
+    {
+      "path": "Docker-NonCritical/Media/flaresolverr/flaresolverr.yml",
+      "bytes": 994,
+      "modifiedUtc": "2026-03-19T17:59:12.5024046Z"
+    },
+    {
+      "path": "Docker-NonCritical/Media/Immich/immich.yml",
+      "bytes": 3071,
+      "modifiedUtc": "2026-03-19T17:59:15.2801849Z"
+    },
+    {
+      "path": "Docker-NonCritical/Media/lidarr/lidarr.yml",
+      "bytes": 996,
+      "modifiedUtc": "2026-03-19T17:59:10.8474363Z"
+    },
+    {
+      "path": "Docker-NonCritical/Media/media.yml",
+      "bytes": 4375,
+      "modifiedUtc": "2026-03-19T17:58:19.9505435Z"
+    },
+    {
+      "path": "Docker-NonCritical/Media/overseerr/overseerr.yml",
+      "bytes": 927,
+      "modifiedUtc": "2026-04-05T23:14:14.8381560Z"
+    },
+    {
+      "path": "Docker-NonCritical/Media/Plex/plex.yml",
+      "bytes": 1701,
+      "modifiedUtc": "2026-04-10T00:33:07.4415344Z"
+    },
+    {
+      "path": "Docker-NonCritical/Media/profilarr/profilarr.yml",
+      "bytes": 1063,
+      "modifiedUtc": "2026-03-19T17:59:17.9163577Z"
+    },
+    {
+      "path": "Docker-NonCritical/Media/prowlarr/prowlarr.yml",
+      "bytes": 1011,
+      "modifiedUtc": "2026-03-19T17:58:55.5153237Z"
+    },
+    {
+      "path": "Docker-NonCritical/Media/radarr/radarr.yml",
+      "bytes": 1004,
+      "modifiedUtc": "2026-03-19T17:58:56.6670733Z"
+    },
+    {
+      "path": "Docker-NonCritical/Media/readarr/readarr.yml",
+      "bytes": 1020,
+      "modifiedUtc": "2026-03-19T17:58:59.7884436Z"
+    },
+    {
+      "path": "Docker-NonCritical/Media/Sonarr/sonarr.yml",
+      "bytes": 1084,
+      "modifiedUtc": "2026-03-19T17:58:58.3193437Z"
+    },
+    {
+      "path": "Docker-NonCritical/Networking/Proxy/proxy.yml",
+      "bytes": 3638,
+      "modifiedUtc": "2026-03-29T01:03:42.5921268Z"
+    },
+    {
+      "path": "Docker-NonCritical/Networking/Torrent/torrent.yml",
+      "bytes": 4577,
+      "modifiedUtc": "2026-03-22T18:51:57.7727975Z"
+    },
+    {
+      "path": "Docker-NonCritical/Security/Crowdsec/crowdsec.yml",
+      "bytes": 1419,
+      "modifiedUtc": "2026-03-19T17:58:37.3117264Z"
+    },
+    {
+      "path": "Docker-NonCritical/Security/dashboard-config/opensearch_dashboards.yml",
+      "bytes": 119,
+      "modifiedUtc": "2026-02-17T19:52:49.6451291Z"
+    },
+    {
+      "path": "Docker-NonCritical/Security/indexer-config/opensearch.yml",
+      "bytes": 276,
+      "modifiedUtc": "2026-02-17T18:19:15.0265043Z"
+    },
+    {
+      "path": "Docker-NonCritical/Security/security.yaml",
+      "bytes": 7068,
+      "modifiedUtc": "2026-03-19T17:57:42.5923120Z"
+    },
+    {
+      "path": "Docker-NonCritical/Tools/DealHound/dealhound.yml",
+      "bytes": 8459,
+      "modifiedUtc": "2026-03-22T20:28:06.7789641Z"
+    },
+    {
+      "path": "Docker-NonCritical/Tools/DockerSocketProxy/docker-socket-proxy.yml",
+      "bytes": 1360,
+      "modifiedUtc": "2026-02-13T22:18:51.4798196Z"
+    },
+    {
+      "path": "Docker-NonCritical/Tools/DocSight/docsight.yml",
+      "bytes": 1647,
+      "modifiedUtc": "2026-03-15T21:33:47.5519507Z"
+    },
+    {
+      "path": "Docker-NonCritical/Tools/GardenPlanner/gardenplanner.yml",
+      "bytes": 2011,
+      "modifiedUtc": "2026-04-01T14:47:37.5944055Z"
+    },
+    {
+      "path": "Docker-NonCritical/Tools/Hawser/hawser.yml",
+      "bytes": 778,
+      "modifiedUtc": "2026-03-19T17:58:38.3325223Z"
+    },
+    {
+      "path": "Docker-NonCritical/Tools/IT-Tools/it-tools.yml",
+      "bytes": 991,
+      "modifiedUtc": "2026-03-19T17:59:20.1485546Z"
+    },
+    {
+      "path": "Docker-NonCritical/Tools/ntfy/ntfy.yml",
+      "bytes": 1277,
+      "modifiedUtc": "2026-03-22T15:57:06.9889457Z"
+    },
+    {
+      "path": "Docker-NonCritical/Tools/SearX/searx.yml",
+      "bytes": 2550,
+      "modifiedUtc": "2026-03-22T20:48:16.2488941Z"
+    },
+    {
+      "path": "Docker-NonCritical/Tools/SearX/settings-direct.yml",
+      "bytes": 1970,
+      "modifiedUtc": "2026-03-22T20:46:10.5639242Z"
+    },
+    {
+      "path": "Docker-NonCritical/Tools/SearX/settings.yml",
+      "bytes": 6596,
+      "modifiedUtc": "2026-03-22T20:38:33.6479682Z"
+    },
+    {
+      "path": "Docker-NonCritical/Tools/Speedtest/speedtest.yml",
+      "bytes": 817,
+      "modifiedUtc": "2026-03-19T17:57:14.7145640Z"
+    },
+    {
+      "path": "Docker-NonCritical/Tools/Stirling-PDF/stirling-pdf.yml",
+      "bytes": 1087,
+      "modifiedUtc": "2026-03-19T17:57:05.4441008Z"
+    },
+    {
+      "path": "Docker-NonCritical/Tools/UserBrowser/userbrowser.yml",
+      "bytes": 1854,
+      "modifiedUtc": "2026-04-06T18:37:46.3041463Z"
+    },
+    {
+      "path": "GETTING_STARTED.md",
+      "bytes": 6640,
+      "modifiedUtc": "2026-04-08T13:09:09.3782584Z"
+    },
+    {
+      "path": "README.md",
+      "bytes": 31936,
+      "modifiedUtc": "2026-03-19T18:01:02.7443569Z"
+    },
+    {
+      "path": "scripts/add-labels-to-compose.sh",
+      "bytes": 1786,
+      "modifiedUtc": "2026-02-13T22:18:51.4883916Z"
+    },
+    {
+      "path": "scripts/backup-ai-artifacts-to-onedrive.ps1",
+      "bytes": 2768,
+      "modifiedUtc": "2026-04-15T02:10:18.8204951Z"
+    },
+    {
+      "path": "scripts/check-docker-updates.sh",
+      "bytes": 6163,
+      "modifiedUtc": "2026-02-13T22:18:51.4893358Z"
+    },
+    {
+      "path": "scripts/export-rag-pilot-corpus.ps1",
+      "bytes": 4786,
+      "modifiedUtc": "2026-04-16T12:55:51.3823764Z"
+    },
+    {
+      "path": "scripts/extract-from-hosts.sh",
+      "bytes": 4119,
+      "modifiedUtc": "2026-03-09T00:33:13.5535902Z"
+    },
+    {
+      "path": "scripts/forgejo_issue.ps1",
+      "bytes": 2028,
+      "modifiedUtc": "2026-04-07T01:05:57.0676980Z"
+    },
+    {
+      "path": "scripts/generate-container-sensors.py",
+      "bytes": 2905,
+      "modifiedUtc": "2026-02-13T22:18:51.4893358Z"
+    },
+    {
+      "path": "scripts/get-docker-containers.sh",
+      "bytes": 874,
+      "modifiedUtc": "2026-02-13T22:18:51.4893358Z"
+    },
+    {
+      "path": "scripts/sync_adhd_tasks_to_forgejo.ps1",
+      "bytes": 2761,
+      "modifiedUtc": "2026-04-07T01:05:57.0676980Z"
+    }
+  ]
+}
