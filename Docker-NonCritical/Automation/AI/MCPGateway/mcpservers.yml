@@ -4,6 +4,8 @@ services:
     image: node:20-alpine
     container_name: mcp-vikunja
     restart: unless-stopped
+    mem_limit: 768m
+    cpus: 0.75
     networks:
       - mcpnet
     working_dir: /app
@@ -15,6 +17,7 @@ services:
       - VIKUNJA_API_BASE=${VIKUNJA_URL}
       - VIKUNJA_URL=${VIKUNJA_URL}
       - VIKUNJA_API_TOKEN=${VIKUNJA_API_TOKEN}
+      - NODE_OPTIONS=--max-old-space-size=512
     labels:
       - com.centurylinklabs.watchtower.enable=false
       - "ha.monitor=true"
@@ -29,6 +32,8 @@ services:
       dockerfile: Dockerfile
     container_name: mcp-homebox
     restart: unless-stopped
+    mem_limit: 512m
+    cpus: 0.5
     networks:
       - mcpnet
     working_dir: /app
@@ -37,6 +42,7 @@ services:
       - HOMEBOX_URL=${HOMEBOX_URL}
       - HOMEBOX_EMAIL=${HOMEBOX_EMAIL}
       - HOMEBOX_PASSWORD=${HOMEBOX_PASSWORD}
+      - NODE_OPTIONS=--max-old-space-size=384
     labels:
       - com.centurylinklabs.watchtower.enable=false
       - "ha.monitor=true"
@@ -115,6 +121,7 @@ services:
       - mcpnet
     command: sh -c "npx -y supergateway --port 3000 --outputTransport streamableHttp --stdio 'node index.js'"
     mem_limit: 512m
+    cpus: 0.5
     environment:
       - DOCKHAND_URL=${DOCKHAND_URL}
       - DOCKHAND_USERNAME=${DOCKHAND_USERNAME}
