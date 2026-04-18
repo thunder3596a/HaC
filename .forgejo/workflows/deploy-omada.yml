@@ -28,9 +28,10 @@ jobs:
         env:
           DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
           CERTRESOLVER: ${{ vars.CERTRESOLVER }}
+          DNS_SERVER: ${{ vars.DNS_SERVER }}
         run: |
           # Validate required vars
-          for var in DOMAIN_NAME; do
+          for var in DOMAIN_NAME DNS_SERVER; do
             eval val=\$$var
             if [ -z "$val" ]; then
               echo "Missing required variable: $var" >&2

@@ -20,11 +20,15 @@ services:
     ports:
       - "8043:8043" # HTTPS portal (backend for Traefik)
       - "8843:8843" # HTTPS guest portal
+      - "27001:27001/udp" # App discovery
       - "29810:29810/udp" # EAP discovery
       - "29811:29811" # Manager v1 port
       - "29812:29812" # Manager v2 port
       - "29813:29813" # Port for adopt and upgrade
       - "29814:29814" # Port for manager/device discovery
+      - "29815:29815" # App management port
+    dns:
+      - ${DNS_SERVER}
     deploy:
       resources:
         limits:
