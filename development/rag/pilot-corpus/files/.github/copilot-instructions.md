@@ -1,5 +1,11 @@
 # HaC — Copilot Context
 
+## Assistant Policy
+
+- Approved assistants right now: GitHub Copilot and Microsoft Copilot.
+- Strategic direction: move toward fully local Ollama-only operation.
+- Do not introduce, require, or depend on Claude or any other AI assistant tooling.
+
 ## Documentation
 
 All setup guides and configuration references are in **Outline** at `https://docs.u-acres.com`.

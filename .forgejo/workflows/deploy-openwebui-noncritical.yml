@@ -28,10 +28,12 @@ jobs:
         env:
           DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
           CERTRESOLVER: ${{ vars.CERTRESOLVER }}
+          OLLAMA_BASE_URL: ${{ vars.OLLAMA_BASE_URL }}
+          OPENWEBUI_RAG_EMBEDDING_MODEL: ${{ vars.OPENWEBUI_RAG_EMBEDDING_MODEL || 'nomic-embed-text' }}
           OPENWEBUI_OAUTH_CLIENT_ID: ${{ vars.OPENWEBUI_OAUTH_CLIENT_ID }}
           OPENWEBUI_OAUTH_CLIENT_SECRET: ${{ secrets.OPENWEBUI_OAUTH_CLIENT_SECRET }}
         run: |
-          for var in DOMAIN_NAME CERTRESOLVER OPENWEBUI_OAUTH_CLIENT_ID OPENWEBUI_OAUTH_CLIENT_SECRET; do
+          for var in DOMAIN_NAME CERTRESOLVER OLLAMA_BASE_URL OPENWEBUI_OAUTH_CLIENT_ID OPENWEBUI_OAUTH_CLIENT_SECRET; do
             eval val=\$$var
             if [ -z "$val" ]; then
               echo "Missing required variable: $var" >&2

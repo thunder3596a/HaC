@@ -9,13 +9,21 @@ services:
     restart: unless-stopped
 
     environment:
-      - OLLAMA_BASE_URL=http://192.168.19.19:11434
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL}
       - WEBUI_AUTH=true
       - ENABLE_SIGNUP=false
       - DEFAULT_MODELS=qwen2.5-coder:14b
       - ENABLE_OLLAMA_API=true
       - ENABLE_OPENAI_API=false
       - ENABLE_RAG_WEB_SEARCH=false
+      - ENABLE_WEB_SEARCH=false
+      - RAG_OLLAMA_BASE_URL=${OLLAMA_BASE_URL}
+      - RAG_EMBEDDING_ENGINE=ollama
+      - RAG_EMBEDDING_MODEL=${OPENWEBUI_RAG_EMBEDDING_MODEL:-nomic-embed-text}
+      - ENABLE_RAG_HYBRID_SEARCH=true
+      - RAG_TOP_K=5
+      - CHUNK_SIZE=1200
+      - CHUNK_OVERLAP=120
       - ENABLE_OAUTH_SIGNUP=true
       - OAUTH_MERGE_ACCOUNTS_BY_EMAIL=true
       - OAUTH_CLIENT_ID=${OPENWEBUI_OAUTH_CLIENT_ID}
