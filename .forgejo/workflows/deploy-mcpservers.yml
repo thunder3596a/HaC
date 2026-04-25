@@ -42,10 +42,14 @@ jobs:
           DOCKHAND_URL: ${{ vars.DOCKHAND_URL }}
           DOCKHAND_USERNAME: ${{ secrets.DOCKHAND_MCP_USERNAME }}
           DOCKHAND_PASSWORD: ${{ secrets.DOCKHAND_MCP_PASSWORD }}
+          OMADA_URL: ${{ vars.OMADA_URL }}
+          OMADA_USERNAME: ${{ secrets.OMADA_USERNAME }}
+          OMADA_PASSWORD: ${{ secrets.OMADA_PASSWORD }}
+          OMADA_SITE_ID: ${{ vars.OMADA_SITE_ID }}
           MCP_GATEWAY_BOOTSTRAP_SUB: ${{ vars.MCP_GATEWAY_BOOTSTRAP_SUB }}
         run: |
           # Validate required secrets
-          for var in VIKUNJA_API_TOKEN N8N_API_KEY N8N_MCP_AUTH_TOKEN HOMEBOX_EMAIL HOMEBOX_PASSWORD DOCKHAND_USERNAME DOCKHAND_PASSWORD FORGEJO_TOKEN; do
+          for var in VIKUNJA_API_TOKEN N8N_API_KEY N8N_MCP_AUTH_TOKEN HOMEBOX_EMAIL HOMEBOX_PASSWORD DOCKHAND_USERNAME DOCKHAND_PASSWORD FORGEJO_TOKEN OMADA_USERNAME OMADA_PASSWORD; do
             eval val=\$$var
             if [ -z "$val" ]; then
               echo "Missing required secret: $var" >&2
@@ -54,7 +58,7 @@ jobs:
           done
 
           # Validate required vars
-          for var in VIKUNJA_URL N8N_URL HOMEBOX_URL DOCKHAND_URL FORGEJO_URL; do
+          for var in VIKUNJA_URL N8N_URL HOMEBOX_URL DOCKHAND_URL FORGEJO_URL OMADA_URL; do
             eval val=\$$var
             if [ -z "$val" ]; then
               echo "Missing required variable: $var" >&2
@@ -71,6 +75,9 @@ jobs:
             mcp-servers/dockhand/index.js \
             mcp-servers/dockhand/package.json \
             mcp-servers/forgejo/Dockerfile \
+            mcp-servers/omada/Dockerfile \
+            mcp-servers/omada/index.js \
+            mcp-servers/omada/package.json \
             | sha256sum | awk '{print $1}')
           old=$(cat .mcpservers_checksum 2>/dev/null || echo "")
 
@@ -251,6 +258,7 @@ jobs:
           ensure_gateway "dockhand-mcp" "http://mcp-dockhand:3000/mcp" "Dockhand MCP server"
           ensure_gateway "forgejo-mcp" "http://mcp-forgejo:3000/mcp" "Forgejo MCP server"
           ensure_gateway "n8n-mcp" "http://n8n-mcp:3000/mcp" "n8n MCP server" "$N8N_MCP_AUTH_TOKEN"
+          ensure_gateway "omada-mcp" "http://mcp-omada:3000/mcp" "Omada MCP server"
 
           if [ -n "$failed_gateways" ]; then
             echo "Gateway registration warnings:$failed_gateways"

@@ -174,163 +174,128 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
   };
 });
 
+// Dispatch a single tool call; throws on API errors (including 401).
+async function dispatch(name, args) {
+  const siteId = OMADA_SITE_ID;
+
+  switch (name) {
+    case 'list_sites': {
+      const response = await omadaApi.get(`/${omadaId}/api/v2/sites`);
+      return {
+        content: [{ type: 'text', text: JSON.stringify(response.data.result, null, 2) }],
+      };
+    }
+
+    case 'list_devices': {
+      let endpoint = `/${omadaId}/api/v2/sites/${siteId}/devices`;
+      if (args.type) {
+        endpoint += `?type=${args.type}`;
+      }
+      const response = await omadaApi.get(endpoint);
+      return {
+        content: [{ type: 'text', text: JSON.stringify(response.data.result, null, 2) }],
+      };
+    }
+
+    case 'get_device_info': {
+      const response = await omadaApi.get(
+        `/${omadaId}/api/v2/sites/${siteId}/devices/${args.mac}`
+      );
+      return {
+        content: [{ type: 'text', text: JSON.stringify(response.data.result, null, 2) }],
+      };
+    }
+
+    case 'list_clients': {
+      let endpoint = `/${omadaId}/api/v2/sites/${siteId}/clients`;
+      if (args.online !== undefined) {
+        endpoint += `?filters.active=${args.online}`;
+      }
+      const response = await omadaApi.get(endpoint);
+      return {
+        content: [{ type: 'text', text: JSON.stringify(response.data.result, null, 2) }],
+      };
+    }
+
+    case 'get_network_stats': {
+      const response = await omadaApi.get(
+        `/${omadaId}/api/v2/sites/${siteId}/stat/dashboard`
+      );
+      return {
+        content: [{ type: 'text', text: JSON.stringify(response.data.result, null, 2) }],
+      };
+    }
+
+    case 'list_ssids': {
+      const response = await omadaApi.get(
+        `/${omadaId}/api/v2/sites/${siteId}/setting/wlans`
+      );
+      return {
+        content: [{ type: 'text', text: JSON.stringify(response.data.result, null, 2) }],
+      };
+    }
+
+    case 'reboot_device': {
+      await omadaApi.post(
+        `/${omadaId}/api/v2/sites/${siteId}/cmd/devices/${args.mac}/reboot`
+      );
+      return {
+        content: [{ type: 'text', text: `Device ${args.mac} reboot initiated successfully` }],
+      };
+    }
+
+    case 'block_client': {
+      await omadaApi.post(
+        `/${omadaId}/api/v2/sites/${siteId}/cmd/clients/${args.mac}/block`
+      );
+      return {
+        content: [{ type: 'text', text: `Client ${args.mac} blocked successfully` }],
+      };
+    }
+
+    case 'unblock_client': {
+      await omadaApi.post(
+        `/${omadaId}/api/v2/sites/${siteId}/cmd/clients/${args.mac}/unblock`
+      );
+      return {
+        content: [{ type: 'text', text: `Client ${args.mac} unblocked successfully` }],
+      };
+    }
+
+    default:
+      throw new Error(`Unknown tool: ${name}`);
+  }
+}
+
 // Tool handlers
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  if (!authToken) {
+    await login();
+  }
+
+  const { name, arguments: args } = request.params;
+
   try {
-    // Ensure we're logged in
-    if (!authToken) {
-      await login();
-    }
-
-    const { name, arguments: args } = request.params;
-    const siteId = OMADA_SITE_ID;
-
-    switch (name) {
-      case 'list_sites': {
-        const response = await omadaApi.get(`/${omadaId}/api/v2/sites`);
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(response.data.result, null, 2),
-            },
-          ],
-        };
-      }
-
-      case 'list_devices': {
-        let endpoint = `/${omadaId}/api/v2/sites/${siteId}/devices`;
-        if (args.type) {
-          endpoint += `?type=${args.type}`;
-        }
-        const response = await omadaApi.get(endpoint);
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(response.data.result, null, 2),
-            },
-          ],
-        };
-      }
-
-      case 'get_device_info': {
-        const response = await omadaApi.get(
-          `/${omadaId}/api/v2/sites/${siteId}/devices/${args.mac}`
-        );
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(response.data.result, null, 2),
-            },
-          ],
-        };
-      }
-
-      case 'list_clients': {
-        let endpoint = `/${omadaId}/api/v2/sites/${siteId}/clients`;
-        if (args.online !== undefined) {
-          endpoint += `?filters.active=${args.online}`;
-        }
-        const response = await omadaApi.get(endpoint);
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(response.data.result, null, 2),
-            },
-          ],
-        };
-      }
-
-      case 'get_network_stats': {
-        const response = await omadaApi.get(
-          `/${omadaId}/api/v2/sites/${siteId}/stat/dashboard`
-        );
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(response.data.result, null, 2),
-            },
-          ],
-        };
-      }
-
-      case 'list_ssids': {
-        const response = await omadaApi.get(
-          `/${omadaId}/api/v2/sites/${siteId}/setting/wlans`
-        );
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(response.data.result, null, 2),
-            },
-          ],
-        };
-      }
-
-      case 'reboot_device': {
-        const response = await omadaApi.post(
-          `/${omadaId}/api/v2/sites/${siteId}/cmd/devices/${args.mac}/reboot`
-        );
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Device ${args.mac} reboot initiated successfully`,
-            },
-          ],
-        };
-      }
-
-      case 'block_client': {
-        const response = await omadaApi.post(
-          `/${omadaId}/api/v2/sites/${siteId}/cmd/clients/${args.mac}/block`
-        );
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Client ${args.mac} blocked successfully`,
-            },
-          ],
-        };
-      }
-
-      case 'unblock_client': {
-        const response = await omadaApi.post(
-          `/${omadaId}/api/v2/sites/${siteId}/cmd/clients/${args.mac}/unblock`
-        );
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Client ${args.mac} unblocked successfully`,
-            },
-          ],
-        };
-      }
-
-      default:
-        throw new Error(`Unknown tool: ${name}`);
-    }
+    return await dispatch(name, args);
   } catch (error) {
-    // Try to re-authenticate if token expired
     if (error.response?.status === 401) {
-      await login();
-      // Retry the request would go here
+      // Token expired — re-authenticate and retry once.
+      authToken = null;
+      const ok = await login();
+      if (ok) {
+        try {
+          return await dispatch(name, args);
+        } catch (retryError) {
+          return {
+            content: [{ type: 'text', text: `Error: ${retryError.message}` }],
+            isError: true,
+          };
+        }
+      }
     }
 
     return {
-      content: [
-        {
-          type: 'text',
-          text: `Error: ${error.message}`,
-        },
-      ],
+      content: [{ type: 'text', text: `Error: ${error.message}` }],
       isError: true,
     };
   }
